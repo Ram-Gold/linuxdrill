@@ -30,6 +30,7 @@ export interface CommandOutput {
   stderr: string;
   exitCode: number;
   clear?: boolean;
+  pager?: { title: string; content: string };
 }
 
 export interface HistoryItem {

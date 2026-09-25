@@ -1,0 +1,162 @@
+{
+  "LX-BASIC-01": {
+    "title": "Directory Tree & Brace Expansion",
+    "description": "Create a nested directory tree and files in a single command using bash brace expansion."
+  },
+  "LX-BASIC-02": {
+    "title": "File Redirection, Sed & Line Counting",
+    "description": "Create text files, append content with redirection, filter lines with sed, and count lines with wc."
+  },
+  "LX-BASIC-03": {
+    "title": "Find Large Modified Log Files",
+    "description": "Search /var/log for files larger than 1MB modified within the last 7 days and export paths."
+  },
+  "LX-BASIC-04": {
+    "title": "Passwd Pipeline: Top Login Shells",
+    "description": "Parse /etc/passwd with cut or awk, count frequencies with sort and uniq, and rank the top login shells."
+  },
+  "LX-BASIC-05": {
+    "title": "Sensitive File & Octal Permission Hardening",
+    "description": "Generate a user report in /root/users_report.txt and restrict permissions to owner-only read/write (0600)."
+  },
+  "LX-USER-01": {
+    "title": "User Creation with Home Directory & Shell",
+    "description": "Create system user alice with a dedicated home directory and standard login bash shell."
+  },
+  "LX-USER-02": {
+    "title": "Group Management & User Membership",
+    "description": "Create system group developers and add user alice as a supplementary group member."
+  },
+  "LX-USER-03": {
+    "title": "Custom UID, Group Affiliation & Expiry Policy",
+    "description": "Create user bob with fixed UID 2500, primary and secondary groups, and 30-day password aging."
+  },
+  "LX-USER-04": {
+    "title": "Account Lockout & Password Expiration Enforcement",
+    "description": "Lock user carol's account, force password change upon next login, and set account expiry date."
+  },
+  "LX-USER-05": {
+    "title": "Batch User Provisioning & Sudoers Rights",
+    "description": "Provision multiple users from a colon-delimited file, configure expiration, and grant sudo rights."
+  },
+  "LX-PKG-01": {
+    "title": "Package Installation & RPM Verification",
+    "description": "Install Apache httpd using dnf/yum and verify package installation and version with rpm."
+  },
+  "LX-PKG-02": {
+    "title": "Reverse Package Lookup by File Path",
+    "description": "Query the RPM database to determine which package owns /usr/bin/scp and save to /tmp/scp_pkg.txt."
+  },
+  "LX-PKG-03": {
+    "title": "RPM Package Counting & File Manifest Query",
+    "description": "Count installed kernel packages with rpm and grep, and query all files provided by bash."
+  },
+  "LX-PKG-04": {
+    "title": "Local YUM/DNF Repository Configuration",
+    "description": "Configure /etc/yum.repos.d/local.repo pointing to ISO media, clean cache, and verify repolist."
+  },
+  "LX-PKG-05": {
+    "title": "Persistent ISO Repository & Package Installation",
+    "description": "Persistently mount ISO media in /etc/fstab, isolate local repositories, and install packages."
+  },
+  "LX-NET-01": {
+    "title": "IP Addressing & Default Route Inspection",
+    "description": "Inspect network configuration and default gateway, exporting details to /tmp/netinfo.txt."
+  },
+  "LX-NET-02": {
+    "title": "Persistent System Hostname Configuration",
+    "description": "Configure persistent system hostname to server01.lab.local using hostnamectl."
+  },
+  "LX-NET-03": {
+    "title": "Static IP & Network Interface Configuration",
+    "description": "Configure interface ens33 with static IP, netmask, gateway, and DNS using nmcli."
+  },
+  "LX-NET-04": {
+    "title": "Static Host Name Resolution in /etc/hosts",
+    "description": "Add static host resolution mapping IP 192.168.10.20 to web01 and web01.lab.local."
+  },
+  "LX-NET-05": {
+    "title": "Firewalld Services, Ports & Rich Reject Rules",
+    "description": "Configure firewalld permanently allowing HTTP, HTTPS, port 8080/tcp, and rejecting malicious sources."
+  },
+  "LX-FS-01": {
+    "title": "File Ownership & Octal Access Permissions",
+    "description": "Create /srv/report.txt with owner alice, group developers, and strict 640 permissions."
+  },
+  "LX-FS-02": {
+    "title": "Disk Usage Analysis with du & Sort",
+    "description": "Identify the top 5 largest directories under /var and record results to /tmp/var_usage.txt."
+  },
+  "LX-FS-03": {
+    "title": "Collaborative Directory with SGID Bit",
+    "description": "Configure /srv/shared with group developers and SGID (2770) so new files inherit group ownership."
+  },
+  "LX-FS-04": {
+    "title": "POSIX Access Control Lists (ACLs)",
+    "description": "Grant user bob full permissions and configure default ACL inheritance on /srv/project using setfacl."
+  },
+  "LX-FS-05": {
+    "title": "LVM Storage Stack: PV, VG, LV & Growth",
+    "description": "Create LVM physical volume, volume group, logical volume, format XFS, mount in fstab, and extend online."
+  },
+  "LX-SVC-01": {
+    "title": "Service Management: Enable & Start httpd",
+    "description": "Start Apache httpd service immediately and enable it to start automatically on system boot."
+  },
+  "LX-SVC-02": {
+    "title": "Systemd Unit State Inspection & Exports",
+    "description": "Query failed units and all enabled service unit files, exporting reports to /tmp/."
+  },
+  "LX-SVC-03": {
+    "title": "Stop, Disable & Mask System Services",
+    "description": "Stop and disable postfix service, then mask the unit to completely prevent manual or automated startup."
+  },
+  "LX-SVC-04": {
+    "title": "Custom Systemd Daemon Unit Creation",
+    "description": "Create custom systemd service hello.service running a background logger with restart-on-failure."
+  },
+  "LX-SVC-05": {
+    "title": "Scheduled Tasks with Systemd Timers",
+    "description": "Create a systemd timer backup.timer running a daily backup service unit at 02:00."
+  },
+  "LX-SEC-01": {
+    "title": "SELinux Status & Permissive Mode Enforcement",
+    "description": "Check current SELinux mode, switch immediately to permissive, and persist in /etc/selinux/config."
+  },
+  "LX-SEC-02": {
+    "title": "SSH Hardening: Disable Root Login",
+    "description": "Configure /etc/ssh/sshd_config to set PermitRootLogin no and reload SSH server daemon."
+  },
+  "LX-SEC-03": {
+    "title": "Relocate SSH to Non-Standard Port 2222",
+    "description": "Change SSH listening port to 2222, update SELinux port labeling with semanage, and open firewall port."
+  },
+  "LX-SEC-04": {
+    "title": "Password Complexity & Aging Security Policies",
+    "description": "Enforce password complexity rules via pwquality.conf and configure aging policies in /etc/login.defs."
+  },
+  "LX-SEC-05": {
+    "title": "SSH Key Authentication & Server Hardening",
+    "description": "Generate ed25519 SSH keys, copy public key, disable password authentication, and configure login banner."
+  },
+  "LX-SCR-01": {
+    "title": "System Information Report Script",
+    "description": "Write executable script /root/info.sh displaying hostname, system date, and current user."
+  },
+  "LX-SCR-02": {
+    "title": "Script Argument Validation & Exit Codes",
+    "description": "Write script /root/greet.sh validating positional parameters and returning proper exit codes."
+  },
+  "LX-SCR-03": {
+    "title": "Loop & Conditional Directory Creation Script",
+    "description": "Write script /root/mkusers.sh creating user directories and welcome files using loops and conditionals."
+  },
+  "LX-SCR-04": {
+    "title": "Disk Usage Threshold Alert Script",
+    "description": "Write script /root/diskcheck.sh monitoring root filesystem usage against an alert threshold."
+  },
+  "LX-SCR-05": {
+    "title": "Automated Backup, Log & Retention Script",
+    "description": "Write comprehensive backup script creating tar archives, logging execution, and rotating old backups."
+  }
+}

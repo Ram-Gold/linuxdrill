@@ -18,5 +18,13 @@ export function useProgress() {
   const toggle = (id: string) =>
     setSolved((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
-  return { solved, toggle };
+  const markSolved = (id: string) =>
+    setSolved((s) => (s.includes(id) ? s : [...s, id]));
+
+  const unmarkSolved = (id: string) =>
+    setSolved((s) => s.filter((x) => x !== id));
+
+  const isSolved = (id: string) => solved.includes(id);
+
+  return { solved, toggle, markSolved, unmarkSolved, isSolved };
 }

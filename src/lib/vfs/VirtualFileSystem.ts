@@ -88,8 +88,44 @@ export class VirtualFileSystem {
     ensureDir(["backup"]);
     ensureDir(["opt"]);
     ensureDir(["mnt"]);
+    ensureDir(["mnt", "cdrom"]);
+    ensureDir(["srv"]);
+    ensureDir(["etc", "selinux"]);
+    ensureDir(["etc", "sudoers.d"]);
+    ensureDir(["etc", "cron.d"]);
+    ensureDir(["etc", "yum.repos.d"]);
+
+    // Device nodes in /dev
+    addFile(["dev"], "null", "", "root", "root", "crw-rw-rw-");
+    addFile(["dev"], "zero", "", "root", "root", "crw-rw-rw-");
+    addFile(["dev"], "sdb", "", "root", "disk", "brw-rw----");
+    addFile(["dev"], "sr0", "", "root", "cdrom", "brw-rw----");
 
     // Configuration files in /etc
+    addFile(
+      ["etc"],
+      "fstab",
+      `# /etc/fstab\n/dev/mapper/cs-root   /                       xfs     defaults        0 0\nUUID=3a2b1c0d-4e5f-6a7b-8c9d-0e1f2a3b4c5d /boot                   xfs     defaults        0 0\n/dev/mapper/cs-swap   none                    swap    defaults        0 0\n`
+    );
+
+    addFile(
+      ["etc", "selinux"],
+      "config",
+      `# This file controls the state of SELinux on the system.\nSELINUX=enforcing\nSELINUXTYPE=targeted\n`
+    );
+
+    addFile(
+      ["etc"],
+      "login.defs",
+      `PASS_MAX_DAYS   99999\nPASS_MIN_DAYS   0\nPASS_WARN_AGE   7\n`
+    );
+
+    addFile(
+      ["etc", "security"],
+      "pwquality.conf",
+      `# Configuration for systemwide password quality\nminlen = 8\ndcredit = 0\nucredit = 0\n`
+    );
+
     addFile(
       ["etc"],
       "passwd",
@@ -246,6 +282,9 @@ export class VirtualFileSystem {
     options: { append?: boolean; owner?: string; group?: string; permissions?: string } = {}
   ): { success: boolean; error?: string } {
     const resolved = this.resolvePath(path, cwd);
+    if (resolved === "/dev/null") {
+      return { success: true };
+    }
     const parts = resolved.split("/").filter(Boolean);
     if (parts.length === 0) return { success: false, error: "Invalid path" };
 
@@ -284,6 +323,10 @@ export class VirtualFileSystem {
   }
 
   public readFile(path: string, cwd = "/"): { content?: string; error?: string } {
+    const resolved = this.resolvePath(path, cwd);
+    if (resolved === "/dev/null") {
+      return { content: "" };
+    }
     const node = this.getNode(path, cwd);
     if (!node) return { error: `No such file or directory: '${path}'` };
     if (node.type === "dir") return { error: `Is a directory: '${path}'` };
@@ -324,14 +367,63 @@ export class VirtualFileSystem {
     const node = this.getNode(path, cwd);
     if (!node) return { success: false, error: `No such file or directory: '${path}'` };
 
-    // Convert octal mode e.g. "755", "644", "0750"
-    const cleanMode = mode.replace(/^0+/, "");
-    if (/^[0-7]{3}$/.test(cleanMode)) {
-      const permsMap = ["---", "--x", "-w-", "-wx", "r--", "r-x", "rw-", "rwx"];
-      const u = permsMap[parseInt(cleanMode[0], 10)];
-      const g = permsMap[parseInt(cleanMode[1], 10)];
-      const o = permsMap[parseInt(cleanMode[2], 10)];
+    const permsMap = ["---", "--x", "-w-", "-wx", "r--", "r-x", "rw-", "rwx"];
+
+    // 4-digit octal mode e.g. "2770", "0755", "1777"
+    if (/^[0-7]{4}$/.test(mode)) {
+      const special = parseInt(mode[0], 10);
+      const u = permsMap[parseInt(mode[1], 10)].split("");
+      const g = permsMap[parseInt(mode[2], 10)].split("");
+      const o = permsMap[parseInt(mode[3], 10)].split("");
+
+      if (special & 4) u[2] = u[2] === "x" ? "s" : "S";
+      if (special & 2) g[2] = g[2] === "x" ? "s" : "S";
+      if (special & 1) o[2] = o[2] === "x" ? "t" : "T";
+
+      node.permissions = `${u.join("")}${g.join("")}${o.join("")}`;
+      return { success: true };
+    }
+
+    // 3-digit octal mode e.g. "755", "640", "600", "440"
+    if (/^[0-7]{3}$/.test(mode)) {
+      const u = permsMap[parseInt(mode[0], 10)];
+      const g = permsMap[parseInt(mode[1], 10)];
+      const o = permsMap[parseInt(mode[2], 10)];
       node.permissions = `${u}${g}${o}`;
+      return { success: true };
+    }
+
+    // Symbolic modes e.g. "+x", "u+x", "a+x", "g+s", "go-rwx"
+    if (/^[ugoa]*[+-][rwxst]+$/.test(mode)) {
+      const parts = node.permissions.split(""); // 9 chars
+      const isAdd = mode.includes("+");
+      const [whoStr, whatStr] = mode.split(/[+-]/);
+      const who = whoStr || "a"; // default all
+
+      const targetIndices: number[] = [];
+      if (who.includes("a") || who.includes("u")) targetIndices.push(0, 1, 2);
+      if (who.includes("a") || who.includes("g")) targetIndices.push(3, 4, 5);
+      if (who.includes("a") || who.includes("o")) targetIndices.push(6, 7, 8);
+
+      for (const char of whatStr) {
+        if (char === "x") {
+          if (targetIndices.includes(2)) parts[2] = isAdd ? "x" : "-";
+          if (targetIndices.includes(5)) parts[5] = isAdd ? "x" : "-";
+          if (targetIndices.includes(8)) parts[8] = isAdd ? "x" : "-";
+        } else if (char === "r") {
+          if (targetIndices.includes(0)) parts[0] = isAdd ? "r" : "-";
+          if (targetIndices.includes(3)) parts[3] = isAdd ? "r" : "-";
+          if (targetIndices.includes(6)) parts[6] = isAdd ? "r" : "-";
+        } else if (char === "w") {
+          if (targetIndices.includes(1)) parts[1] = isAdd ? "w" : "-";
+          if (targetIndices.includes(4)) parts[4] = isAdd ? "w" : "-";
+          if (targetIndices.includes(7)) parts[7] = isAdd ? "w" : "-";
+        } else if (char === "s") {
+          if (targetIndices.includes(5)) parts[5] = isAdd ? "s" : parts[5] === "s" ? "x" : "-";
+          if (targetIndices.includes(2)) parts[2] = isAdd ? "s" : parts[2] === "s" ? "x" : "-";
+        }
+      }
+      node.permissions = parts.join("");
       return { success: true };
     }
 

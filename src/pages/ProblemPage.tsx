@@ -1,203 +1,512 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { AnimatePresence, motion } from "motion/react";
+import { clsx } from "clsx";
+import { cva } from "class-variance-authority";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckSquare,
+  FileCode,
+  FileText,
+  HelpCircle,
+  Lightbulb,
+  Play,
+  Terminal as TerminalIcon,
+} from "lucide-react";
 import { problems } from "../lib/problems";
 import { useProgress } from "../lib/useProgress";
+import { fireGrandCelebration } from "../lib/confetti";
+import { playSuccessChime } from "../lib/sound";
+import { verifyProblem, type VerificationResult } from "../lib/verifyProblem";
+import type { ShellContext } from "../lib/vfs/commands";
 import Markdown from "../components/Markdown";
-import Terminal from "../components/Terminal";
+import Terminal, { type TerminalHandle } from "../components/Terminal";
+import SuccessConfirmation from "../components/SuccessConfirmation";
+import HintAccordion from "../components/HintAccordion";
+import CategoryIcon from "../components/CategoryIcon";
 
-type ViewMode = "split" | "problem" | "terminal";
+// ── Section card — one unified style, no per-section ad-hoc borders ──────────
+const section = cva(
+  "rounded border p-3.5 space-y-2.5",
+  {
+    variants: {
+      intent: {
+        neutral:  "border-slate-800/70 bg-[#090d16]",
+        setup:    "border-amber-900/30 bg-[#0c0e14]",
+        pass:     "border-emerald-800/50 bg-emerald-950/10",
+        fail:     "border-amber-800/40 bg-amber-950/10",
+        solution: "border-slate-700/60 bg-[#09110d]",
+        verify:   "border-slate-700/50 bg-[#090d16]",
+      },
+    },
+    defaultVariants: { intent: "neutral" },
+  }
+);
+
+// ── Section label — one size, one weight, consistent icon slot ───────────────
+function SectionLabel({
+  icon: Icon,
+  children,
+  intent = "neutral",
+  action,
+}: {
+  icon?: React.ElementType;
+  children: React.ReactNode;
+  intent?: "neutral" | "setup" | "pass" | "fail" | "solution" | "verify";
+  action?: React.ReactNode;
+}) {
+  const color = {
+    neutral:  "text-slate-500",
+    setup:    "text-amber-500",
+    pass:     "text-emerald-400",
+    fail:     "text-amber-400",
+    solution: "text-emerald-500",
+    verify:   "text-cyan-500",
+  }[intent];
+
+  return (
+    <div className={clsx("flex items-center justify-between border-b border-slate-800/60 pb-2", color)}>
+      <span className="flex items-center gap-1.5 text-[11px] font-mono tracking-widest uppercase font-semibold">
+        {Icon && <Icon className="w-3 h-3 shrink-0" />}
+        {children}
+      </span>
+      {action}
+    </div>
+  );
+}
 
 export default function ProblemPage() {
   const { id } = useParams();
   const problem = problems.find((p) => p.id === id);
-  const { solved, toggle } = useProgress();
-  const [shown, setShown] = useState(0); // how many hints are revealed
+  const { solved, markSolved, unmarkSolved } = useProgress();
+
   const [showSolution, setShowSolution] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("split");
+  const [mobileTab, setMobileTab] = useState<"spec" | "term">("spec");
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [lastChecks, setLastChecks] = useState<{ name: string; passed: boolean }[]>([]);
+  const [verificationFeedback, setVerificationFeedback] = useState<{
+    passed: boolean;
+    message: string;
+    hint?: string;
+  } | null>(null);
+  const terminalRef = useRef<TerminalHandle>(null);
+
+  const handleCheckAnswer = useCallback(
+    (customShell?: ShellContext) => {
+      const shell = customShell || terminalRef.current?.getShell();
+      if (!shell || !problem) return;
+
+      const result: VerificationResult = verifyProblem(problem, shell);
+      setLastChecks(result.checks);
+      setVerificationFeedback({
+        passed: result.passed,
+        message: result.message,
+        hint: result.missingHint,
+      });
+
+      if (result.passed) {
+        markSolved(problem.id);
+        fireGrandCelebration();
+        playSuccessChime();
+        setShowConfirmation(true);
+        terminalRef.current?.appendOutput(
+          `\n============================================================\n` +
+            `[PASS] VERIFICATION PASSED: That's the right answer!\n` +
+            `[PASS] Challenge ${problem.id} marked as SOLVED (+${problem.points} pts)\n` +
+            `============================================================\n`
+        );
+      } else {
+        terminalRef.current?.appendOutput(
+          `\n------------------------------------------------------------\n` +
+            `[!] Verification check incomplete: ${result.message}\n` +
+            (result.missingHint ? `    Tip: ${result.missingHint}\n` : "") +
+            `------------------------------------------------------------\n`
+        );
+      }
+    },
+    [problem, markSolved]
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        handleCheckAnswer();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleCheckAnswer]);
 
   if (!problem) {
     return (
-      <div className="py-12 text-center">
-        <p className="text-lg text-slate-300">
-          Problem not found.{" "}
-          <Link to="/" className="text-cyan-400 hover:underline">
-            Back to problem list
-          </Link>
-        </p>
+      <div className="py-20 text-center font-mono border border-slate-800 rounded bg-[#070a12] p-8">
+        <p className="text-slate-400 mb-4 text-sm">[!] Challenge '{id}' not found in registry.</p>
+        <Link to="/" className="text-xs text-cyan-400 hover:text-cyan-300 font-mono inline-flex items-center gap-1.5 border border-slate-800 bg-slate-900 px-3 py-1.5 rounded">
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Return to Catalog</span>
+        </Link>
       </div>
     );
   }
 
   const isSolved = solved.includes(problem.id);
+  const idx = problems.findIndex((p) => p.id === id);
+  const prevProblem = idx > 0 ? problems[idx - 1] : null;
+  const nextProblem = idx >= 0 && idx + 1 < problems.length ? problems[idx + 1] : null;
+  const totalEarned = problems
+    .filter((p) => solved.includes(p.id) || (isSolved && p.id === problem.id))
+    .reduce((sum, p) => sum + p.points, 0);
+
+  const handleToggleSolved = () => {
+    if (isSolved) {
+      unmarkSolved(problem.id);
+      setVerificationFeedback(null);
+    } else {
+      markSolved(problem.id);
+      fireGrandCelebration();
+      playSuccessChime();
+      setLastChecks([{ name: `Challenge ${problem.id} task requirements completed`, passed: true }]);
+      setVerificationFeedback({ passed: true, message: "Problem confirmed and marked as solved!" });
+      setShowConfirmation(true);
+      terminalRef.current?.appendOutput(
+        `\n[PASS] Challenge ${problem.id} confirmed and marked as solved (+${problem.points} pts)!\n`
+      );
+    }
+  };
+
+  // derive verification state
+  const verifyPass = verificationFeedback ? verificationFeedback.passed : isSolved;
 
   return (
-    <div className="space-y-4">
-      {/* Top Bar with Navigation & View Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-        <Link to="/" className="text-sm font-medium text-slate-400 hover:text-white transition flex items-center gap-1">
-          <span>←</span> Back to all problems
-        </Link>
+    <div className="flex flex-col space-y-3 font-mono">
 
-        {/* Layout Mode Selector */}
-        <div className="flex items-center rounded-lg border border-slate-800 bg-slate-900 p-1 text-xs font-medium">
+      {/* ── Header ───────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-800/70 pb-2.5 select-none">
+        {/* Left */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link to="/" className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white border border-slate-800 bg-slate-900/60 px-2.5 py-1 rounded transition-colors">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Catalog</span>
+          </Link>
+          <div className="h-4 w-px bg-slate-800 hidden sm:block" />
+          <div className="flex items-center gap-2 text-xs">
+            <span className="font-mono font-bold text-slate-300 bg-slate-900/60 px-2 py-0.5 rounded border border-slate-800 text-[11px]">{problem.id}</span>
+            <span className="text-slate-300 font-medium truncate max-w-xs">{problem.title}</span>
+            <span className="text-slate-600 hidden md:flex items-center gap-1 text-[11px]">
+              <CategoryIcon category={problem.topic} className="w-3 h-3" />
+              <span>{problem.topicName}</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Right */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {isSolved ? (
+            <span className="flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-mono font-semibold text-emerald-400 border border-emerald-800/60 rounded bg-emerald-950/30">
+              <Check className="w-3 h-3 stroke-[2.5]" />
+              +{problem.points} pts
+            </span>
+          ) : (
+            <span className="text-[11px] font-mono text-slate-500">
+              {problem.difficulty} · {problem.points} pts
+            </span>
+          )}
+
+          <div className="flex items-center gap-1">
+            {prevProblem ? (
+              <Link to={`/p/${prevProblem.id}`} className="text-[11px] px-2 py-1 rounded border bg-slate-900/60 border-slate-800 text-slate-400 hover:text-white transition-colors inline-flex items-center gap-1">
+                <ArrowLeft className="w-3 h-3" /><span className="hidden sm:inline">Prev</span>
+              </Link>
+            ) : (
+              <span className="text-[11px] px-2 py-1 rounded border border-slate-800/40 text-slate-700 inline-flex items-center gap-1">
+                <ArrowLeft className="w-3 h-3" /><span className="hidden sm:inline">Prev</span>
+              </span>
+            )}
+            {nextProblem ? (
+              <Link to={`/p/${nextProblem.id}`} className="text-[11px] px-2 py-1 rounded border bg-slate-900/60 border-slate-800 text-slate-400 hover:text-white transition-colors inline-flex items-center gap-1">
+                <span className="hidden sm:inline">Next</span><ArrowRight className="w-3 h-3" />
+              </Link>
+            ) : (
+              <span className="text-[11px] px-2 py-1 rounded border border-slate-800/40 text-slate-700 inline-flex items-center gap-1">
+                <span className="hidden sm:inline">Next</span><ArrowRight className="w-3 h-3" />
+              </span>
+            )}
+          </div>
+
           <button
-            onClick={() => setViewMode("split")}
-            className={`rounded px-2.5 py-1 transition ${
-              viewMode === "split" ? "bg-slate-700 text-white shadow" : "text-slate-400 hover:text-slate-200"
-            }`}
+            id="check-answer-btn"
+            onClick={() => handleCheckAnswer()}
+            className="rounded bg-emerald-700 hover:bg-emerald-600 px-3 py-1 text-[11px] font-mono font-semibold text-white transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
+            title="Check answer (Ctrl+Enter)"
           >
-            Split View
+            <CheckSquare className="w-3.5 h-3.5" />
+            Check Answer
           </button>
+
           <button
-            onClick={() => setViewMode("problem")}
-            className={`rounded px-2.5 py-1 transition ${
-              viewMode === "problem" ? "bg-slate-700 text-white shadow" : "text-slate-400 hover:text-slate-200"
-            }`}
+            id="mark-solved-btn"
+            onClick={handleToggleSolved}
+            className={clsx(
+              "rounded px-2.5 py-1 text-[11px] font-mono transition-colors border cursor-pointer",
+              isSolved
+                ? "border-slate-800 text-slate-500 hover:text-rose-400 hover:border-rose-900/60"
+                : "border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white"
+            )}
           >
-            Problem Only
-          </button>
-          <button
-            onClick={() => setViewMode("terminal")}
-            className={`rounded px-2.5 py-1 transition ${
-              viewMode === "terminal" ? "bg-slate-700 text-white shadow" : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Terminal Only
+            {isSolved ? "Unmark" : "Mark Solved"}
           </button>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div
-        className={`grid gap-6 ${
-          viewMode === "split"
-            ? "grid-cols-1 lg:grid-cols-2 items-start"
-            : "grid-cols-1"
-        }`}
-      >
-        {/* Left Column: Problem Information */}
-        {(viewMode === "split" || viewMode === "problem") && (
-          <div className="space-y-6">
-            <header className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-mono text-xl font-bold text-white tracking-wide">{problem.id}</span>
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                    problem.difficulty === "Easy"
-                      ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
-                      : problem.difficulty === "Average"
-                      ? "bg-amber-950 text-amber-300 border border-amber-800"
-                      : "bg-rose-950 text-rose-300 border border-rose-800"
-                  }`}
-                >
-                  {problem.difficulty} · {problem.points} pts
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-slate-400 font-medium">Topic: {problem.topicName}</p>
-            </header>
-
-            <section className="rounded-xl border border-slate-800/80 bg-slate-900/30 p-4">
-              <h2 className="mb-2 text-base font-semibold text-slate-200 uppercase tracking-wider text-xs">Task</h2>
-              <Markdown>{problem.task}</Markdown>
-            </section>
-
-            {problem.setup && (
-              <section className="rounded-xl border border-slate-800/80 bg-slate-900/30 p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-base font-semibold text-slate-200 uppercase tracking-wider text-xs">Setup Required</h2>
-                  <span className="text-[11px] text-cyan-400">Click 'Run Setup' in terminal to load</span>
-                </div>
-                <Markdown>{problem.setup}</Markdown>
-              </section>
+      {/* ── Mobile tab switcher ──────────────────────────────────────── */}
+      <div className="flex lg:hidden items-center gap-1 rounded border border-slate-800 bg-[#070a12] p-1 text-[11px] select-none font-mono">
+        {(["spec", "term"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setMobileTab(tab)}
+            className={clsx(
+              "flex-1 py-1 rounded transition-colors flex items-center justify-center gap-1.5 cursor-pointer",
+              mobileTab === tab ? "bg-slate-800 text-slate-200" : "text-slate-500 hover:text-slate-300"
             )}
+          >
+            {tab === "spec" ? <FileText className="w-3 h-3" /> : <TerminalIcon className="w-3 h-3" />}
+            <span>{tab === "spec" ? "Specification" : "Terminal"}</span>
+          </button>
+        ))}
+      </div>
 
-            <section className="rounded-xl border border-slate-800/80 bg-slate-900/30 p-4">
-              <h2 className="mb-2 text-base font-semibold text-slate-200 uppercase tracking-wider text-xs">Hints</h2>
-              <div className="space-y-2">
-                {problem.hints.slice(0, shown).map((h, i) => (
-                  <div key={i} className="rounded-lg bg-slate-900/90 border border-slate-800 p-3">
-                    <span className="text-xs font-semibold uppercase text-amber-400 block mb-1">
-                      Hint {i + 1}
-                    </span>
-                    <Markdown>{h}</Markdown>
-                  </div>
-                ))}
-              </div>
-              {shown < problem.hints.length && (
+      {/* ── Split workstation ────────────────────────────────────────── */}
+      <div className="h-[calc(100vh-140px)] min-h-[640px] max-h-[960px] border border-slate-800/80 rounded-lg bg-[#070a12] overflow-hidden flex flex-col">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
+
+          {/* ── Spec pane ──────────────────────────────────────────────── */}
+          <div className={clsx(
+            "lg:col-span-5 flex flex-col h-full border-r border-slate-800/60 min-h-0",
+            mobileTab === "term" ? "hidden lg:flex" : "flex"
+          )}>
+            {/* Pane header */}
+            <div className="h-9 border-b border-slate-800/60 bg-[#0a0e17] px-3 flex items-center justify-between shrink-0 select-none">
+              <span className="text-[11px] font-mono text-slate-500 tracking-widest uppercase">
+                Specification
+              </span>
+              <div className="flex items-center gap-1.5">
                 <button
-                  className="mt-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-3 py-1.5 transition"
-                  onClick={() => setShown(shown + 1)}
+                  onClick={() => setShowSolution(!showSolution)}
+                  className={clsx(
+                    "px-2 py-0.5 text-[10px] font-mono rounded border transition-colors cursor-pointer",
+                    showSolution
+                      ? "border-emerald-800/60 text-emerald-400 bg-emerald-950/30"
+                      : "border-slate-800 text-slate-500 hover:text-slate-300"
+                  )}
                 >
-                  Reveal Hint {shown + 1} of {problem.hints.length}
+                  Solution
                 </button>
-              )}
-            </section>
+                <button
+                  onClick={() => setShowVerify(!showVerify)}
+                  className={clsx(
+                    "px-2 py-0.5 text-[10px] font-mono rounded border transition-colors cursor-pointer",
+                    showVerify
+                      ? "border-cyan-800/60 text-cyan-400 bg-cyan-950/30"
+                      : "border-slate-800 text-slate-500 hover:text-slate-300"
+                  )}
+                >
+                  Verify guide
+                </button>
+              </div>
+            </div>
 
-            <section className="flex flex-wrap gap-2.5 pt-2">
-              <button
-                className="rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition"
-                onClick={() => setShowVerify(!showVerify)}
-              >
-                {showVerify ? "Hide" : "Show"} how to verify
-              </button>
-              <button
-                className="rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition"
-                onClick={() => setShowSolution(!showSolution)}
-              >
-                {showSolution ? "Hide" : "Show"} solution
-              </button>
-              <button
-                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
-                  isSolved
-                    ? "bg-emerald-600 hover:bg-emerald-500 text-white"
-                    : "bg-blue-600 hover:bg-blue-500 text-white"
-                }`}
-                onClick={() => toggle(problem.id)}
-              >
-                {isSolved ? "Solved ✓" : "Mark as solved"}
-              </button>
-            </section>
+            {/* Pane body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 text-slate-300">
 
-            {showVerify && (
-              <section className="rounded-xl border border-cyan-900/50 bg-cyan-950/20 p-4">
-                <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2">
-                  Verification Commands
-                </h3>
-                <Markdown>{problem.verify}</Markdown>
-              </section>
-            )}
+              {/* Title block */}
+              <div className="pb-2 border-b border-slate-800/40">
+                <h2 className="text-sm font-semibold text-white leading-snug mb-1">{problem.title}</h2>
+                <p className="text-[12px] text-slate-500 leading-relaxed font-sans">{problem.description}</p>
+              </div>
 
-            {showSolution && (
-              <section className="space-y-3 rounded-xl border border-slate-700 bg-slate-900/80 p-4">
-                <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
-                  Reference Solution
-                </h3>
-                <Markdown>{problem.solution}</Markdown>
-                {problem.watchOut && (
-                  <div className="rounded-lg border border-amber-500/50 bg-amber-950/30 p-3 mt-3">
-                    <strong className="text-amber-400 text-xs uppercase tracking-wider block mb-1">
-                      ⚠️ Watch out:
-                    </strong>
-                    <Markdown>{problem.watchOut}</Markdown>
+              {/* Task */}
+              <div className={section({ intent: "neutral" })}>
+                <SectionLabel icon={FileText} intent="neutral">Objective</SectionLabel>
+                <div className="text-[12px] text-slate-200 font-sans leading-relaxed">
+                  <Markdown>{problem.task}</Markdown>
+                </div>
+              </div>
+
+              {/* Setup */}
+              {problem.setup && (
+                <div className={section({ intent: "setup" })}>
+                  <SectionLabel
+                    icon={Play}
+                    intent="setup"
+                    action={
+                      <button
+                        onClick={() => terminalRef.current?.runSetup()}
+                        className="text-[10px] font-mono text-amber-600 hover:text-amber-400 border border-amber-900/50 rounded px-2 py-0.5 transition-colors cursor-pointer"
+                      >
+                        Run setup
+                      </button>
+                    }
+                  >
+                    Environment
+                  </SectionLabel>
+                  <div className="text-[12px] text-slate-300 font-sans leading-relaxed">
+                    <Markdown>{problem.setup}</Markdown>
                   </div>
-                )}
-              </section>
-            )}
-          </div>
-        )}
+                </div>
+              )}
 
-        {/* Right Column: Interactive Terminal */}
-        {(viewMode === "split" || viewMode === "terminal") && (
-          <div className={viewMode === "split" ? "sticky top-4" : ""}>
+              {/* Verification result — animated in */}
+              <AnimatePresence>
+                {(isSolved || verificationFeedback) && (
+                  <motion.div
+                    key="verification"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className={section({ intent: verifyPass ? "pass" : "fail" })}
+                  >
+                    <SectionLabel
+                      icon={verifyPass ? Check : AlertTriangle}
+                      intent={verifyPass ? "pass" : "fail"}
+                      action={
+                        verifyPass ? (
+                          <span className="text-[10px] font-mono text-emerald-500">+{problem.points} pts</span>
+                        ) : null
+                      }
+                    >
+                      {verifyPass ? "Passed" : "Incomplete"}
+                    </SectionLabel>
+
+                    <ul className="space-y-1.5 font-mono">
+                      {lastChecks.length > 0 ? (
+                        lastChecks.map((chk, i) => (
+                          <li key={i} className="flex items-start gap-2 text-[11px]">
+                            <span className={clsx("shrink-0 font-bold", chk.passed ? "text-emerald-400" : "text-amber-400")}>
+                              {chk.passed ? "[✓]" : "[✗]"}
+                            </span>
+                            <span className={chk.passed ? "text-slate-300" : "text-slate-500"}>
+                              {chk.name}
+                            </span>
+                          </li>
+                        ))
+                      ) : isSolved ? (
+                        <li className="flex items-start gap-2 text-[11px]">
+                          <span className="shrink-0 font-bold text-emerald-400">[✓]</span>
+                          <span className="text-slate-300">All objectives verified.</span>
+                        </li>
+                      ) : null}
+                    </ul>
+
+                    {verificationFeedback?.hint && (
+                      <div className="flex items-start gap-1.5 text-[11px] font-mono text-amber-400 border-t border-slate-800/40 pt-2 mt-1">
+                        <Lightbulb className="w-3 h-3 shrink-0 mt-0.5 text-amber-500" />
+                        <span>{verificationFeedback.hint}</span>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Solution */}
+              <AnimatePresence>
+                {showSolution && (
+                  <motion.div
+                    key="solution"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 2 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className={section({ intent: "solution" })}
+                  >
+                    <SectionLabel
+                      icon={FileCode}
+                      intent="solution"
+                      action={
+                        <button
+                          onClick={() => {
+                            const clean = problem.solution.replace(/```[a-z]*\n?/g, "").replace(/```/g, "").trim();
+                            navigator.clipboard.writeText(clean);
+                          }}
+                          className="text-[10px] font-mono text-slate-500 hover:text-emerald-400 transition-colors cursor-pointer"
+                        >
+                          [copy]
+                        </button>
+                      }
+                    >
+                      Reference Solution
+                    </SectionLabel>
+                    <div className="text-[12px] text-emerald-300 font-sans">
+                      <Markdown>{problem.solution}</Markdown>
+                    </div>
+                    {problem.watchOut && (
+                      <div className="border-t border-slate-800/40 pt-2 text-[12px] text-amber-300 font-sans">
+                        <span className="font-mono text-[10px] text-amber-500 uppercase tracking-widest block mb-1">Watch out</span>
+                        <Markdown>{problem.watchOut}</Markdown>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Verify guide */}
+              <AnimatePresence>
+                {showVerify && (
+                  <motion.div
+                    key="verify"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 2 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className={section({ intent: "verify" })}
+                  >
+                    <SectionLabel icon={HelpCircle} intent="verify">How it's verified</SectionLabel>
+                    <div className="text-[12px] text-slate-300 font-sans">
+                      <Markdown>{problem.verify}</Markdown>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Hints */}
+              <HintAccordion hints={problem.hints} />
+
+            </div>
+          </div>
+
+          {/* ── Terminal pane ───────────────────────────────────────────── */}
+          <div className={clsx(
+            "lg:col-span-7 flex flex-col h-full min-h-0",
+            mobileTab === "spec" ? "hidden lg:flex" : "flex"
+          )}>
             <Terminal
+              ref={terminalRef}
+              embedded={true}
               title={`${problem.id} Practice Environment`}
               initialSetup={problem.setup}
-              defaultHeight={viewMode === "terminal" ? "650px" : "600px"}
+              onVerify={handleCheckAnswer}
+              isSolved={isSolved}
             />
           </div>
-        )}
+        </div>
       </div>
+
+      {/* Success modal */}
+      {showConfirmation && (
+        <SuccessConfirmation
+          problem={problem}
+          nextProblem={nextProblem}
+          checks={lastChecks}
+          earnedPoints={problem.points}
+          totalScore={totalEarned}
+          onClose={() => setShowConfirmation(false)}
+        />
+      )}
     </div>
   );
 }

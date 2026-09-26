@@ -11,7 +11,6 @@ import {
 
 export type { SoundpackId, SoundpackSettings, SoundpackMeta } from './soundpack';
 
-
 export function useSoundpack() {
   const [settings, setSettings] = useState<SoundpackSettings>(getSoundpackSettings);
 

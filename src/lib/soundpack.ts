@@ -4,7 +4,9 @@
  * channel-separated voices, interruptible acoustic damping, and single-stroke key hold.
  */
 
-export type SoundpackId = 'holy-panda' | 'cream-travel' | 'cherrymx-red-abs';
+import { SOUND_DEFINES_DOWN, SOUND_DEFINES_UP } from './soundSprite';
+
+export type SoundpackId = 'keyb-switch' | 'holy-panda' | 'cream-travel' | 'cherrymx-red-abs';
 
 export interface SoundpackMeta {
   id: SoundpackId;
@@ -22,6 +24,14 @@ export interface SoundpackSettings {
 }
 
 export const SOUNDPACK_METAS: SoundpackMeta[] = [
+  {
+    id: 'keyb-switch',
+    name: 'Keyb Mechanical Sprite',
+    category: 'Linear',
+    description: 'High-fidelity mechanical switch audio sprite with distinct per-key acoustic profiles and realistic key releases.',
+    tag: 'Keyb Sprite (Default)',
+    actuation: '50g Mechanical',
+  },
   {
     id: 'holy-panda',
     name: 'Holy Panda',
@@ -63,7 +73,7 @@ interface SoundpackAudioManifest {
   };
 }
 
-const MANIFESTS: Record<SoundpackId, SoundpackAudioManifest> = {
+const MANIFESTS: Partial<Record<SoundpackId, SoundpackAudioManifest>> = {
   'holy-panda': {
     press: {
       enter: '/soundpacks/holy-panda/press_enter.mp3',
@@ -129,7 +139,7 @@ const MANIFESTS: Record<SoundpackId, SoundpackAudioManifest> = {
 const STORAGE_KEY = 'linuxdrill-sfx-settings';
 const DEFAULT_SETTINGS: SoundpackSettings = {
   enabled: true,
-  activePack: 'holy-panda',
+  activePack: 'keyb-switch',
   volume: 0.85,
 };
 
@@ -160,7 +170,14 @@ export function loadSoundpackSettings(): SoundpackSettings {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      return { ...DEFAULT_SETTINGS, ...parsed };
+      const activePack = SOUNDPACK_METAS.some((m) => m.id === parsed.activePack)
+        ? parsed.activePack
+        : DEFAULT_SETTINGS.activePack;
+      return {
+        ...DEFAULT_SETTINGS,
+        ...parsed,
+        activePack,
+      };
     }
   } catch {}
   return DEFAULT_SETTINGS;
@@ -214,6 +231,12 @@ async function fetchAndDecode(ctx: AudioContext, url: string): Promise<AudioBuff
 export async function preloadSoundpack(packId: SoundpackId) {
   const ctx = getAudioContext();
   if (!ctx) return;
+
+  if (packId === 'keyb-switch') {
+    await fetchAndDecode(ctx, '/sounds/sound.ogg');
+    return;
+  }
+
   const manifest = MANIFESTS[packId];
   if (!manifest) return;
 
@@ -329,6 +352,54 @@ function playBuffer(buffer: AudioBuffer, volume: number): ActiveVoice | null {
   }
 }
 
+function playBufferSlice(
+  buffer: AudioBuffer,
+  offsetSec: number,
+  durationSec: number,
+  volume: number
+): ActiveVoice | null {
+  const ctx = getAudioContext();
+  if (!ctx) return null;
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+
+  try {
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+
+    // Subtle pitch jitter (+/- 1.5%) for organic analog variety
+    source.playbackRate.setValueAtTime(
+      1 + (Math.random() - 0.5) * 0.03,
+      ctx.currentTime
+    );
+
+    const gainNode = ctx.createGain();
+    gainNode.gain.setValueAtTime(Math.max(0, Math.min(1.5, volume)), ctx.currentTime);
+
+    source.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    source.start(ctx.currentTime, offsetSec, durationSec);
+
+    const voice: ActiveVoice = {
+      source,
+      gainNode,
+      startedAt: ctx.currentTime,
+    };
+
+    source.onended = () => {
+      source.disconnect();
+      gainNode.disconnect();
+    };
+
+    return voice;
+  } catch (e) {
+    console.warn('[LinuxDrill SFX] Sprite playback error', e);
+    return null;
+  }
+}
+
 function getRandomItem<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -352,6 +423,27 @@ export async function playKeyPress(key: string, code: string) {
 
   const ctx = getAudioContext();
   if (!ctx) return;
+
+  // Keyb mechanical audio sprite mode (default)
+  if (currentSettings.activePack === 'keyb-switch') {
+    const soundDef = SOUND_DEFINES_DOWN[code] ?? SOUND_DEFINES_DOWN['KeyA'];
+    if (!soundDef) return;
+
+    const buffer = bufferCache.get('/sounds/sound.ogg') || (await fetchAndDecode(ctx, '/sounds/sound.ogg'));
+    if (!buffer) return;
+
+    if (activeKeyVoices.has(code)) {
+      stopVoice(activeKeyVoices.get(code) || null, ctx, 3);
+      activeKeyVoices.delete(code);
+    }
+
+    const [startMs, durationMs] = soundDef;
+    const voice = playBufferSlice(buffer, startMs / 1000, durationMs / 1000, currentSettings.volume);
+    if (voice) {
+      activeKeyVoices.set(code, voice);
+    }
+    return;
+  }
 
   const manifest = MANIFESTS[currentSettings.activePack];
   if (!manifest) return;
@@ -403,6 +495,24 @@ export async function playKeyRelease(key: string, code: string) {
   const ctx = getAudioContext();
   if (!ctx) return;
 
+  // Keyb mechanical audio sprite mode (default)
+  if (currentSettings.activePack === 'keyb-switch') {
+    if (activeKeyVoices.has(code)) {
+      stopVoice(activeKeyVoices.get(code) || null, ctx, 4);
+      activeKeyVoices.delete(code);
+    }
+
+    const soundDef = SOUND_DEFINES_UP[code] ?? SOUND_DEFINES_UP['KeyA'];
+    if (!soundDef) return;
+
+    const buffer = bufferCache.get('/sounds/sound.ogg') || (await fetchAndDecode(ctx, '/sounds/sound.ogg'));
+    if (!buffer) return;
+
+    const [startMs, durationMs] = soundDef;
+    playBufferSlice(buffer, startMs / 1000, durationMs / 1000, currentSettings.volume * 0.88);
+    return;
+  }
+
   const manifest = MANIFESTS[currentSettings.activePack];
   if (!manifest) return;
 
@@ -446,6 +556,28 @@ export async function playSamplePreview(
 ) {
   const ctx = getAudioContext();
   if (!ctx) return;
+
+  // Keyb mechanical audio sprite preview
+  if (packId === 'keyb-switch') {
+    const code =
+      type === 'enter'
+        ? 'Enter'
+        : type === 'space'
+        ? 'Space'
+        : type === 'back'
+        ? 'Backspace'
+        : 'KeyA';
+    const downDef = SOUND_DEFINES_DOWN[code] ?? SOUND_DEFINES_DOWN['Enter'];
+    const upDef = SOUND_DEFINES_UP[code] ?? SOUND_DEFINES_UP['Enter'];
+    const buffer = bufferCache.get('/sounds/sound.ogg') || (await fetchAndDecode(ctx, '/sounds/sound.ogg'));
+    if (buffer) {
+      playBufferSlice(buffer, downDef[0] / 1000, downDef[1] / 1000, currentSettings.volume);
+      setTimeout(() => {
+        playBufferSlice(buffer, upDef[0] / 1000, upDef[1] / 1000, currentSettings.volume * 0.88);
+      }, downDef[1] + 15);
+    }
+    return;
+  }
 
   const manifest = MANIFESTS[packId];
   if (!manifest) return;

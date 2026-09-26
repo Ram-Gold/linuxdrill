@@ -37,3 +37,6 @@ export function playSuccessChime() {
     // AudioContext blocked by browser policy or unsupported, ignore safely
   }
 }
+
+export * from "./soundpack";
+export * from "./useSoundpack";

@@ -526,11 +526,11 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
     <div
       className={`flex flex-col font-mono transition-all select-none ${
         embedded
-          ? "h-full w-full bg-[#070a12] border-0 rounded-none shadow-none overflow-hidden"
-          : "rounded-xl border border-slate-800 bg-[#090d16] shadow-xl overflow-hidden"
+          ? "h-full w-full bg-[var(--terminal-body-bg)] border-0 rounded-none shadow-none overflow-hidden"
+          : "rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-base)] shadow-[var(--card-shadow)] overflow-hidden"
       } ${
         isMaximized
-          ? "!fixed !inset-2 !z-50 !h-[calc(100vh-1rem)] !w-[calc(100vw-1rem)] !rounded-lg !border !border-slate-700 !shadow-2xl !bg-[#070a12]"
+          ? "!fixed !inset-3 !z-50 !h-[calc(100vh-1.5rem)] !w-[calc(100vw-1.5rem)] !rounded-2xl !border !border-[var(--border-strong)] !shadow-2xl !bg-[var(--terminal-body-bg)]"
           : ""
       } ${className}`}
       style={{ height: isMaximized || embedded ? undefined : defaultHeight }}
@@ -542,72 +542,53 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
         }
       }}
     >
-      {/* Window / Pane Titlebar */}
+      {/* macOS Pro Terminal Header Toolbar */}
       <div
-        className={`flex items-center justify-between border-b border-slate-800 bg-[#0a0e17] px-3 select-none gap-2 shrink-0 ${
-          embedded ? "h-9" : "px-4 py-2.5"
+        className={`flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--surface-subtle)] px-3.5 select-none gap-2 shrink-0 ${
+          embedded ? "h-10" : "h-11"
         }`}
       >
         <div className="flex items-center space-x-2 text-xs">
           {embedded ? (
             <div className="flex items-center gap-2">
               <span
-                className={`rounded px-1.5 py-0.5 text-[11px] font-mono ${
+                className={`rounded-lg px-2 py-0.5 text-[11px] font-mono ${
                   isRoot
-                    ? "bg-rose-950/60 text-rose-300 border border-rose-800/80"
-                    : "bg-slate-900/60 text-slate-400 border border-slate-800"
+                    ? "bg-rose-500/10 text-rose-500 border border-rose-500/20 font-semibold"
+                    : "bg-[var(--surface-base)] text-[var(--text-muted)] border border-[var(--border-subtle)]"
                 }`}
               >
                 {shell.session.username}@{shell.session.hostname}:{displayCwd}
               </span>
             </div>
           ) : (
-            <>
-              {/* Traffic light dots */}
-              <div className="flex space-x-1.5 mr-1">
-                <span
-                  className="h-2.5 w-2.5 rounded-full bg-red-500/80 hover:bg-red-500 cursor-pointer inline-block transition-colors"
-                  onClick={() => setHistoryItems([])}
-                  title="Clear Screen"
-                />
-                <span
-                  className="h-2.5 w-2.5 rounded-full bg-amber-500/80 hover:bg-amber-500 cursor-pointer inline-block transition-colors"
-                  onClick={handleReset}
-                  title="Reset VM"
-                />
-                <span
-                  className="h-2.5 w-2.5 rounded-full bg-emerald-500/80 hover:bg-emerald-500 cursor-pointer inline-block transition-colors"
-                  onClick={() => setIsMaximized(!isMaximized)}
-                  title="Maximize"
-                />
-              </div>
-
-              <span className="text-xs font-semibold text-slate-200 ml-1">{title}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-[var(--text-main)]">{title}</span>
 
               <span
-                className={`rounded px-1.5 py-0.5 text-[11px] font-bold ${
+                className={`rounded-lg px-2 py-0.5 text-[11px] font-mono font-medium ${
                   isRoot
-                    ? "bg-rose-900/60 text-rose-300 border border-rose-700"
-                    : "bg-cyan-950/60 text-cyan-300 border border-cyan-800"
+                    ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                    : "bg-[var(--surface-base)] text-[var(--accent-cyan)] border border-[var(--border-subtle)]"
                 }`}
               >
                 {shell.session.username}@{shell.session.hostname}:{displayCwd}
               </span>
 
               <div className="hidden sm:flex items-center gap-1.5 ml-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">
-                  VM: Active
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-mono">
+                  Live
                 </span>
               </div>
 
               {isSolved && (
-                <span className="inline-flex items-center gap-1 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-semibold px-1.5 py-0.5">
+                <span className="inline-flex items-center gap-1 rounded-lg bg-[var(--accent-green-bg)] text-[var(--accent-green)] border border-[var(--accent-green)]/20 text-[10px] font-semibold px-2 py-0.5">
                   <Check className="w-3 h-3" />
                   <span>Solved</span>
                 </span>
               )}
-            </>
+            </div>
           )}
         </div>
 
@@ -618,7 +599,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                 e.stopPropagation();
                 onVerify(shell);
               }}
-              className="flex items-center space-x-1.5 rounded bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-white shadow-sm transition cursor-pointer"
+              className="flex items-center space-x-1.5 rounded-lg bg-[var(--accent-green)] hover:brightness-110 px-3 py-1 text-xs font-semibold text-white shadow-sm transition-all cursor-pointer apple-press"
               title="Verify if solution meets problem requirements"
             >
               <CheckSquare className="w-3.5 h-3.5" />
@@ -632,17 +613,17 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                 e.stopPropagation();
                 handleRunSetup();
               }}
-              className={`flex items-center space-x-1 rounded px-2 py-0.5 text-[11px] font-mono transition cursor-pointer border ${
+              className={`flex items-center space-x-1.5 rounded-lg px-2.5 py-1 text-[11px] font-mono transition-colors cursor-pointer border apple-press ${
                 setupRun
-                  ? "bg-emerald-950 text-emerald-400 border-emerald-800"
-                  : "bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border-amber-800/80"
+                  ? "bg-[var(--accent-green-bg)] text-[var(--accent-green)] border-[var(--accent-green)]/30"
+                  : "bg-[var(--surface-base)] hover:bg-[var(--surface-active)] text-[var(--accent-amber)] border-[var(--border-subtle)]"
               }`}
               title="Execute challenge setup script"
             >
               {setupRun ? (
                 <>
                   <Check className="w-3 h-3" />
-                  <span>Setup Ready</span>
+                  <span>Setup Done</span>
                 </>
               ) : (
                 <>
@@ -658,7 +639,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               e.stopPropagation();
               handleReset();
             }}
-            className="flex items-center space-x-1 rounded border border-slate-800 bg-slate-900/80 px-2 py-0.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition cursor-pointer text-[11px] font-mono"
+            className="flex items-center space-x-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono apple-press"
             title="Reset VM State"
           >
             <RotateCcw className="w-3 h-3" />
@@ -670,12 +651,12 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               e.stopPropagation();
               handleCopy();
             }}
-            className="flex items-center space-x-1 rounded border border-slate-800 bg-slate-900/80 px-2 py-0.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition cursor-pointer text-[11px] font-mono"
+            className="flex items-center space-x-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono apple-press"
             title="Copy Terminal Output"
           >
             {copied ? (
               <>
-                <Check className="w-3 h-3 text-emerald-400" />
+                <Check className="w-3 h-3 text-[var(--accent-green)]" />
                 <span className="hidden sm:inline">Copied</span>
               </>
             ) : (
@@ -691,13 +672,13 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               e.stopPropagation();
               setIsMaximized(!isMaximized);
             }}
-            className="flex items-center space-x-1 rounded border border-slate-800 bg-slate-900/80 px-1.5 py-0.5 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer text-[11px]"
+            className="flex items-center space-x-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] apple-press"
             title={isMaximized ? "Restore Split View" : "Maximize Terminal"}
           >
             {isMaximized ? (
-              <Minimize2 className="w-3 h-3" />
+              <Minimize2 className="w-3.5 h-3.5" />
             ) : (
-              <Maximize2 className="w-3 h-3" />
+              <Maximize2 className="w-3.5 h-3.5" />
             )}
           </button>
         </div>

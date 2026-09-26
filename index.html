@@ -11,8 +11,19 @@
       rel="stylesheet"
     />
     <title>LinuxDrill — POSIX & Linux Systems Mastery</title>
+    <!-- Prevent theme flashing (anti-FOUC) from dark-mode-design-expert -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("linuxdrill-theme");
+          var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var theme = saved || (prefersDark ? "dark" : "light");
+          document.documentElement.classList.add(theme, "theme-" + theme);
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-[#090d16] text-slate-100 font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+  <body class="bg-[var(--bg-canvas)] text-[var(--text-main)] font-sans antialiased selection:bg-sky-500/25 selection:text-sky-700 dark:selection:text-sky-200">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

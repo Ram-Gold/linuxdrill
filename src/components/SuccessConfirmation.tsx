@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Check, CheckCircle2, ArrowRight, X } from "lucide-react";
+import { motion } from "motion/react";
 import type { Problem } from "../lib/types";
 
 interface SuccessConfirmationProps {
@@ -20,7 +21,6 @@ export default function SuccessConfirmation({
   earnedPoints,
   totalScore,
 }: SuccessConfirmationProps) {
-  // Allow Esc key to close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -34,76 +34,80 @@ export default function SuccessConfirmation({
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirmation-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/80 backdrop-blur-sm select-none"
       onClick={onClose}
     >
-      <div
-        className="relative w-full max-w-lg rounded-xl border border-emerald-700/60 bg-[#0f172a] p-6 md:p-8 shadow-2xl text-slate-100 transform transition-all animate-in zoom-in-95 duration-150"
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        transition={{ type: "spring", damping: 26, stiffness: 320 }}
+        className="relative w-full max-w-lg rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-base)] p-6 sm:p-7 shadow-[var(--modal-shadow)] text-[var(--text-main)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
           aria-label="Close dialog"
-          className="absolute top-4 right-4 h-8 w-8 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition cursor-pointer"
+          className="absolute top-4 right-4 h-7 w-7 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)] flex items-center justify-center transition-colors cursor-pointer apple-press"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5" />
         </button>
 
         {/* Badge & Icon */}
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-950 border border-emerald-700/60 text-emerald-400 mb-4">
-            <CheckCircle2 className="w-8 h-8" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--accent-green-bg)] border border-[var(--accent-green)]/20 text-[var(--accent-green)] mb-3">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
 
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-800 bg-emerald-950/90 px-3 py-1 text-xs font-mono font-semibold text-emerald-300 mb-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent-green)]/20 bg-[var(--accent-green-bg)] px-3 py-0.5 text-[11px] font-mono font-medium text-[var(--accent-green)] mb-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-green)]" />
             <span>VERIFICATION PASSED</span>
           </div>
 
-          <h2 id="confirmation-title" className="text-xl font-bold tracking-tight text-white mb-1">
-            Challenge Solved
+          <h2 id="confirmation-title" className="text-lg font-semibold tracking-tight text-[var(--text-main)] mb-1">
+            Challenge Solved!
           </h2>
-          <p className="text-xs text-slate-400 mb-4 font-mono">
-            {problem.id} · <span className="text-cyan-400">{problem.topicName}</span>
+          <p className="text-xs text-[var(--text-muted)] mb-4 font-mono">
+            {problem.id} · <span className="text-[var(--accent-cyan)]">{problem.topicName}</span>
           </p>
 
           {/* Points Highlight */}
-          <div className="w-full flex items-center justify-around rounded-lg border border-slate-800 bg-[#090d16] py-3 px-4 mb-4">
+          <div className="w-full flex items-center justify-around rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] py-3 px-4 mb-4">
             <div className="text-center">
-              <span className="block text-[10px] uppercase tracking-wider text-slate-400 font-mono">
+              <span className="block text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-mono">
                 Points Earned
               </span>
-              <span className="text-lg font-bold text-emerald-400 font-mono">
+              <span className="text-base font-bold text-[var(--accent-green)] font-mono">
                 +{earnedPoints ?? problem.points} pts
               </span>
             </div>
             {totalScore !== undefined && (
-              <div className="h-8 w-px bg-slate-800" />
+              <div className="h-6 w-px bg-[var(--border-subtle)]" />
             )}
             {totalScore !== undefined && (
               <div className="text-center">
-                <span className="block text-[10px] uppercase tracking-wider text-slate-400 font-mono">
+                <span className="block text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-mono">
                   Total Score
                 </span>
-                <span className="text-lg font-bold text-white font-mono">
+                <span className="text-base font-bold text-[var(--text-main)] font-mono">
                   {totalScore} pts
                 </span>
               </div>
             )}
           </div>
 
-          {/* Checks passed breakdown if any */}
+          {/* Checks passed breakdown */}
           {checks.length > 0 && (
-            <div className="w-full text-left mb-4 rounded-lg border border-slate-800 bg-[#090d16] p-3 max-h-36 overflow-y-auto">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider font-mono block mb-2">
+            <div className="w-full text-left mb-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] p-3 max-h-36 overflow-y-auto">
+              <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider font-mono block mb-2">
                 Passed Verification Checks:
               </span>
-              <ul className="space-y-1 text-xs text-slate-300 font-mono">
+              <ul className="space-y-1 text-xs text-[var(--text-main)] font-mono">
                 {checks.map((chk, idx) => (
                   <li key={idx} className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span className={chk.passed ? "text-slate-200" : "text-slate-400"}>
+                    <Check className="w-3.5 h-3.5 text-[var(--accent-green)] shrink-0" />
+                    <span className={chk.passed ? "text-[var(--text-main)]" : "text-[var(--text-muted)]"}>
                       {chk.name}
                     </span>
                   </li>
@@ -112,8 +116,8 @@ export default function SuccessConfirmation({
             </div>
           )}
 
-          <p className="text-xs text-slate-400 leading-relaxed mb-5">
-            Your terminal environment satisfies all scenario requirements.
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-5">
+            Your CentOS 9 terminal satisfies all system requirements.
           </p>
 
           {/* Action Buttons */}
@@ -122,15 +126,15 @@ export default function SuccessConfirmation({
               <Link
                 to={`/p/${nextProblem.id}`}
                 onClick={onClose}
-                className="w-full flex-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 py-2.5 px-4 text-center text-xs font-semibold text-white transition flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full flex-1 rounded-xl bg-[var(--accent-green)] hover:brightness-110 py-2 px-4 text-center text-xs font-semibold text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer apple-press shadow-sm"
               >
-                <span>Next Problem ({nextProblem.id})</span>
+                <span>Continue to {nextProblem.id}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             ) : (
               <button
                 onClick={onClose}
-                className="w-full flex-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 py-2.5 px-4 text-center text-xs font-semibold text-white transition cursor-pointer"
+                className="w-full flex-1 rounded-xl bg-[var(--accent-green)] hover:brightness-110 py-2 px-4 text-center text-xs font-semibold text-white transition-all cursor-pointer apple-press shadow-sm"
               >
                 Continue Training
               </button>
@@ -138,13 +142,13 @@ export default function SuccessConfirmation({
 
             <button
               onClick={onClose}
-              className="w-full sm:w-auto rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 py-2.5 px-4 text-center text-xs font-medium text-slate-300 hover:text-white transition cursor-pointer"
+              className="w-full sm:w-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] py-2 px-4 text-center text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer apple-press"
             >
-              Close
+              Done
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

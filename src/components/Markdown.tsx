@@ -3,7 +3,7 @@ import remarkGfm from "remark-gfm";
 
 export default function Markdown({ children }: { children: string }) {
   return (
-    <div className="prose prose-invert max-w-none">
+    <div className="prose dark:prose-invert max-w-none text-xs text-[var(--text-main)] leading-relaxed">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
     </div>
   );

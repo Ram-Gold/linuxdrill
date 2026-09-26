@@ -12,47 +12,47 @@ export default function ProblemCard({ problem, isSolved }: ProblemCardProps) {
   const getDifficultyBadge = (difficulty: Problem["difficulty"]) => {
     switch (difficulty) {
       case "Easy":
-        return "bg-emerald-950/80 text-emerald-400 border-emerald-800/60";
+        return "bg-[var(--accent-green-bg)] text-[var(--accent-green)] border border-[var(--accent-green)]/20";
       case "Average":
-        return "bg-amber-950/80 text-amber-400 border-amber-800/60";
+        return "bg-[var(--accent-amber-bg)] text-[var(--accent-amber)] border border-[var(--accent-amber)]/20";
       case "Difficult":
-        return "bg-rose-950/80 text-rose-400 border-rose-800/60";
+        return "bg-[var(--accent-red-bg)] text-[var(--accent-red)] border border-[var(--accent-red)]/20";
       default:
-        return "bg-slate-800 text-slate-300 border-slate-700";
+        return "bg-[var(--surface-subtle)] text-[var(--text-muted)] border-[var(--border-subtle)]";
     }
   };
 
   return (
     <Link
       to={`/p/${problem.id}`}
-      className={`group relative rounded-xl border p-5 transition-all duration-200 flex flex-col justify-between shadow-sm cursor-pointer ${
+      className={`group relative rounded-2xl border p-5 flex flex-col justify-between shadow-[var(--card-shadow)] cursor-pointer select-none apple-press transition-colors duration-150 ${
         isSolved
-          ? "border-emerald-600/50 bg-[#0c1524] hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-950/30"
-          : "bg-[#0f172a] hover:bg-[#131d33] border-slate-800 hover:border-cyan-500/50 hover:shadow-md hover:shadow-cyan-950/20"
+          ? "border-[var(--accent-green)]/40 bg-[var(--surface-base)] hover:border-[var(--accent-green)]/70 hover:bg-[var(--surface-subtle)]"
+          : "bg-[var(--surface-base)] hover:bg-[var(--surface-subtle)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]"
       }`}
     >
       <div>
         {/* Top row: ID, Category tag, Difficulty badge, Solved status */}
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs font-bold text-cyan-400 bg-slate-900 px-2.5 py-1 rounded-md border border-slate-800">
+            <span className="font-mono text-xs font-semibold text-[var(--accent-cyan)] bg-[var(--surface-subtle)] px-2.5 py-1 rounded-lg border border-[var(--border-subtle)]">
               {problem.id}
             </span>
-            <span className="text-xs font-mono text-slate-400 flex items-center gap-1.5">
-              <CategoryIcon category={problem.topic} className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-xs font-mono text-[var(--text-muted)] flex items-center gap-1.5">
+              <CategoryIcon category={problem.topic} className="w-3.5 h-3.5 text-[var(--accent-cyan)]" />
               <span className="truncate max-w-[130px]">{problem.topicName}</span>
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
             {isSolved && (
-              <span className="flex items-center gap-1 text-[11px] font-mono text-emerald-300 bg-emerald-950/90 px-2 py-0.5 rounded border border-emerald-700/60 font-medium">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+              <span className="flex items-center gap-1 text-[11px] font-mono text-[var(--accent-green)] bg-[var(--accent-green-bg)] px-2 py-0.5 rounded-lg border border-[var(--accent-green)]/20 font-medium">
+                <CheckCircle2 className="w-3 h-3 text-[var(--accent-green)]" />
                 <span>Solved</span>
               </span>
             )}
             <span
-              className={`text-[11px] font-mono px-2 py-0.5 rounded border font-medium ${getDifficultyBadge(
+              className={`text-[11px] font-mono px-2 py-0.5 rounded-lg border font-medium ${getDifficultyBadge(
                 problem.difficulty
               )}`}
             >
@@ -62,25 +62,25 @@ export default function ProblemCard({ problem, isSolved }: ProblemCardProps) {
         </div>
 
         {/* Title & description */}
-        <h3 className="font-sans font-bold text-base text-white group-hover:text-cyan-300 transition-colors mb-2 line-clamp-1">
+        <h3 className="font-sans font-semibold text-[15px] text-[var(--text-main)] group-hover:text-[var(--accent-cyan)] transition-colors mb-1.5 line-clamp-1 tracking-tight">
           {problem.title}
         </h3>
-        <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed font-sans mb-5">
+        <p className="text-xs text-[var(--text-muted)] line-clamp-2 leading-relaxed font-sans mb-4">
           {problem.description || problem.task}
         </p>
       </div>
 
       {/* Bottom row: Reward Points + Action Link */}
-      <div className="flex items-center justify-between pt-3.5 border-t border-slate-800/80 text-xs">
-        <span className="font-mono text-slate-400">
-          Reward: <strong className="text-cyan-400 font-bold">+{problem.points} PTS</strong>
+      <div className="flex items-center justify-between pt-3 border-t border-[var(--border-subtle)] text-xs">
+        <span className="font-mono text-[var(--text-muted)]">
+          Reward: <strong className="text-[var(--accent-cyan)] font-semibold">+{problem.points} PTS</strong>
         </span>
 
         <span
-          className={`font-mono flex items-center gap-1 transition-all font-semibold ${
+          className={`font-mono flex items-center gap-1 text-xs font-medium transition-colors ${
             isSolved
-              ? "text-emerald-400 group-hover:text-emerald-300"
-              : "text-slate-300 group-hover:text-cyan-300"
+              ? "text-[var(--accent-green)] group-hover:brightness-110"
+              : "text-[var(--text-muted)] group-hover:text-[var(--accent-cyan)]"
           }`}
         >
           <span>{isSolved ? "Review Solution" : "Solve Challenge"}</span>

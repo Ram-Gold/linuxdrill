@@ -15,7 +15,7 @@ export default function App() {
     .reduce((sum, p) => sum + p.points, 0);
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-main)] flex flex-col font-sans selection:bg-sky-500/25 selection:text-sky-700 dark:selection:text-sky-200 antialiased transition-colors duration-150">
       <Navbar
         solvedCount={solvedCount}
         totalCount={totalCount}
@@ -29,10 +29,6 @@ export default function App() {
           <Route path="/terminal" element={<TerminalPlayground />} />
         </Routes>
       </main>
-
-      <footer className="border-t border-slate-800/80 bg-[#090d16] py-5 text-center text-xs text-slate-500 font-mono">
-        LinuxDrill · ITSO 2026 POSIX & Linux Systems Administration Training Platform
-      </footer>
     </div>
   );
 }

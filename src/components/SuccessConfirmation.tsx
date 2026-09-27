@@ -49,7 +49,7 @@ export default function SuccessConfirmation({
         <button
           onClick={onClose}
           aria-label="Close dialog"
-          className="absolute top-4 right-4 h-7 w-7 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)] flex items-center justify-center transition-colors cursor-pointer apple-press"
+          className="absolute top-4 right-4 h-7 w-7 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)] flex items-center justify-center transition-colors cursor-pointer mimo-press"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -69,7 +69,7 @@ export default function SuccessConfirmation({
             Challenge Solved!
           </h2>
           <p className="text-xs text-[var(--text-muted)] mb-4 font-mono">
-            {problem.id} · <span className="text-[var(--accent-cyan)]">{problem.topicName}</span>
+            {problem.id} · <span className="text-[var(--accent-primary-soft)]">{problem.topicName}</span>
           </p>
 
           {/* Points Highlight */}
@@ -126,7 +126,7 @@ export default function SuccessConfirmation({
               <Link
                 to={`/p/${nextProblem.id}`}
                 onClick={onClose}
-                className="w-full flex-1 rounded-xl bg-[var(--accent-green)] hover:brightness-110 py-2 px-4 text-center text-xs font-semibold text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer apple-press shadow-sm"
+                className="btn-mimo-primary w-full flex-1 h-10 text-xs"
               >
                 <span>Continue to {nextProblem.id}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -134,7 +134,7 @@ export default function SuccessConfirmation({
             ) : (
               <button
                 onClick={onClose}
-                className="w-full flex-1 rounded-xl bg-[var(--accent-green)] hover:brightness-110 py-2 px-4 text-center text-xs font-semibold text-white transition-all cursor-pointer apple-press shadow-sm"
+                className="btn-mimo-primary w-full flex-1 h-10 text-xs"
               >
                 Continue Training
               </button>
@@ -142,7 +142,7 @@ export default function SuccessConfirmation({
 
             <button
               onClick={onClose}
-              className="w-full sm:w-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] py-2 px-4 text-center text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer apple-press"
+              className="btn-mimo-outline w-full sm:w-auto h-10 text-xs"
             >
               Done
             </button>

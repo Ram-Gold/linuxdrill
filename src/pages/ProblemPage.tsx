@@ -13,7 +13,6 @@ import {
   HelpCircle,
   Lightbulb,
   Play,
-  Terminal as TerminalIcon,
   Columns2,
   Maximize2,
 } from "lucide-react";
@@ -27,7 +26,6 @@ import Markdown from "../components/Markdown";
 import Terminal, { type TerminalHandle } from "../components/Terminal";
 import SuccessConfirmation from "../components/SuccessConfirmation";
 import HintAccordion from "../components/HintAccordion";
-import CategoryIcon from "../components/CategoryIcon";
 
 export default function ProblemPage() {
   const { id } = useParams();
@@ -96,14 +94,14 @@ export default function ProblemPage() {
 
   if (!problem) {
     return (
-      <div className="py-20 text-center font-mono border border-[var(--border-subtle)] rounded-2xl bg-[var(--surface-base)] p-8 max-w-lg mx-auto shadow-[var(--card-shadow)]">
-        <p className="text-[var(--text-muted)] mb-4 text-xs font-mono">Scenario '{id}' not found in registry.</p>
+      <div className="py-20 text-center max-w-md mx-auto">
+        <p className="text-sm text-[var(--text-muted)] mb-4">Scenario '{id}' not found.</p>
         <Link
           to="/"
-          className="text-xs text-[var(--accent-cyan)] hover:brightness-110 font-mono inline-flex items-center gap-1.5 border border-[var(--border-subtle)] bg-[var(--surface-subtle)] px-3.5 py-1.5 rounded-xl apple-press"
+          className="text-sm text-[var(--accent-primary)] hover:opacity-80 inline-flex items-center gap-1.5"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Return to Catalog</span>
+          <span>Back to challenges</span>
         </Link>
       </div>
     );
@@ -137,159 +135,133 @@ export default function ProblemPage() {
   const verifyPass = verificationFeedback ? verificationFeedback.passed : isSolved;
 
   return (
-    <div className="flex flex-col space-y-3 font-sans select-none">
-      {/* ── macOS Pro Workstation Toolbar ─────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-subtle)] pb-3 select-none">
-        {/* Left: Back button + Context Title */}
-        <div className="flex items-center gap-3 flex-wrap">
+    <div className="flex flex-col gap-3 select-none max-w-[1200px] mx-auto">
+      {/* ── Toolbar ───────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[var(--border-subtle)]">
+        {/* Left: Back + title */}
+        <div className="flex items-center gap-3 min-w-0">
           <Link
             to="/"
-            className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-main)] border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] px-3 py-1.5 rounded-xl transition-colors apple-press"
+            className="text-sm text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors flex items-center gap-1"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="font-medium">Catalog</span>
+            <span className="hidden sm:inline">Back</span>
           </Link>
-          <div className="h-4 w-px bg-[var(--border-subtle)] hidden sm:block" />
-          <div className="flex items-center gap-2 text-xs">
-            <span className="font-mono font-semibold text-[var(--accent-cyan)] bg-[var(--surface-subtle)] px-2 py-0.5 rounded-lg border border-[var(--border-subtle)] text-[11px]">
-              {problem.id}
-            </span>
-            <span className="text-[var(--text-main)] font-semibold truncate max-w-xs text-sm tracking-tight">
-              {problem.title}
-            </span>
-            <span className="text-[var(--text-muted)] hidden md:flex items-center gap-1.5 text-[11px] font-mono bg-[var(--surface-subtle)] px-2 py-0.5 rounded-lg border border-[var(--border-subtle)]">
-              <CategoryIcon category={problem.topic} className="w-3 h-3 text-[var(--accent-cyan)]" />
-              <span>{problem.topicName}</span>
-            </span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-mono text-xs text-[var(--text-tertiary)]">{problem.id}</span>
+            <span className="text-sm font-medium text-[var(--text-main)] truncate">{problem.title}</span>
           </div>
         </div>
 
-        {/* Right: Actions, Navigation, Check Answer */}
+        {/* Right: Actions */}
         <div className="flex items-center gap-2 flex-wrap">
-          {isSolved ? (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold text-[var(--accent-green)] border border-[var(--accent-green)]/20 rounded-xl bg-[var(--accent-green-bg)]">
-              <Check className="w-3 h-3 stroke-[2.5]" />
-              +{problem.points} pts
-            </span>
-          ) : (
-            <span className="text-xs font-mono text-[var(--text-muted)] bg-[var(--surface-subtle)] px-2.5 py-1 rounded-xl border border-[var(--border-subtle)]">
-              {problem.difficulty} · {problem.points} pts
+          {isSolved && (
+            <span className="text-xs text-[var(--accent-green)] flex items-center gap-1">
+              <Check className="w-3 h-3" />
+              <span>+{problem.points} pts</span>
             </span>
           )}
 
-          {/* Prev / Next Buttons */}
-          <div className="flex items-center gap-1 bg-[var(--surface-subtle)] p-0.5 rounded-xl border border-[var(--border-subtle)]">
+          {/* Prev / Next */}
+          <div className="flex items-center gap-1">
             {prevProblem ? (
               <Link
                 to={`/p/${prevProblem.id}`}
-                className="text-xs px-2.5 py-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)] transition-colors inline-flex items-center gap-1 apple-press"
-                title="Previous Challenge"
+                className="text-xs px-2 py-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] transition-colors mimo-press"
               >
                 <ArrowLeft className="w-3 h-3" />
-                <span className="hidden sm:inline">Prev</span>
               </Link>
             ) : (
-              <span className="text-xs px-2.5 py-1 text-[var(--text-tertiary)] inline-flex items-center gap-1">
+              <span className="text-xs px-2 py-1 text-[var(--text-tertiary)]">
                 <ArrowLeft className="w-3 h-3" />
-                <span className="hidden sm:inline">Prev</span>
               </span>
             )}
             {nextProblem ? (
               <Link
                 to={`/p/${nextProblem.id}`}
-                className="text-xs px-2.5 py-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)] transition-colors inline-flex items-center gap-1 apple-press"
-                title="Next Challenge"
+                className="text-xs px-2 py-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] transition-colors mimo-press"
               >
-                <span className="hidden sm:inline">Next</span>
                 <ArrowRight className="w-3 h-3" />
               </Link>
             ) : (
-              <span className="text-xs px-2.5 py-1 text-[var(--text-tertiary)] inline-flex items-center gap-1">
-                <span className="hidden sm:inline">Next</span>
+              <span className="text-xs px-2 py-1 text-[var(--text-tertiary)]">
                 <ArrowRight className="w-3 h-3" />
               </span>
             )}
           </div>
 
-          {/* Toggle Spec Inspector (Xcode Pro split toggle) */}
+          {/* Split toggle */}
           <button
             onClick={() => setSpecCollapsed(!specCollapsed)}
-            className="hidden lg:flex items-center gap-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] px-2.5 py-1.5 text-xs font-mono text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer apple-press"
-            title={specCollapsed ? "Show Specification Pane" : "Focus Terminal Only"}
+            className="hidden lg:flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] px-2 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--border-strong)] transition-colors cursor-pointer mimo-press"
           >
             {specCollapsed ? <Columns2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-            <span>{specCollapsed ? "Split View" : "Focus"}</span>
           </button>
 
-          {/* Check Answer Button (⌘↵) */}
+          {/* Check Answer */}
           <button
             id="check-answer-btn"
             onClick={() => handleCheckAnswer()}
-            className="rounded-xl bg-[var(--accent-green)] hover:brightness-110 px-3.5 py-1.5 text-xs font-mono font-semibold text-white shadow-sm transition-all flex items-center gap-1.5 cursor-pointer apple-press"
-            title="Check answer (Ctrl+Enter / ⌘+Enter)"
+            className="btn-mimo-primary h-8 px-3 text-xs"
+            title="Check your solution (Ctrl+Enter)"
           >
             <CheckSquare className="w-3.5 h-3.5" />
             <span>Check Answer</span>
           </button>
 
-          {/* Mark / Unmark Solved */}
+          {/* Mark/Unmark */}
           <button
             id="mark-solved-btn"
             onClick={handleToggleSolved}
-            className={clsx(
-              "rounded-xl px-2.5 py-1.5 text-xs font-mono transition-colors border cursor-pointer apple-press",
-              isSolved
-                ? "border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--accent-red)] bg-[var(--surface-subtle)]"
-                : "border-[var(--border-subtle)] bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)]"
-            )}
+            className="btn-mimo-outline h-8 px-3 text-xs"
           >
             {isSolved ? "Unmark" : "Mark Solved"}
           </button>
         </div>
       </div>
 
-      {/* ── Mobile tab switcher (macOS Segmented Control) ─────────────── */}
-      <div className="flex lg:hidden items-center gap-1 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] p-1 text-xs select-none font-mono">
+      {/* ── Mobile tabs ───────────────────────────────────── */}
+      <div className="flex lg:hidden items-center gap-1 rounded-xl border border-[var(--border-subtle)] p-1 text-xs bg-[var(--surface-base)]">
         {(["spec", "term"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setMobileTab(tab)}
             className={clsx(
-              "flex-1 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer apple-press",
-              mobileTab === tab ? "bg-[var(--surface-elevated)] text-[var(--text-main)] font-semibold border border-[var(--border-strong)] shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+              "flex-1 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer mimo-press text-xs font-medium",
+              mobileTab === tab
+                ? "bg-[var(--accent-primary)] text-white"
+                : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
             )}
           >
-            {tab === "spec" ? <FileText className="w-3.5 h-3.5" /> : <TerminalIcon className="w-3.5 h-3.5" />}
-            <span>{tab === "spec" ? "Specification" : "Terminal"}</span>
+            {tab === "spec" ? "Specification" : "Terminal"}
           </button>
         ))}
       </div>
 
-      {/* ── Split workstation window ──────────────────────────────────── */}
-      <div className="h-[calc(100vh-140px)] min-h-[640px] max-h-[960px] border border-[var(--border-subtle)] rounded-2xl bg-[var(--surface-base)] overflow-hidden flex flex-col shadow-[var(--card-shadow)] transition-colors duration-150">
+      {/* ── Split workstation ─────────────────────────────── */}
+      <div className="h-[calc(100vh-140px)] min-h-[640px] max-h-[960px] border border-[var(--border-subtle)] rounded-2xl overflow-hidden flex flex-col transition-colors" style={{ backgroundColor: 'var(--surface-base)' }}>
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
 
-          {/* ── Left Spec pane (Xcode Pro Inspector) ────────────────────── */}
+          {/* ── Left: Spec pane ──────────────────────────────── */}
           {!specCollapsed && (
             <div
               className={clsx(
-                "lg:col-span-5 flex flex-col h-full border-r border-[var(--border-subtle)] bg-[var(--bg-canvas)] min-h-0",
+                "lg:col-span-5 flex flex-col h-full border-r border-[var(--border-subtle)] min-h-0",
                 mobileTab === "term" ? "hidden lg:flex" : "flex"
               )}
+              style={{ backgroundColor: 'var(--bg-canvas)' }}
             >
               {/* Pane toolbar */}
-              <div className="h-10 border-b border-[var(--border-subtle)] bg-[var(--surface-base)] px-3.5 flex items-center justify-between shrink-0 select-none">
-                <span className="text-[11px] font-mono text-[var(--text-muted)] tracking-wider uppercase font-semibold">
-                  Specification
-                </span>
+              <div className="h-10 border-b border-[var(--border-subtle)] px-4 flex items-center justify-between shrink-0" style={{ backgroundColor: 'var(--surface-base)' }}>
+                <span className="text-xs text-[var(--text-muted)] font-medium">Specification</span>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => setShowSolution(!showSolution)}
                     className={clsx(
-                      "px-2.5 py-1 text-[11px] font-mono rounded-lg border transition-all cursor-pointer apple-press",
+                      "px-2.5 py-1 text-xs rounded-lg border transition-colors cursor-pointer mimo-press",
                       showSolution
-                        ? "border-[var(--accent-green)]/40 text-[var(--accent-green)] bg-[var(--accent-green-bg)] font-semibold"
-                        : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)]"
+                        ? "border-[var(--accent-green)]/40 text-[var(--accent-green)] bg-[var(--accent-green-bg)] font-medium"
+                        : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--border-strong)]"
                     )}
                   >
                     Solution
@@ -297,10 +269,10 @@ export default function ProblemPage() {
                   <button
                     onClick={() => setShowVerify(!showVerify)}
                     className={clsx(
-                      "px-2.5 py-1 text-[11px] font-mono rounded-lg border transition-all cursor-pointer apple-press",
+                      "px-2.5 py-1 text-xs rounded-lg border transition-colors cursor-pointer mimo-press",
                       showVerify
-                        ? "border-[var(--accent-cyan)]/40 text-[var(--accent-cyan)] bg-[var(--accent-cyan-bg)] font-semibold"
-                        : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)]"
+                        ? "border-[var(--accent-primary)]/40 text-[var(--accent-primary-soft)] bg-[var(--accent-primary-bg)] font-medium"
+                        : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--border-strong)]"
                     )}
                   >
                     Verify Guide
@@ -309,84 +281,83 @@ export default function ProblemPage() {
               </div>
 
               {/* Pane body */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-[var(--text-main)] select-text bg-[var(--bg-canvas)]">
-                {/* Title block */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 select-text">
+                {/* Title */}
                 <div className="pb-3 border-b border-[var(--border-subtle)]">
-                  <h2 className="text-base font-semibold text-[var(--text-main)] tracking-tight mb-1">{problem.title}</h2>
-                  <p className="text-xs text-[var(--text-muted)] leading-relaxed font-sans">{problem.description}</p>
+                  <h2 className="text-[var(--text-main)] mb-1">{problem.title}</h2>
+                  <p className="text-xs text-[var(--text-muted)] leading-relaxed">{problem.description}</p>
                 </div>
 
-                {/* Objective Card */}
-                <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-base)] p-4 space-y-2.5 shadow-[var(--card-shadow)]">
-                  <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2 text-[var(--text-muted)]">
-                    <span className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider uppercase font-semibold text-[var(--accent-cyan)]">
-                      <FileText className="w-3.5 h-3.5" />
-                      <span>Task Objective</span>
-                    </span>
+                {/* Task */}
+                <div className="rounded-lg border border-[var(--border-subtle)] p-4 space-y-2" style={{ backgroundColor: 'var(--surface-base)' }}>
+                  <div className="flex items-center gap-1.5 text-xs text-[var(--accent-primary)] font-medium mb-2">
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Task</span>
                   </div>
-                  <div className="text-xs text-[var(--text-main)] font-sans leading-relaxed">
+                  <div className="text-xs text-[var(--text-main)] leading-relaxed">
                     <Markdown>{problem.task}</Markdown>
                   </div>
                 </div>
 
-                {/* Environment / Setup Card */}
+                {/* Setup */}
                 {problem.setup && (
-                  <div className="rounded-xl border border-[var(--accent-amber)]/35 bg-[var(--surface-base)] p-4 space-y-2.5 shadow-[var(--card-shadow)]">
-                    <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2 text-[var(--accent-amber)]">
-                      <span className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider uppercase font-semibold">
+                  <div className="rounded-lg border border-[var(--accent-amber)]/30 p-4 space-y-2" style={{ backgroundColor: 'var(--surface-base)' }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="flex items-center gap-1.5 text-xs text-[var(--accent-amber)] font-medium">
                         <Play className="w-3.5 h-3.5" />
-                        <span>Environment Setup</span>
+                        <span>Setup</span>
                       </span>
                       <button
                         onClick={() => terminalRef.current?.runSetup()}
-                        className="text-[11px] font-mono text-[var(--accent-amber)] hover:brightness-110 border border-[var(--accent-amber)]/30 rounded-lg px-2.5 py-0.5 bg-[var(--accent-amber-bg)] transition-colors cursor-pointer apple-press"
+                        className="text-[11px] text-[var(--accent-amber)] border border-[var(--accent-amber)]/30 rounded-md px-2 py-0.5 hover:opacity-80 transition-colors cursor-pointer mimo-press"
                       >
-                        Run Setup
+                        Run
                       </button>
                     </div>
-                    <div className="text-xs text-[var(--text-main)] font-sans leading-relaxed">
+                    <div className="text-xs text-[var(--text-main)] leading-relaxed">
                       <Markdown>{problem.setup}</Markdown>
                     </div>
                   </div>
                 )}
 
-                {/* Verification result animated card */}
+                {/* Verification result */}
                 <AnimatePresence>
                   {(isSolved || verificationFeedback) && (
                     <motion.div
                       key="verification"
-                      initial={{ opacity: 0, y: 6 }}
+                      initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 4 }}
-                      transition={{ type: "spring", damping: 26, stiffness: 320 }}
+                      transition={{ duration: 0.15 }}
                       className={clsx(
-                        "rounded-xl border p-4 space-y-2.5 shadow-[var(--card-shadow)]",
+                        "rounded-lg border p-4 space-y-2",
                         verifyPass
-                          ? "border-[var(--accent-green)]/40 bg-[var(--surface-base)]"
-                          : "border-[var(--accent-amber)]/40 bg-[var(--surface-base)]"
+                          ? "border-[var(--accent-green)]/30"
+                          : "border-[var(--accent-amber)]/30"
                       )}
+                      style={{ backgroundColor: 'var(--surface-base)' }}
                     >
-                      <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2">
+                      <div className="flex items-center justify-between mb-1">
                         <span
                           className={clsx(
-                            "flex items-center gap-1.5 text-[11px] font-mono tracking-wider uppercase font-semibold",
+                            "flex items-center gap-1.5 text-xs font-medium",
                             verifyPass ? "text-[var(--accent-green)]" : "text-[var(--accent-amber)]"
                           )}
                         >
                           {verifyPass ? <Check className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
-                          <span>{verifyPass ? "Verification Passed" : "Incomplete Checklist"}</span>
+                          <span>{verifyPass ? "Passed" : "Incomplete"}</span>
                         </span>
                         {verifyPass && (
-                          <span className="text-[11px] font-mono text-[var(--accent-green)] font-semibold">+{problem.points} pts</span>
+                          <span className="text-xs text-[var(--accent-green)]">+{problem.points} pts</span>
                         )}
                       </div>
 
-                      <ul className="space-y-1.5 font-mono">
+                      <ul className="space-y-1 font-mono">
                         {lastChecks.length > 0 ? (
                           lastChecks.map((chk, i) => (
                             <li key={i} className="flex items-start gap-2 text-xs">
-                              <span className={clsx("shrink-0 font-bold", chk.passed ? "text-[var(--accent-green)]" : "text-[var(--accent-amber)]")}>
-                                {chk.passed ? "[✓]" : "[✗]"}
+                              <span className={chk.passed ? "text-[var(--accent-green)]" : "text-[var(--accent-amber)]"}>
+                                {chk.passed ? "✓" : "✗"}
                               </span>
                               <span className={chk.passed ? "text-[var(--text-main)]" : "text-[var(--text-muted)]"}>
                                 {chk.name}
@@ -395,15 +366,15 @@ export default function ProblemPage() {
                           ))
                         ) : isSolved ? (
                           <li className="flex items-start gap-2 text-xs">
-                            <span className="shrink-0 font-bold text-[var(--accent-green)]">[✓]</span>
-                            <span className="text-[var(--text-main)]">All objectives verified successfully.</span>
+                            <span className="text-[var(--accent-green)]">✓</span>
+                            <span className="text-[var(--text-main)]">All objectives verified.</span>
                           </li>
                         ) : null}
                       </ul>
 
                       {verificationFeedback?.hint && (
-                        <div className="flex items-start gap-1.5 text-xs font-mono text-[var(--accent-amber)] border-t border-[var(--border-subtle)] pt-2 mt-1">
-                          <Lightbulb className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[var(--accent-amber)]" />
+                        <div className="flex items-start gap-1.5 text-xs text-[var(--accent-amber)] border-t border-[var(--border-subtle)] pt-2 mt-1">
+                          <Lightbulb className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                           <span>{verificationFeedback.hint}</span>
                         </div>
                       )}
@@ -411,40 +382,39 @@ export default function ProblemPage() {
                   )}
                 </AnimatePresence>
 
-                {/* Reference Solution Card */}
+                {/* Solution */}
                 <AnimatePresence>
                   {showSolution && (
                     <motion.div
                       key="solution"
-                      initial={{ opacity: 0, y: 6 }}
+                      initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 4 }}
-                      transition={{ type: "spring", damping: 26, stiffness: 320 }}
-                      className="rounded-xl border border-[var(--accent-green)]/35 bg-[var(--surface-base)] p-4 space-y-2.5 shadow-[var(--card-shadow)]"
+                      transition={{ duration: 0.15 }}
+                      className="rounded-lg border border-[var(--accent-green)]/30 p-4 space-y-2"
+                      style={{ backgroundColor: 'var(--surface-base)' }}
                     >
-                      <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2 text-[var(--accent-green)]">
-                        <span className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider uppercase font-semibold">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="flex items-center gap-1.5 text-xs text-[var(--accent-green)] font-medium">
                           <FileCode className="w-3.5 h-3.5" />
-                          <span>Reference Solution</span>
+                          <span>Solution</span>
                         </span>
                         <button
                           onClick={() => {
                             const clean = problem.solution.replace(/```[a-z]*\n?/g, "").replace(/```/g, "").trim();
                             navigator.clipboard.writeText(clean);
                           }}
-                          className="text-[11px] font-mono text-[var(--text-muted)] hover:text-[var(--accent-green)] border border-[var(--border-subtle)] px-2 py-0.5 rounded-lg bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] transition-colors cursor-pointer apple-press"
+                          className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-main)] border border-[var(--border-subtle)] px-2 py-0.5 rounded-md transition-colors cursor-pointer mimo-press"
                         >
                           copy
                         </button>
                       </div>
-                      <div className="text-xs text-[var(--text-main)] font-sans">
+                      <div className="text-xs text-[var(--text-main)]">
                         <Markdown>{problem.solution}</Markdown>
                       </div>
                       {problem.watchOut && (
-                        <div className="border-t border-[var(--border-subtle)] pt-2 text-xs text-[var(--accent-amber)] font-sans">
-                          <span className="font-mono text-[10px] text-[var(--accent-amber)] uppercase tracking-wider block mb-1 font-semibold">
-                            Watch out
-                          </span>
+                        <div className="border-t border-[var(--border-subtle)] pt-2 text-xs text-[var(--accent-amber)]">
+                          <span className="text-[10px] uppercase tracking-wider block mb-1 font-medium">Watch out</span>
                           <Markdown>{problem.watchOut}</Markdown>
                         </div>
                       )}
@@ -452,37 +422,36 @@ export default function ProblemPage() {
                   )}
                 </AnimatePresence>
 
-                {/* Verify Guide Card */}
+                {/* Verify Guide */}
                 <AnimatePresence>
                   {showVerify && (
                     <motion.div
                       key="verify"
-                      initial={{ opacity: 0, y: 6 }}
+                      initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 4 }}
-                      transition={{ type: "spring", damping: 26, stiffness: 320 }}
-                      className="rounded-xl border border-[var(--accent-cyan)]/35 bg-[var(--surface-base)] p-4 space-y-2.5 shadow-[var(--card-shadow)]"
+                      transition={{ duration: 0.15 }}
+                      className="rounded-lg border border-[var(--accent-primary)]/30 p-4 space-y-2"
+                      style={{ backgroundColor: 'var(--surface-base)' }}
                     >
-                      <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2 text-[var(--accent-cyan)]">
-                        <span className="flex items-center gap-1.5 text-[11px] font-mono tracking-wider uppercase font-semibold">
-                          <HelpCircle className="w-3.5 h-3.5" />
-                          <span>How It's Verified</span>
-                        </span>
+                      <div className="flex items-center gap-1.5 text-xs text-[var(--accent-primary)] font-medium mb-1">
+                        <HelpCircle className="w-3.5 h-3.5" />
+                        <span>How It's Verified</span>
                       </div>
-                      <div className="text-xs text-[var(--text-main)] font-sans">
+                      <div className="text-xs text-[var(--text-main)]">
                         <Markdown>{problem.verify}</Markdown>
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                {/* Hints Accordion */}
+                {/* Hints */}
                 <HintAccordion hints={problem.hints} />
               </div>
             </div>
           )}
 
-          {/* ── Right Terminal pane ─────────────────────────────────────── */}
+          {/* ── Right: Terminal ──────────────────────────────── */}
           <div
             className={clsx(
               specCollapsed ? "lg:col-span-12" : "lg:col-span-7",
@@ -502,7 +471,7 @@ export default function ProblemPage() {
         </div>
       </div>
 
-      {/* Success Modal Sheet */}
+      {/* Success Modal */}
       {showConfirmation && (
         <SuccessConfirmation
           problem={problem}

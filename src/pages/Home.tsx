@@ -1,11 +1,10 @@
 import { useState, useMemo } from "react";
-import { SlidersHorizontal, RotateCcw } from "lucide-react";
+import { Search, X, RotateCcw } from "lucide-react";
 import { problems } from "../lib/problems";
 import { useProgress } from "../lib/useProgress";
-import { type Category, type Difficulty } from "../lib/types";
-import ProgressDashboard from "../components/ProgressDashboard";
-import FilterBar from "../components/FilterBar";
+import { type Category, type Difficulty, CATEGORY_INFO } from "../lib/types";
 import ProblemCard from "../components/ProblemCard";
+import CategoryIcon from "../components/CategoryIcon";
 
 export default function Home() {
   const { solved } = useProgress();
@@ -42,65 +41,175 @@ export default function Home() {
     setHideSolved(false);
   };
 
+  const categories: { id: Category | "ALL"; label: string }[] = [
+    { id: "ALL", label: "All Topics" },
+    ...Object.entries(CATEGORY_INFO).map(([key, val]) => ({
+      id: key as Category,
+      label: val.name,
+    })),
+  ];
+
+  const difficulties: { id: Difficulty | "ALL"; label: string; color?: string }[] = [
+    { id: "ALL", label: "All Levels" },
+    { id: "Easy", label: "Easy", color: "bg-[var(--accent-green)]" },
+    { id: "Average", label: "Medium", color: "bg-[var(--accent-amber)]" },
+    { id: "Difficult", label: "Hard", color: "bg-[var(--accent-red)]" },
+  ];
+
+  const hasActiveFilter =
+    selectedCategory !== "ALL" ||
+    selectedDifficulty !== "ALL" ||
+    searchQuery.trim() !== "" ||
+    hideSolved;
+
+  const solvedCount = solved.length;
+  const totalCount = problems.length;
+  const progressPercent = Math.round((solvedCount / totalCount) * 100);
+  const totalPoints = problems
+    .filter((p) => solved.includes(p.id))
+    .reduce((sum, p) => sum + p.points, 0);
+
   return (
-    <div className="space-y-6 max-w-[1440px] mx-auto select-none">
-      {/* Clean macOS Pro Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border-subtle)] pb-5">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text-main)] tracking-tight font-sans">
+    <div className="max-w-[1200px] mx-auto select-none space-y-7">
+      {/* Header section */}
+      <div className="pt-2">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text-main)] tracking-tight">
               Linux Systems Challenges
             </h1>
-            <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-[var(--surface-subtle)] text-[var(--accent-cyan)] border border-[var(--border-subtle)] font-semibold">
-              40 Scenarios
-            </span>
+            <p className="text-sm text-[var(--text-muted)] mt-1.5 max-w-xl leading-relaxed">
+              Master POSIX utilities, system administration, and shell diagnostics in a live CentOS sandbox.
+            </p>
           </div>
-          <p className="text-xs sm:text-sm text-[var(--text-muted)] max-w-2xl font-sans leading-relaxed">
-            Hands-on contest scenarios modeled after the 15th IT Skills Olympics (ITSO) competition on CentOS Stream 9. Select any scenario to enter its dedicated workstation.
-          </p>
+
+          {/* Minimal progress tracker */}
+          <div className="shrink-0 flex flex-col items-start md:items-end gap-1.5">
+            <div className="text-xs font-mono text-[var(--text-muted)]">
+              <span className="text-[var(--text-main)] font-semibold">{solvedCount}</span>
+              <span>/{totalCount} completed</span>
+              <span className="text-[var(--text-tertiary)]"> ({progressPercent}%)</span>
+              <span className="mx-1.5 text-[var(--border-strong)]">·</span>
+              <span className="text-[var(--accent-amber)] font-medium">{totalPoints} pts</span>
+            </div>
+            <div className="w-48 h-1.5 rounded-full bg-[var(--surface-subtle)] overflow-hidden border border-[var(--border-subtle)]">
+              <div
+                className="h-full bg-[var(--accent-primary)] transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="h-px w-full bg-[var(--border-subtle)]" />
+      </div>
+
+      {/* Search & Filters */}
+      <div className="space-y-3.5">
+        {/* Search input */}
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[var(--text-tertiary)]">
+            <Search className="w-4 h-4" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search drills by command (e.g. sed, grep), concept, or ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-11 bg-[var(--surface-base)] border border-[var(--border-subtle)] focus:border-[var(--accent-primary)] text-[var(--text-main)] text-sm rounded-xl pl-10 pr-10 placeholder-[var(--text-tertiary)] transition-colors focus:outline-none"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[var(--text-muted)] hover:text-[var(--text-main)] cursor-pointer"
+              title="Clear search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter controls row */}
+        <div className="flex flex-col gap-2.5">
+          {/* Categories */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {categories.map((cat) => {
+              const active = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`chip-mimo mimo-press ${active ? "active" : ""}`}
+                >
+                  {cat.id !== "ALL" && (
+                    <CategoryIcon category={cat.id} className="w-3.5 h-3.5" />
+                  )}
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Level + Hide Solved + Reset */}
+          <div className="flex items-center gap-2 flex-wrap pt-1 text-xs">
+            <span className="text-[var(--text-tertiary)] font-mono text-[11px] uppercase tracking-wider mr-1">
+              Difficulty:
+            </span>
+            {difficulties.map((diff) => {
+              const active = selectedDifficulty === diff.id;
+              return (
+                <button
+                  key={diff.id}
+                  onClick={() => setSelectedDifficulty(diff.id)}
+                  className={`px-3 py-1 rounded-full border text-xs font-mono transition-colors cursor-pointer mimo-press flex items-center gap-1.5 ${
+                    active
+                      ? "bg-[var(--accent-primary)] border-[var(--accent-primary)] text-white font-medium"
+                      : "bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-main)]"
+                  }`}
+                >
+                  {diff.color && <span className={`w-1.5 h-1.5 rounded-full ${diff.color}`} />}
+                  <span>{diff.label}</span>
+                </button>
+              );
+            })}
+
+            <div className="w-px h-4 bg-[var(--border-subtle)] mx-1 hidden sm:block" />
+
+            {/* Hide solved toggle */}
+            <button
+              onClick={() => setHideSolved(!hideSolved)}
+              className={`px-3 py-1 rounded-full border text-xs transition-colors cursor-pointer mimo-press ${
+                hideSolved
+                  ? "bg-[var(--accent-primary)] border-[var(--accent-primary)] text-white font-medium"
+                  : "bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-main)]"
+              }`}
+            >
+              Hide solved
+            </button>
+
+            {/* Reset filters button */}
+            {hasActiveFilter && (
+              <button
+                onClick={handleResetFilters}
+                className="text-xs text-[var(--accent-primary-soft)] hover:text-white flex items-center gap-1 cursor-pointer transition-colors ml-auto"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset filters</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Progress & Contest Scoring Dashboard */}
-      <ProgressDashboard
-        problems={problems}
-        solved={solved}
-        selectedCategory={selectedCategory}
-        onSelectCategory={(cat) => setSelectedCategory(cat)}
-      />
-
-      {/* Search & Filter Controls */}
-      <FilterBar
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
-        selectedDifficulty={selectedDifficulty}
-        onDifficultyChange={setSelectedDifficulty}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        hideSolved={hideSolved}
-        onToggleHideSolved={() => setHideSolved(!hideSolved)}
-      />
-
-      {/* Results Header Count */}
-      <div className="flex items-center justify-between text-xs font-mono text-[var(--text-muted)] px-1">
+      {/* Results header */}
+      <div className="flex items-center justify-between text-xs text-[var(--text-tertiary)]">
         <span>
-          Showing <strong className="text-[var(--text-main)] font-semibold">{filteredProblems.length}</strong> of{" "}
-          <strong className="text-[var(--text-main)]">{problems.length}</strong> challenges
+          Showing {filteredProblems.length} drill{filteredProblems.length !== 1 ? "s" : ""}
         </span>
-        {(selectedCategory !== "ALL" || selectedDifficulty !== "ALL" || searchQuery || hideSolved) && (
-          <button
-            onClick={handleResetFilters}
-            className="text-[var(--accent-cyan)] hover:brightness-110 flex items-center gap-1 cursor-pointer font-medium transition-all apple-press"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span>Reset filters</span>
-          </button>
-        )}
       </div>
 
-      {/* Problem Cards Grid */}
+      {/* Cards grid */}
       {filteredProblems.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredProblems.map((problem) => (
             <ProblemCard
               key={problem.id}
@@ -110,23 +219,15 @@ export default function Home() {
           ))}
         </div>
       ) : (
-        /* Empty State */
-        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-base)] p-12 text-center space-y-4 shadow-[var(--card-shadow)]">
-          <div className="w-12 h-12 rounded-xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)] mx-auto flex items-center justify-center text-[var(--text-muted)]">
-            <SlidersHorizontal className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-[var(--text-main)] mb-1">No matching challenges found</h3>
-            <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
-              Try loosening your search keywords, switching domain filters, or toggling hidden solved challenges.
-            </p>
-          </div>
+        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-base)] p-12 text-center max-w-lg mx-auto">
+          <p className="text-sm text-[var(--text-muted)] mb-4">
+            No challenges match your current search and filters.
+          </p>
           <button
             onClick={handleResetFilters}
-            className="inline-flex items-center gap-1.5 text-xs font-mono px-4 py-2 rounded-xl bg-[var(--accent-cyan)] hover:brightness-110 text-white font-medium transition-all cursor-pointer apple-press shadow-sm"
+            className="btn-mimo-primary text-xs"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Clear Filters & Search</span>
+            Clear all filters
           </button>
         </div>
       )}

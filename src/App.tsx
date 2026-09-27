@@ -15,14 +15,14 @@ export default function App() {
     .reduce((sum, p) => sum + p.points, 0);
 
   return (
-    <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-main)] flex flex-col font-sans selection:bg-sky-500/25 selection:text-sky-700 dark:selection:text-sky-200 antialiased transition-colors duration-150">
+    <div className="min-h-screen flex flex-col font-sans antialiased transition-colors duration-120" style={{ backgroundColor: 'var(--bg-canvas)', color: 'var(--text-main)' }}>
       <Navbar
         solvedCount={solvedCount}
         totalCount={totalCount}
         totalPoints={totalPoints}
       />
 
-      <main className="mx-auto w-full max-w-[1536px] flex-1 px-4 lg:px-6 py-5">
+      <main className="mx-auto w-full max-w-[1200px] flex-1 px-5 lg:px-8 py-6">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/p/:id" element={<ProblemPage />} />

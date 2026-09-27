@@ -1,17 +1,44 @@
 /**
  * LinuxDrill Mechanical Switch Keystroke Soundpack Engine
  * High-performance Web Audio API engine with zero latency, buffer pre-caching,
- * channel-separated voices, interruptible acoustic damping, and single-stroke key hold.
+ * physical layout modeling, channel-separated voices, interruptible acoustic damping,
+ * and matched downstroke + upstroke mechanical releases.
  */
 
-import { SOUND_DEFINES_DOWN, SOUND_DEFINES_UP } from './soundSprite';
+import {
+  SOUND_DEFINES_DOWN,
+  SOUND_DEFINES_UP,
+  HOLY_PANDA_SLICES,
+  CREAM_TRAVEL_SLICES,
+  CHERRY_MX_SLICES,
+  getKeyPhysicalPosition,
+} from './soundSprite';
+import {
+  KEYECHO_PACK_METAS,
+  KEYECHO_PACK_SLICES,
+} from './keyechoPacks';
 
-export type SoundpackId = 'keyb-switch' | 'holy-panda' | 'cream-travel' | 'cherrymx-red-abs';
+export type SoundpackId =
+  | 'keyb-switch'
+  | 'holy-panda'
+  | 'cream-travel'
+  | 'cherrymx-red-abs'
+  | string;
+
+export type SoundpackCategory =
+  | 'All'
+  | 'Tactile'
+  | 'Linear'
+  | 'Clicky'
+  | 'Thocky'
+  | 'Silent'
+  | 'Vintage'
+  | 'FX';
 
 export interface SoundpackMeta {
   id: SoundpackId;
   name: string;
-  category: 'Tactile' | 'Linear';
+  category: SoundpackCategory;
   description: string;
   tag: string;
   actuation: string;
@@ -36,7 +63,7 @@ export const SOUNDPACK_METAS: SoundpackMeta[] = [
     id: 'holy-panda',
     name: 'Holy Panda',
     category: 'Tactile',
-    description: 'Enthusiast tactile switch with snappy D-bump & rounded bottom-out pop.',
+    description: 'Remastered enthusiast tactile switch with snappy D-bump, row formant modeling, and clean release clack.',
     tag: 'Crisp Thock',
     actuation: '67g Tactile',
   },
@@ -44,7 +71,7 @@ export const SOUNDPACK_METAS: SoundpackMeta[] = [
     id: 'cream-travel',
     name: 'NK Cream (Lubed)',
     category: 'Linear',
-    description: 'Ultra-smooth lubed POM housing with deep, buttery travel clacks.',
+    description: 'Smooth lubed POM housing with physical row-mapped (R0–R4) travel clacks and spatial stereo imaging.',
     tag: 'Buttery Cream',
     actuation: '55g Linear',
   },
@@ -52,88 +79,26 @@ export const SOUNDPACK_METAS: SoundpackMeta[] = [
     id: 'cherrymx-red-abs',
     name: 'Cherry MX Red',
     category: 'Linear',
-    description: 'Lightweight linear switch with clean ABS keycap clacks and crisp actuation.',
+    description: 'Lightweight linear switch with clean ABS keycap clacks, matched upstroke synthesis, and generous headroom.',
     tag: 'Classic Linear',
     actuation: '45g Linear',
   },
+  ...KEYECHO_PACK_METAS.map((p) => ({
+    id: p.id,
+    name: p.name,
+    category: p.category as SoundpackCategory,
+    description: p.description,
+    tag: p.tag,
+    actuation: p.actuation,
+  })),
 ];
 
-interface SoundpackAudioManifest {
-  press: {
-    enter: string;
-    space: string;
-    back: string;
-    standard: string[];
-  };
-  release: {
-    enter: string;
-    space: string;
-    back: string;
-    standard: string[];
-  };
-}
-
-const MANIFESTS: Partial<Record<SoundpackId, SoundpackAudioManifest>> = {
-  'holy-panda': {
-    press: {
-      enter: '/soundpacks/holy-panda/press_enter.mp3',
-      space: '/soundpacks/holy-panda/press_space.mp3',
-      back: '/soundpacks/holy-panda/press_back.mp3',
-      standard: [
-        '/soundpacks/holy-panda/press_key1.mp3',
-        '/soundpacks/holy-panda/press_key2.mp3',
-        '/soundpacks/holy-panda/press_key3.mp3',
-        '/soundpacks/holy-panda/press_key4.mp3',
-        '/soundpacks/holy-panda/press_key5.mp3',
-      ],
-    },
-    release: {
-      enter: '/soundpacks/holy-panda/release_enter.mp3',
-      space: '/soundpacks/holy-panda/release_space.mp3',
-      back: '/soundpacks/holy-panda/release_back.mp3',
-      standard: ['/soundpacks/holy-panda/release_key.mp3'],
-    },
-  },
-  'cream-travel': {
-    press: {
-      enter: '/soundpacks/cream-travel/press_enter.mp3',
-      space: '/soundpacks/cream-travel/press_space.mp3',
-      // Dedicated heavier backspace acoustic borrowed from Holy Panda
-      back: '/soundpacks/holy-panda/press_back.mp3',
-      standard: [
-        '/soundpacks/cream-travel/press_standard_GENERIC_R0.mp3',
-        '/soundpacks/cream-travel/press_standard_GENERIC_R1.mp3',
-        '/soundpacks/cream-travel/press_standard_GENERIC_R2.mp3',
-        '/soundpacks/cream-travel/press_standard_GENERIC_R3.mp3',
-        '/soundpacks/cream-travel/press_standard_GENERIC_R4.mp3',
-      ],
-    },
-    release: {
-      enter: '/soundpacks/cream-travel/release_enter.mp3',
-      space: '/soundpacks/cream-travel/release_space.mp3',
-      back: '/soundpacks/holy-panda/release_back.mp3',
-      standard: ['/soundpacks/cream-travel/release_standard_GENERIC.mp3'],
-    },
-  },
-  'cherrymx-red-abs': {
-    press: {
-      enter: '/soundpacks/cherrymx-red-abs/press_enter.wav',
-      space: '/soundpacks/cherrymx-red-abs/press_space.wav',
-      back: '/soundpacks/cherrymx-red-abs/press_back.wav',
-      standard: [
-        '/soundpacks/cherrymx-red-abs/press_standard_1.wav',
-        '/soundpacks/cherrymx-red-abs/press_standard_2.wav',
-        '/soundpacks/cherrymx-red-abs/press_standard_3.wav',
-      ],
-    },
-    // Fall back to neutral release recordings from cream-travel & holy-panda
-    release: {
-      enter: '/soundpacks/cream-travel/release_enter.mp3',
-      space: '/soundpacks/cream-travel/release_space.mp3',
-      back: '/soundpacks/holy-panda/release_back.mp3',
-      standard: ['/soundpacks/cream-travel/release_standard_GENERIC.mp3'],
-    },
-  },
+export const SOUNDPACK_SPRITE_FILES: Record<string, string> = {
+  'keyb-switch': '/sounds/sound.ogg',
+  'holy-panda': '/sounds/holy-panda.ogg',
+  'cream-travel': '/sounds/cream-travel.ogg',
+  'cherrymx-red-abs': '/sounds/cherrymx-red-abs.ogg',
+  ...Object.fromEntries(KEYECHO_PACK_METAS.map((p) => [p.id, p.audioFile])),
 };
 
 const STORAGE_KEY = 'linuxdrill-sfx-settings';
@@ -227,44 +192,39 @@ async function fetchAndDecode(ctx: AudioContext, url: string): Promise<AudioBuff
   return promise;
 }
 
-/** Preload all audio samples for a given soundpack */
+/** Preload audio sprite for a given soundpack */
 export async function preloadSoundpack(packId: SoundpackId) {
   const ctx = getAudioContext();
   if (!ctx) return;
-
-  if (packId === 'keyb-switch') {
-    await fetchAndDecode(ctx, '/sounds/sound.ogg');
-    return;
+  const url = SOUNDPACK_SPRITE_FILES[packId];
+  if (url) {
+    await fetchAndDecode(ctx, url);
   }
-
-  const manifest = MANIFESTS[packId];
-  if (!manifest) return;
-
-  const urls: string[] = [
-    manifest.press.enter,
-    manifest.press.space,
-    manifest.press.back,
-    ...manifest.press.standard,
-    manifest.release.enter,
-    manifest.release.space,
-    manifest.release.back,
-    ...manifest.release.standard,
-  ];
-
-  await Promise.all(urls.map((url) => fetchAndDecode(ctx, url)));
 }
 
-/** Eagerly preload default soundpack */
+/** Eagerly preload default and other soundpacks in background */
 if (typeof window !== 'undefined') {
+  const idlePreload = () => {
+    preloadSoundpack(currentSettings.activePack).then(() => {
+      // Preload the primary built-in packs lazily when idle; KeyEcho packs preload on demand
+      const primaryPacks: SoundpackId[] = ['keyb-switch', 'holy-panda', 'cream-travel', 'cherrymx-red-abs'];
+      for (const id of primaryPacks) {
+        if (id !== currentSettings.activePack) {
+          preloadSoundpack(id);
+        }
+      }
+    });
+  };
+
   if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(() => preloadSoundpack(currentSettings.activePack));
+    (window as any).requestIdleCallback(idlePreload);
   } else {
-    setTimeout(() => preloadSoundpack(currentSettings.activePack), 300);
+    setTimeout(idlePreload, 300);
   }
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// VOICE MANAGEMENT & INTERRUPTIBLE CHANNEL ARCHITECTURE
+// VOICE MANAGEMENT & ACOUSTIC SPATIAL ENGINE
 // ══════════════════════════════════════════════════════════════════════
 
 export type KeyChannel = 'enter' | 'space' | 'back' | 'standard';
@@ -283,16 +243,19 @@ interface ActiveVoice {
   startedAt: number;
 }
 
-// Dedicated channel voices
-let activeEnterVoice: ActiveVoice | null = null;
-let activeSpaceVoice: ActiveVoice | null = null;
-let activeBackVoice: ActiveVoice | null = null;
+interface KeyStrokeAcoustics {
+  spriteUrl: string;
+  releaseSlice: [number, number];
+  playbackRate: number;
+  pan: number;
+}
 
-// Tight 2-voice circular pool for standard typing keys (natural damped overlap)
-const activeStandardVoices: ActiveVoice[] = [];
-
-// Specific key tracking to cancel keydown audio when keyup occurs
+// Track active voice per key code to cleanly crossfade downstroke into upstroke
 const activeKeyVoices = new Map<string, ActiveVoice>();
+// Track the acoustic configuration chosen on downstroke so upstroke matches it
+const activeKeyAcoustics = new Map<string, KeyStrokeAcoustics>();
+// Track round-robin variation state per key code to prevent machine-gunning
+const activeKeyVariations = new Map<string, number>();
 
 /** Smoothly fade out and stop an active voice without digital clicks (3-5ms ramp) */
 function stopVoice(voice: ActiveVoice | null, ctx: AudioContext, fadeTimeMs = 4) {
@@ -308,55 +271,13 @@ function stopVoice(voice: ActiveVoice | null, ctx: AudioContext, fadeTimeMs = 4)
   } catch {}
 }
 
-function playBuffer(buffer: AudioBuffer, volume: number): ActiveVoice | null {
-  const ctx = getAudioContext();
-  if (!ctx) return null;
-  if (ctx.state === 'suspended') {
-    ctx.resume().catch(() => {});
-  }
-
-  try {
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-
-    // Subtle pitch jitter (+/- 2%) for organic analog variety
-    source.playbackRate.setValueAtTime(
-      1 + (Math.random() - 0.5) * 0.04,
-      ctx.currentTime
-    );
-
-    const gainNode = ctx.createGain();
-    gainNode.gain.setValueAtTime(Math.max(0, Math.min(1.5, volume)), ctx.currentTime);
-
-    source.connect(gainNode);
-    gainNode.connect(ctx.destination);
-
-    source.start(ctx.currentTime);
-
-    const voice: ActiveVoice = {
-      source,
-      gainNode,
-      startedAt: ctx.currentTime,
-    };
-
-    // Clean up when sound finishes naturally
-    source.onended = () => {
-      source.disconnect();
-      gainNode.disconnect();
-    };
-
-    return voice;
-  } catch (e) {
-    console.warn('[LinuxDrill SFX] Playback error', e);
-    return null;
-  }
-}
-
 function playBufferSlice(
   buffer: AudioBuffer,
   offsetSec: number,
   durationSec: number,
-  volume: number
+  volume: number,
+  playbackRate = 1.0,
+  pan = 0.0
 ): ActiveVoice | null {
   const ctx = getAudioContext();
   if (!ctx) return null;
@@ -367,18 +288,22 @@ function playBufferSlice(
   try {
     const source = ctx.createBufferSource();
     source.buffer = buffer;
-
-    // Subtle pitch jitter (+/- 1.5%) for organic analog variety
-    source.playbackRate.setValueAtTime(
-      1 + (Math.random() - 0.5) * 0.03,
-      ctx.currentTime
-    );
+    source.playbackRate.setValueAtTime(playbackRate, ctx.currentTime);
 
     const gainNode = ctx.createGain();
     gainNode.gain.setValueAtTime(Math.max(0, Math.min(1.5, volume)), ctx.currentTime);
 
-    source.connect(gainNode);
-    gainNode.connect(ctx.destination);
+    // Physical stereo spatialization across the keyboard plate
+    if (typeof ctx.createStereoPanner === 'function' && pan !== 0) {
+      const panner = ctx.createStereoPanner();
+      panner.pan.setValueAtTime(Math.max(-0.5, Math.min(0.5, pan)), ctx.currentTime);
+      source.connect(gainNode);
+      gainNode.connect(panner);
+      panner.connect(ctx.destination);
+    } else {
+      source.connect(gainNode);
+      gainNode.connect(ctx.destination);
+    }
 
     source.start(ctx.currentTime, offsetSec, durationSec);
 
@@ -400,166 +325,280 @@ function playBufferSlice(
   }
 }
 
-function getRandomItem<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+/** Resolves downstroke and matching upstroke slices, row acoustics, and stereo pan */
+function resolveKeyAcoustics(
+  packId: SoundpackId,
+  key: string,
+  code: string
+): {
+  spriteUrl: string;
+  pressSlice: [number, number];
+  releaseSlice: [number, number];
+  playbackRate: number;
+  pan: number;
+} {
+  const pos = getKeyPhysicalPosition(code);
+  const channel = getKeyChannel(key);
+  const pan = pos.col * 0.22; // Subtle natural stereo width
+  const jitter = (Math.random() - 0.5) * 0.025; // +/-1.25% humanized analog variation
 
-function getPressUrl(manifest: SoundpackAudioManifest, channel: KeyChannel): string {
-  if (channel === 'enter') return manifest.press.enter;
-  if (channel === 'space') return manifest.press.space;
-  if (channel === 'back') return manifest.press.back;
-  return getRandomItem(manifest.press.standard);
-}
+  // 1. Keyb Mechanical Audio Sprite
+  if (packId === 'keyb-switch') {
+    const pressSlice = SOUND_DEFINES_DOWN[code] ?? SOUND_DEFINES_DOWN['KeyA'];
+    const releaseSlice = SOUND_DEFINES_UP[code] ?? SOUND_DEFINES_UP['KeyA'];
+    return {
+      spriteUrl: SOUNDPACK_SPRITE_FILES['keyb-switch'],
+      pressSlice,
+      releaseSlice,
+      playbackRate: 1.0 + jitter,
+      pan,
+    };
+  }
 
-function getReleaseUrl(manifest: SoundpackAudioManifest, channel: KeyChannel): string {
-  if (channel === 'enter') return manifest.release.enter;
-  if (channel === 'space') return manifest.release.space;
-  if (channel === 'back') return manifest.release.back;
-  return getRandomItem(manifest.release.standard);
-}
+  // 2. NK Cream (Lubed) — Physical Row Mapping (R0 to R4)
+  if (packId === 'cream-travel') {
+    let pressSlice: [number, number];
+    let releaseSlice: [number, number];
 
-export async function playKeyPress(key: string, code: string) {
-  if (!currentSettings.enabled || currentSettings.volume <= 0) return;
+    if (channel === 'enter') {
+      pressSlice = CREAM_TRAVEL_SLICES.press_enter;
+      releaseSlice = CREAM_TRAVEL_SLICES.release_enter;
+    } else if (channel === 'space') {
+      pressSlice = CREAM_TRAVEL_SLICES.press_space;
+      releaseSlice = CREAM_TRAVEL_SLICES.release_space;
+    } else if (channel === 'back') {
+      pressSlice = CREAM_TRAVEL_SLICES.press_back;
+      releaseSlice = CREAM_TRAVEL_SLICES.release_back;
+    } else {
+      const rowIdx = Math.min(4, Math.max(0, pos.row));
+      pressSlice = CREAM_TRAVEL_SLICES[`press_row_${rowIdx}`] ?? CREAM_TRAVEL_SLICES.press_row_3;
+      releaseSlice = CREAM_TRAVEL_SLICES.release_standard;
+    }
 
-  const ctx = getAudioContext();
-  if (!ctx) return;
+    return {
+      spriteUrl: SOUNDPACK_SPRITE_FILES['cream-travel'],
+      pressSlice,
+      releaseSlice,
+      playbackRate: 1.0 + jitter,
+      pan,
+    };
+  }
 
-  // Keyb mechanical audio sprite mode (default)
-  if (currentSettings.activePack === 'keyb-switch') {
-    const soundDef = SOUND_DEFINES_DOWN[code] ?? SOUND_DEFINES_DOWN['KeyA'];
-    if (!soundDef) return;
+  // 3. Holy Panda — Round-Robin Cycling + Row/Plate Formant Pitch Modeling
+  if (packId === 'holy-panda') {
+    let pressSlice: [number, number];
+    let releaseSlice: [number, number];
+    let pitchMultiplier = 1.0;
 
-    const buffer = bufferCache.get('/sounds/sound.ogg') || (await fetchAndDecode(ctx, '/sounds/sound.ogg'));
+    if (channel === 'enter') {
+      pressSlice = HOLY_PANDA_SLICES.press_enter;
+      releaseSlice = HOLY_PANDA_SLICES.release_enter;
+    } else if (channel === 'space') {
+      pressSlice = HOLY_PANDA_SLICES.press_space;
+      releaseSlice = HOLY_PANDA_SLICES.release_space;
+    } else if (channel === 'back') {
+      pressSlice = HOLY_PANDA_SLICES.press_back;
+      releaseSlice = HOLY_PANDA_SLICES.release_back;
+    } else {
+      // Cycle through 5 variations sequentially per key code to prevent machine-gunning
+      const lastVar = activeKeyVariations.get(code) ?? Math.floor(Math.random() * 5);
+      const nextVar = (lastVar + 1) % 5;
+      activeKeyVariations.set(code, nextVar);
+
+      pressSlice = HOLY_PANDA_SLICES[`press_key${nextVar + 1}`] ?? HOLY_PANDA_SLICES.press_key1;
+      releaseSlice = HOLY_PANDA_SLICES.release_standard;
+
+      // Row acoustics: higher clacks on top rows, deeper bottom-outs on lower rows
+      const rowCents = [35, 20, 10, 0, -18, -25][pos.row] ?? 0;
+      // Center plate flex: keys near center vibrate deeper
+      const centerPlateCents = (1 - Math.abs(pos.col)) * -8;
+      pitchMultiplier = Math.pow(2, (rowCents + centerPlateCents) / 1200);
+    }
+
+    return {
+      spriteUrl: SOUNDPACK_SPRITE_FILES['holy-panda'],
+      pressSlice,
+      releaseSlice,
+      playbackRate: pitchMultiplier * (1.0 + jitter),
+      pan,
+    };
+  }
+
+  // 4. Cherry MX Red — Matched Upstroke Synthesis & Row Modeling
+  if (packId === 'cherrymx-red-abs') {
+    let pressSlice: [number, number];
+    let releaseSlice: [number, number];
+    let pitchMultiplier = 1.0;
+
+    if (channel === 'enter') {
+      pressSlice = CHERRY_MX_SLICES.press_enter;
+      releaseSlice = CHERRY_MX_SLICES.release_enter;
+    } else if (channel === 'space') {
+      pressSlice = CHERRY_MX_SLICES.press_space;
+      releaseSlice = CHERRY_MX_SLICES.release_space;
+    } else if (channel === 'back') {
+      pressSlice = CHERRY_MX_SLICES.press_back;
+      releaseSlice = CHERRY_MX_SLICES.release_back;
+    } else {
+      // Cycle through 3 variations
+      const lastVar = activeKeyVariations.get(code) ?? Math.floor(Math.random() * 3);
+      const nextVar = (lastVar + 1) % 3;
+      activeKeyVariations.set(code, nextVar);
+
+      pressSlice = CHERRY_MX_SLICES[`press_standard_${nextVar + 1}`] ?? CHERRY_MX_SLICES.press_standard_1;
+      // Matched upstroke: release sound corresponds directly to the struck switch take!
+      releaseSlice = CHERRY_MX_SLICES[`release_standard_${nextVar + 1}`] ?? CHERRY_MX_SLICES.release_standard_1;
+
+      const rowCents = [30, 18, 8, 0, -15, -20][pos.row] ?? 0;
+      pitchMultiplier = Math.pow(2, rowCents / 1200);
+    }
+
+      return {
+        spriteUrl: SOUNDPACK_SPRITE_FILES['cherrymx-red-abs'],
+        pressSlice,
+        releaseSlice,
+        playbackRate: pitchMultiplier * (1.0 + jitter),
+        pan,
+      };
+    }
+
+    // 5. KeyEcho Official Soundpacks (18 profiles)
+    if (KEYECHO_PACK_SLICES[packId]) {
+      const packSlices = KEYECHO_PACK_SLICES[packId];
+      let pressSlice = packSlices[code];
+      if (!pressSlice) {
+        if (channel === 'enter' && packSlices.Enter) pressSlice = packSlices.Enter;
+        else if (channel === 'space' && packSlices.Space) pressSlice = packSlices.Space;
+        else if (channel === 'back' && (packSlices.Backspace || packSlices.Delete)) {
+          pressSlice = packSlices.Backspace || packSlices.Delete;
+        } else {
+          pressSlice = packSlices.KeyA || packSlices.Space || Object.values(packSlices)[0];
+        }
+      }
+
+      // Synthesize matched mechanical release acoustic:
+      // Extract the keycap release transient (first 25-32ms of the switch take)
+      const [startMs, durMs] = pressSlice;
+      const releaseDuration = Math.min(Math.max(durMs, 10), 32);
+      const releaseSlice: [number, number] = [startMs, releaseDuration];
+
+      const rowCents = [24, 14, 6, 0, -12, -18][pos.row] ?? 0;
+      const pitchMultiplier = Math.pow(2, rowCents / 1200);
+
+      return {
+        spriteUrl: SOUNDPACK_SPRITE_FILES[packId] || `/sounds/packs/${packId}.ogg`,
+        pressSlice,
+        releaseSlice,
+        playbackRate: pitchMultiplier * (1.0 + jitter),
+        pan,
+      };
+    }
+
+    // Fallback
+    return {
+      spriteUrl: SOUNDPACK_SPRITE_FILES['keyb-switch'],
+      pressSlice: SOUND_DEFINES_DOWN.KeyA,
+      releaseSlice: SOUND_DEFINES_UP.KeyA,
+      playbackRate: 1.0,
+      pan: 0.0,
+    };
+  }
+
+  export async function playKeyPress(key: string, code: string) {
+    if (!currentSettings.enabled || currentSettings.volume <= 0) return;
+
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const packId = currentSettings.activePack;
+    const acoustic = resolveKeyAcoustics(packId, key, code);
+
+    const buffer =
+      bufferCache.get(acoustic.spriteUrl) || (await fetchAndDecode(ctx, acoustic.spriteUrl));
     if (!buffer) return;
 
+    // Stop any voice previously playing for this specific key with a 3ms ramp
     if (activeKeyVoices.has(code)) {
       stopVoice(activeKeyVoices.get(code) || null, ctx, 3);
       activeKeyVoices.delete(code);
     }
 
-    const [startMs, durationMs] = soundDef;
-    const voice = playBufferSlice(buffer, startMs / 1000, durationMs / 1000, currentSettings.volume);
+    // Cache acoustic info so keyup release matches this stroke perfectly
+    activeKeyAcoustics.set(code, acoustic);
+
+    const [startMs, durationMs] = acoustic.pressSlice;
+    const voice = playBufferSlice(
+      buffer,
+      startMs / 1000,
+      durationMs / 1000,
+      currentSettings.volume,
+      acoustic.playbackRate,
+      acoustic.pan
+    );
+
     if (voice) {
       activeKeyVoices.set(code, voice);
     }
-    return;
   }
 
-  const manifest = MANIFESTS[currentSettings.activePack];
-  if (!manifest) return;
+  export async function playKeyRelease(key: string, code: string) {
+    if (!currentSettings.enabled || currentSettings.volume <= 0) return;
 
-  const channel = getKeyChannel(key);
+    const ctx = getAudioContext();
+    if (!ctx) return;
 
-  // Channel-specific interruption: stop ongoing sounds in the same channel
-  if (channel === 'enter') {
-    stopVoice(activeEnterVoice, ctx, 4);
-    activeEnterVoice = null;
-  } else if (channel === 'space') {
-    stopVoice(activeSpaceVoice, ctx, 4);
-    activeSpaceVoice = null;
-  } else if (channel === 'back') {
-    stopVoice(activeBackVoice, ctx, 4);
-    activeBackVoice = null;
-  } else {
-    // Standard keys: maintain tight 2-voice overlap, damping older voices after ~60ms
-    if (activeStandardVoices.length >= 2) {
-      const oldest = activeStandardVoices.shift();
-      stopVoice(oldest || null, ctx, 6);
-    }
-  }
-
-  // Also stop any voice previously associated with this specific key
-  if (activeKeyVoices.has(code)) {
-    stopVoice(activeKeyVoices.get(code) || null, ctx, 3);
-    activeKeyVoices.delete(code);
-  }
-
-  const url = getPressUrl(manifest, channel);
-  const buffer = bufferCache.get(url) || (await fetchAndDecode(ctx, url));
-  if (buffer) {
-    const voice = playBuffer(buffer, currentSettings.volume);
-    if (voice) {
-      activeKeyVoices.set(code, voice);
-
-      if (channel === 'enter') activeEnterVoice = voice;
-      else if (channel === 'space') activeSpaceVoice = voice;
-      else if (channel === 'back') activeBackVoice = voice;
-      else activeStandardVoices.push(voice);
-    }
-  }
-}
-
-export async function playKeyRelease(key: string, code: string) {
-  if (!currentSettings.enabled || currentSettings.volume <= 0) return;
-
-  const ctx = getAudioContext();
-  if (!ctx) return;
-
-  // Keyb mechanical audio sprite mode (default)
-  if (currentSettings.activePack === 'keyb-switch') {
+    // Damping: smoothly stop the ongoing downstroke voice with 4ms exponential ramp
     if (activeKeyVoices.has(code)) {
       stopVoice(activeKeyVoices.get(code) || null, ctx, 4);
       activeKeyVoices.delete(code);
     }
 
-    const soundDef = SOUND_DEFINES_UP[code] ?? SOUND_DEFINES_UP['KeyA'];
-    if (!soundDef) return;
+    // Retrieve cached acoustics for this stroke (or resolve fresh if missing)
+    const acoustic =
+      activeKeyAcoustics.get(code) ??
+      resolveKeyAcoustics(currentSettings.activePack, key, code);
+    activeKeyAcoustics.delete(code);
 
-    const buffer = bufferCache.get('/sounds/sound.ogg') || (await fetchAndDecode(ctx, '/sounds/sound.ogg'));
+    const buffer =
+      bufferCache.get(acoustic.spriteUrl) || (await fetchAndDecode(ctx, acoustic.spriteUrl));
     if (!buffer) return;
 
-    const [startMs, durationMs] = soundDef;
-    playBufferSlice(buffer, startMs / 1000, durationMs / 1000, currentSettings.volume * 0.88);
-    return;
+    const [startMs, durationMs] = acoustic.releaseSlice;
+    const isKeyEcho = Boolean(KEYECHO_PACK_SLICES[currentSettings.activePack]);
+    const releaseVol = isKeyEcho
+      ? currentSettings.volume * 0.32
+      : currentSettings.volume * 0.86;
+    const releaseRate = isKeyEcho
+      ? acoustic.playbackRate * 1.12
+      : acoustic.playbackRate;
+
+    playBufferSlice(
+      buffer,
+      startMs / 1000,
+      durationMs / 1000,
+      releaseVol,
+      releaseRate,
+      acoustic.pan
+    );
   }
 
-  const manifest = MANIFESTS[currentSettings.activePack];
-  if (!manifest) return;
+  /** Play a test sound for modal previews */
+  export async function playSamplePreview(
+    packId: SoundpackId,
+    type: 'enter' | 'space' | 'standard' | 'back' = 'enter'
+  ) {
+    const ctx = getAudioContext();
+    if (!ctx) return;
 
-  const channel = getKeyChannel(key);
-
-  // Instantly damp the ongoing press sound of this key so release clack takes over cleanly
-  if (activeKeyVoices.has(code)) {
-    stopVoice(activeKeyVoices.get(code) || null, ctx, 4);
-    activeKeyVoices.delete(code);
-  }
-
-  // Also damp channel press if still playing
-  if (channel === 'enter' && activeEnterVoice) {
-    stopVoice(activeEnterVoice, ctx, 4);
-    activeEnterVoice = null;
-  } else if (channel === 'space' && activeSpaceVoice) {
-    stopVoice(activeSpaceVoice, ctx, 4);
-    activeSpaceVoice = null;
-  } else if (channel === 'back' && activeBackVoice) {
-    stopVoice(activeBackVoice, ctx, 4);
-    activeBackVoice = null;
-  }
-
-  const url = getReleaseUrl(manifest, channel);
-  const buffer = bufferCache.get(url) || (await fetchAndDecode(ctx, url));
-  if (buffer) {
-    // Release sounds are slightly softer (~88% volume)
-    const voice = playBuffer(buffer, currentSettings.volume * 0.88);
-    if (voice) {
-      if (channel === 'enter') activeEnterVoice = voice;
-      else if (channel === 'space') activeSpaceVoice = voice;
-      else if (channel === 'back') activeBackVoice = voice;
-    }
-  }
-}
-
-/** Play a test sound for modal previews */
-export async function playSamplePreview(
-  packId: SoundpackId,
-  type: 'enter' | 'space' | 'standard' | 'back' = 'enter'
-) {
-  const ctx = getAudioContext();
-  if (!ctx) return;
-
-  // Keyb mechanical audio sprite preview
-  if (packId === 'keyb-switch') {
-    const code =
+    const sampleKey =
+      type === 'enter'
+        ? 'Enter'
+        : type === 'space'
+        ? ' '
+        : type === 'back'
+        ? 'Backspace'
+        : 'a';
+    const sampleCode =
       type === 'enter'
         ? 'Enter'
         : type === 'space'
@@ -567,42 +606,46 @@ export async function playSamplePreview(
         : type === 'back'
         ? 'Backspace'
         : 'KeyA';
-    const downDef = SOUND_DEFINES_DOWN[code] ?? SOUND_DEFINES_DOWN['Enter'];
-    const upDef = SOUND_DEFINES_UP[code] ?? SOUND_DEFINES_UP['Enter'];
-    const buffer = bufferCache.get('/sounds/sound.ogg') || (await fetchAndDecode(ctx, '/sounds/sound.ogg'));
-    if (buffer) {
-      playBufferSlice(buffer, downDef[0] / 1000, downDef[1] / 1000, currentSettings.volume);
-      setTimeout(() => {
-        playBufferSlice(buffer, upDef[0] / 1000, upDef[1] / 1000, currentSettings.volume * 0.88);
-      }, downDef[1] + 15);
-    }
-    return;
+
+    const acoustic = resolveKeyAcoustics(packId, sampleKey, sampleCode);
+    const buffer =
+      bufferCache.get(acoustic.spriteUrl) || (await fetchAndDecode(ctx, acoustic.spriteUrl));
+    if (!buffer) return;
+
+    const [downStartMs, downDurMs] = acoustic.pressSlice;
+    const [upStartMs, upDurMs] = acoustic.releaseSlice;
+
+    const voice = playBufferSlice(
+      buffer,
+      downStartMs / 1000,
+      downDurMs / 1000,
+      currentSettings.volume,
+      acoustic.playbackRate,
+      acoustic.pan
+    );
+
+    setTimeout(() => {
+      if (voice) {
+        stopVoice(voice, ctx, 4);
+      }
+      const isKeyEcho = Boolean(KEYECHO_PACK_SLICES[packId]);
+      const releaseVol = isKeyEcho
+        ? currentSettings.volume * 0.32
+        : currentSettings.volume * 0.86;
+      const releaseRate = isKeyEcho
+        ? acoustic.playbackRate * 1.12
+        : acoustic.playbackRate;
+
+      playBufferSlice(
+        buffer,
+        upStartMs / 1000,
+        upDurMs / 1000,
+        releaseVol,
+        releaseRate,
+        acoustic.pan
+      );
+    }, downDurMs + 15);
   }
-
-  const manifest = MANIFESTS[packId];
-  if (!manifest) return;
-
-  const channel: KeyChannel = type;
-  const pressUrl = getPressUrl(manifest, channel);
-  const releaseUrl = getReleaseUrl(manifest, channel);
-
-  // Play press immediately, then release 85ms later with clean transition
-  const pressBuf = bufferCache.get(pressUrl) || (await fetchAndDecode(ctx, pressUrl));
-  let pressVoice: ActiveVoice | null = null;
-  if (pressBuf) {
-    pressVoice = playBuffer(pressBuf, currentSettings.volume);
-  }
-
-  setTimeout(async () => {
-    if (pressVoice) {
-      stopVoice(pressVoice, ctx, 4);
-    }
-    const releaseBuf = bufferCache.get(releaseUrl) || (await fetchAndDecode(ctx, releaseUrl));
-    if (releaseBuf) {
-      playBuffer(releaseBuf, currentSettings.volume * 0.88);
-    }
-  }, 85);
-}
 
 // ══════════════════════════════════════════════════════════════════════
 // GLOBAL KEYSTROKE EVENT LISTENER
@@ -643,14 +686,12 @@ export function setupGlobalKeySoundListener(): () => void {
   };
 
   const handleKeyUp = (e: KeyboardEvent) => {
-    // If the key wasn't registered as pressed, ignore
     if (!activeDownKeys.has(e.code)) {
       return;
     }
 
     activeDownKeys.delete(e.code);
 
-    // Ignore modifier key releases
     if (MODIFIER_KEYS.has(e.key)) {
       return;
     }

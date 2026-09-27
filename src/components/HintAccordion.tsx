@@ -26,8 +26,8 @@ export default function HintAccordion({ hints }: HintAccordionProps) {
 
 function HintItem({ idx, hint }: { idx: number; hint: string }) {
   return (
-    <details className="group border border-[var(--border-subtle)] rounded-xl bg-[var(--surface-base)] shadow-[var(--card-shadow)] overflow-hidden transition-colors">
-      <summary className="flex items-center justify-between px-3.5 py-2.5 text-xs font-mono text-[var(--text-muted)] cursor-pointer select-none hover:text-[var(--text-main)] transition-colors list-none [&::-webkit-details-marker]:hidden apple-press">
+    <details className="group border border-[var(--border-subtle)] rounded-xl bg-[var(--surface-base)] overflow-hidden transition-colors">
+      <summary className="flex items-center justify-between px-3.5 py-2.5 text-xs font-mono text-[var(--text-muted)] cursor-pointer select-none hover:text-[var(--text-main)] transition-colors list-none [&::-webkit-details-marker]:hidden mimo-press">
         <span className="flex items-center gap-2">
           <ChevronRight className="w-3.5 h-3.5 text-[var(--text-tertiary)] group-open:rotate-90 group-open:text-[var(--accent-amber)] transition-transform duration-200" />
           <span className="font-medium text-[var(--text-main)]">Hint {String(idx + 1).padStart(2, "0")}</span>

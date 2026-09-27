@@ -179,3 +179,159 @@ export const SOUND_DEFINES_UP: Record<string, [number, number]> = {
   ArrowRight: [37586 + 88, 72],
   AltRight: [35878 + 90, 74],
 };
+
+// ══════════════════════════════════════════════════════════════════════
+// COMPILED AUDIO SPRITE SLICE MANIFESTS FOR REMASTERED PACKS
+// ══════════════════════════════════════════════════════════════════════
+
+export const HOLY_PANDA_SLICES: Record<string, [number, number]> = {
+  press_key1: [0, 64],
+  press_key2: [104, 64],
+  press_key3: [209, 64],
+  press_key4: [313, 64],
+  press_key5: [417, 64],
+  press_space: [521, 290],
+  press_enter: [852, 66],
+  press_back: [958, 65],
+  release_standard: [1063, 51],
+  release_space: [1154, 11],
+  release_enter: [1205, 19],
+  release_back: [1264, 46],
+};
+
+export const CREAM_TRAVEL_SLICES: Record<string, [number, number]> = {
+  press_row_0: [0, 68],
+  press_row_1: [108, 68],
+  press_row_2: [217, 69],
+  press_row_3: [326, 68],
+  press_row_4: [434, 69],
+  press_space: [542, 66],
+  press_enter: [648, 74],
+  press_back: [762, 65],
+  release_standard: [868, 63],
+  release_space: [970, 69],
+  release_enter: [1079, 71],
+  release_back: [1190, 46],
+};
+
+export const CHERRY_MX_SLICES: Record<string, [number, number]> = {
+  press_standard_1: [0, 157],
+  release_standard_1: [197, 55],
+  press_standard_2: [292, 174],
+  release_standard_2: [506, 55],
+  press_standard_3: [601, 163],
+  release_standard_3: [804, 55],
+  press_space: [899, 219],
+  release_space: [1158, 55],
+  press_enter: [1253, 184],
+  release_enter: [1477, 55],
+  press_back: [1572, 223],
+  release_back: [1835, 55],
+};
+
+export interface PhysicalKeyPosition {
+  row: number; // 0 = Function, 1 = Number, 2 = QWERTY, 3 = Home/ASDF, 4 = Bottom/ZXCV, 5 = Space/Mods
+  col: number; // -1.0 (far left) to +1.0 (far right)
+  isStabilized?: boolean;
+}
+
+export const KEYBOARD_PHYSICAL_LAYOUT: Record<string, PhysicalKeyPosition> = {
+  // Row 0: Function & Esc
+  Escape: { row: 0, col: -0.95 },
+  F1: { row: 0, col: -0.75 },
+  F2: { row: 0, col: -0.62 },
+  F3: { row: 0, col: -0.49 },
+  F4: { row: 0, col: -0.36 },
+  F5: { row: 0, col: -0.18 },
+  F6: { row: 0, col: -0.05 },
+  F7: { row: 0, col: 0.08 },
+  F8: { row: 0, col: 0.21 },
+  F9: { row: 0, col: 0.38 },
+  F10: { row: 0, col: 0.51 },
+  F11: { row: 0, col: 0.64 },
+  F12: { row: 0, col: 0.77 },
+  Delete: { row: 0, col: 0.95 },
+
+  // Row 1: Numbers & Backspace
+  Backquote: { row: 1, col: -0.95 },
+  Digit1: { row: 1, col: -0.82 },
+  Digit2: { row: 1, col: -0.69 },
+  Digit3: { row: 1, col: -0.56 },
+  Digit4: { row: 1, col: -0.43 },
+  Digit5: { row: 1, col: -0.3 },
+  Digit6: { row: 1, col: -0.17 },
+  Digit7: { row: 1, col: -0.04 },
+  Digit8: { row: 1, col: 0.09 },
+  Digit9: { row: 1, col: 0.22 },
+  Digit0: { row: 1, col: 0.35 },
+  Minus: { row: 1, col: 0.48 },
+  Equal: { row: 1, col: 0.61 },
+  Backspace: { row: 1, col: 0.88, isStabilized: true },
+
+  // Row 2: Tab & QWERTY
+  Tab: { row: 2, col: -0.92, isStabilized: true },
+  KeyQ: { row: 2, col: -0.78 },
+  KeyW: { row: 2, col: -0.65 },
+  KeyE: { row: 2, col: -0.52 },
+  KeyR: { row: 2, col: -0.39 },
+  KeyT: { row: 2, col: -0.26 },
+  KeyY: { row: 2, col: -0.13 },
+  KeyU: { row: 2, col: 0.0 },
+  KeyI: { row: 2, col: 0.13 },
+  KeyO: { row: 2, col: 0.26 },
+  KeyP: { row: 2, col: 0.39 },
+  BracketLeft: { row: 2, col: 0.52 },
+  BracketRight: { row: 2, col: 0.65 },
+  Backslash: { row: 2, col: 0.82 },
+
+  // Row 3: Caps & Home Row (ASDF)
+  CapsLock: { row: 3, col: -0.92, isStabilized: true },
+  KeyA: { row: 3, col: -0.75 },
+  KeyS: { row: 3, col: -0.62 },
+  KeyD: { row: 3, col: -0.49 },
+  KeyF: { row: 3, col: -0.36 },
+  KeyG: { row: 3, col: -0.23 },
+  KeyH: { row: 3, col: -0.1 },
+  KeyJ: { row: 3, col: 0.03 },
+  KeyK: { row: 3, col: 0.16 },
+  KeyL: { row: 3, col: 0.29 },
+  Semicolon: { row: 3, col: 0.42 },
+  Quote: { row: 3, col: 0.55 },
+  Enter: { row: 3, col: 0.86, isStabilized: true },
+
+  // Row 4: Shift & Bottom Row (ZXCV)
+  ShiftLeft: { row: 4, col: -0.9, isStabilized: true },
+  KeyZ: { row: 4, col: -0.72 },
+  KeyX: { row: 4, col: -0.59 },
+  KeyC: { row: 4, col: -0.46 },
+  KeyV: { row: 4, col: -0.33 },
+  KeyB: { row: 4, col: -0.2 },
+  KeyN: { row: 4, col: -0.07 },
+  KeyM: { row: 4, col: 0.06 },
+  Comma: { row: 4, col: 0.19 },
+  Period: { row: 4, col: 0.32 },
+  Slash: { row: 4, col: 0.45 },
+  ShiftRight: { row: 4, col: 0.82, isStabilized: true },
+  ArrowUp: { row: 4, col: 0.72 },
+
+  // Row 5: Modifiers, Space, Navigation
+  ControlLeft: { row: 5, col: -0.92 },
+  AltLeft: { row: 5, col: -0.7 },
+  MetaLeft: { row: 5, col: -0.55 },
+  Space: { row: 5, col: 0.0, isStabilized: true },
+  MetaRight: { row: 5, col: 0.42 },
+  AltRight: { row: 5, col: 0.55 },
+  ControlRight: { row: 5, col: 0.68 },
+  ArrowLeft: { row: 5, col: 0.6 },
+  ArrowDown: { row: 5, col: 0.72 },
+  ArrowRight: { row: 5, col: 0.84 },
+  Home: { row: 2, col: 0.95 },
+  End: { row: 4, col: 0.95 },
+  PageUp: { row: 1, col: 0.95 },
+  PageDown: { row: 3, col: 0.95 },
+};
+
+export function getKeyPhysicalPosition(code: string): PhysicalKeyPosition {
+  return KEYBOARD_PHYSICAL_LAYOUT[code] ?? { row: 3, col: 0.0 };
+}
+

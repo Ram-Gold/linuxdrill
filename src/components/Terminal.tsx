@@ -569,7 +569,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                 className={`rounded-lg px-2 py-0.5 text-[11px] font-mono font-medium ${
                   isRoot
                     ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-                    : "bg-[var(--surface-base)] text-[var(--accent-cyan)] border border-[var(--border-subtle)]"
+                    : "bg-[var(--surface-base)] text-[var(--accent-primary-soft)] border border-[var(--border-subtle)]"
                 }`}
               >
                 {shell.session.username}@{shell.session.hostname}:{displayCwd}
@@ -599,7 +599,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                 e.stopPropagation();
                 onVerify(shell);
               }}
-              className="flex items-center space-x-1.5 rounded-lg bg-[var(--accent-green)] hover:brightness-110 px-3 py-1 text-xs font-semibold text-white shadow-sm transition-all cursor-pointer apple-press"
+              className="btn-mimo-primary h-7 px-2.5 text-xs"
               title="Verify if solution meets problem requirements"
             >
               <CheckSquare className="w-3.5 h-3.5" />
@@ -613,9 +613,9 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                 e.stopPropagation();
                 handleRunSetup();
               }}
-              className={`flex items-center space-x-1.5 rounded-lg px-2.5 py-1 text-[11px] font-mono transition-colors cursor-pointer border apple-press ${
+              className={`flex items-center space-x-1.5 rounded-lg px-2.5 py-1 text-[11px] font-mono transition-colors cursor-pointer border mimo-press ${
                 setupRun
-                  ? "bg-[var(--accent-green-bg)] text-[var(--accent-green)] border-[var(--accent-green)]/30"
+                  ? "bg-[var(--accent-green-bg)] text-[var(--accent-green)] border-[var(--accent-green)]/30 font-medium"
                   : "bg-[var(--surface-base)] hover:bg-[var(--surface-active)] text-[var(--accent-amber)] border-[var(--border-subtle)]"
               }`}
               title="Execute challenge setup script"
@@ -639,7 +639,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               e.stopPropagation();
               handleReset();
             }}
-            className="flex items-center space-x-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono apple-press"
+            className="flex items-center space-x-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
             title="Reset VM State"
           >
             <RotateCcw className="w-3 h-3" />
@@ -651,7 +651,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               e.stopPropagation();
               handleCopy();
             }}
-            className="flex items-center space-x-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono apple-press"
+            className="flex items-center space-x-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
             title="Copy Terminal Output"
           >
             {copied ? (
@@ -672,7 +672,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               e.stopPropagation();
               setIsMaximized(!isMaximized);
             }}
-            className="flex items-center space-x-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] apple-press"
+            className="flex items-center space-x-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] mimo-press"
             title={isMaximized ? "Restore Split View" : "Maximize Terminal"}
           >
             {isMaximized ? (

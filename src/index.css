@@ -73,8 +73,8 @@
   --modal-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 
   /* Scrollbars */
-  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.24);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.22);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.38);
 
   /* Terminal */
   --terminal-outer-bg: #1a1d3a;
@@ -129,8 +129,8 @@
   --card-shadow: none;
   --modal-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
 
-  --scrollbar-thumb: rgba(0, 0, 0, 0.12);
-  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.24);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.38);
 
   --terminal-outer-bg: #ffffff;
   --terminal-header-bg: #eeedf5;
@@ -146,7 +146,45 @@ body {
   margin: 0;
   padding: 0;
   letter-spacing: -0.011em;
-  transition: background-color 120ms ease, color 120ms ease;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CIRCULAR REVEAL THEME TRANSITION (View Transitions API)
+   Reference: https://jamiewarburton.dev/writing/building-a-cool-circular-reveal-for-light-dark-mode/
+   ══════════════════════════════════════════════════════════════════ */
+html {
+  view-transition-name: root;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+  animation: 0.75s cubic-bezier(0.5, 0, 0.1, 1) theme-circle-reveal;
+}
+
+@keyframes theme-circle-reveal {
+  from {
+    clip-path: circle(0 at var(--theme-circle-x, 50vw) var(--theme-circle-y, 50vh));
+  }
+  to {
+    clip-path: circle(var(--theme-circle-radius, 150vmax) at var(--theme-circle-x, 50vw) var(--theme-circle-y, 50vh));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
 }
 
 /* Mimo typography scale */
@@ -165,10 +203,11 @@ code, kbd, pre, .font-mono {
   color: var(--accent-primary-soft) !important;
   background-color: var(--surface-subtle);
   border: 1px solid var(--border-subtle);
-  padding: 0.12em 0.38em;
-  border-radius: 4px;
+  padding: 0.14em 0.42em;
+  border-radius: 5px;
   font-weight: 500;
-  font-size: 0.875em;
+  font-size: 0.9em;
+  letter-spacing: -0.01em;
 }
 
 .prose :where(code):not(:where([class~=not-prose],[class~=not-prose] *)):before,
@@ -177,8 +216,9 @@ code, kbd, pre, .font-mono {
 }
 
 .prose :where(p):not(:where([class~=not-prose],[class~=not-prose] *)) {
-  margin-top: 0.4em;
-  margin-bottom: 0.4em;
+  margin-top: 0.45em;
+  margin-bottom: 0.45em;
+  line-height: 1.65;
 }
 
 .prose :where(p:first-child):not(:where([class~=not-prose],[class~=not-prose] *)) {
@@ -226,6 +266,30 @@ code, kbd, pre, .font-mono {
 .no-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
+}
+
+/* Subtle scrollbars for sleek inline components */
+.scrollbar-subtle {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+.scrollbar-subtle::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.scrollbar-subtle::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-subtle::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  transition: background-color 150ms ease;
+}
+.scrollbar-subtle::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+.scrollbar-subtle::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* Accessibility */

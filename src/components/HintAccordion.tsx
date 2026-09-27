@@ -66,7 +66,7 @@ function HintItem({ idx, hint }: { idx: number; hint: string }) {
             }}
             className="overflow-hidden border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]"
           >
-            <div className="px-3.5 py-3 text-xs text-[var(--text-main)] font-sans leading-relaxed select-text">
+            <div className="px-3.5 py-3 text-sm text-[var(--text-main)] font-sans leading-relaxed select-text">
               <Markdown>{hint}</Markdown>
             </div>
           </motion.div>

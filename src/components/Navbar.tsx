@@ -20,12 +20,13 @@ export default function Navbar({
   const [isSoundModalOpen, setIsSoundModalOpen] = useState(false);
   const location = useLocation();
   const isTerminal = location.pathname.startsWith("/terminal");
+  const isChallenges = location.pathname === "/";
   const { isDark, toggleTheme } = useTheme();
   const { isEnabled } = useSoundpack();
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border-subtle)] px-5 lg:px-8 transition-colors duration-120" style={{ backgroundColor: 'var(--surface-base)' }}>
-      <div className="max-w-[1200px] mx-auto h-14 flex items-center justify-between">
+      <div className={`${isChallenges ? "max-w-[1400px]" : "w-full"} mx-auto h-14 flex items-center justify-between`}>
         {/* Left: Logo */}
         <Link
           to="/"
@@ -109,7 +110,7 @@ export default function Navbar({
 
           {/* Theme toggle */}
           <button
-            onClick={toggleTheme}
+            onClick={(e) => toggleTheme(e.currentTarget)}
             className="w-9 h-9 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-subtle)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--border-strong)] transition-colors cursor-pointer mimo-press"
             title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}

@@ -135,7 +135,7 @@ export default function ProblemPage() {
   const verifyPass = verificationFeedback ? verificationFeedback.passed : isSolved;
 
   return (
-    <div className="flex flex-col gap-3 select-none max-w-[1200px] mx-auto">
+    <div className="flex flex-col gap-3 select-none w-full">
       {/* ── Toolbar ───────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[var(--border-subtle)]">
         {/* Left: Back + title */}
@@ -284,8 +284,8 @@ export default function ProblemPage() {
               <div className="flex-1 overflow-y-auto p-4 space-y-4 select-text">
                 {/* Title */}
                 <div className="pb-3 border-b border-[var(--border-subtle)]">
-                  <h2 className="text-[var(--text-main)] mb-1">{problem.title}</h2>
-                  <p className="text-xs text-[var(--text-muted)] leading-relaxed">{problem.description}</p>
+                  <h2 className="text-base sm:text-[17px] font-medium text-[var(--text-main)] mb-1">{problem.title}</h2>
+                  <p className="text-sm text-[var(--text-muted)] leading-relaxed">{problem.description}</p>
                 </div>
 
                 {/* Task */}
@@ -294,7 +294,7 @@ export default function ProblemPage() {
                     <FileText className="w-3.5 h-3.5" />
                     <span>Task</span>
                   </div>
-                  <div className="text-xs text-[var(--text-main)] leading-relaxed">
+                  <div className="text-sm text-[var(--text-main)] leading-relaxed">
                     <Markdown>{problem.task}</Markdown>
                   </div>
                 </div>
@@ -314,7 +314,7 @@ export default function ProblemPage() {
                         Run
                       </button>
                     </div>
-                    <div className="text-xs text-[var(--text-main)] leading-relaxed">
+                    <div className="text-sm text-[var(--text-main)] leading-relaxed">
                       <Markdown>{problem.setup}</Markdown>
                     </div>
                   </div>
@@ -409,12 +409,12 @@ export default function ProblemPage() {
                           copy
                         </button>
                       </div>
-                      <div className="text-xs text-[var(--text-main)]">
+                      <div className="text-sm text-[var(--text-main)]">
                         <Markdown>{problem.solution}</Markdown>
                       </div>
                       {problem.watchOut && (
-                        <div className="border-t border-[var(--border-subtle)] pt-2 text-xs text-[var(--accent-amber)]">
-                          <span className="text-[10px] uppercase tracking-wider block mb-1 font-medium">Watch out</span>
+                        <div className="border-t border-[var(--border-subtle)] pt-2 text-sm text-[var(--accent-amber)]">
+                          <span className="text-[11px] uppercase tracking-wider block mb-1 font-medium">Watch out</span>
                           <Markdown>{problem.watchOut}</Markdown>
                         </div>
                       )}
@@ -438,7 +438,7 @@ export default function ProblemPage() {
                         <HelpCircle className="w-3.5 h-3.5" />
                         <span>How It's Verified</span>
                       </div>
-                      <div className="text-xs text-[var(--text-main)]">
+                      <div className="text-sm text-[var(--text-main)]">
                         <Markdown>{problem.verify}</Markdown>
                       </div>
                     </motion.div>

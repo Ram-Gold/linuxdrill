@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Lightbulb, ChevronRight } from "lucide-react";
 import Markdown from "./Markdown";
@@ -25,30 +26,52 @@ export default function HintAccordion({ hints }: HintAccordionProps) {
 }
 
 function HintItem({ idx, hint }: { idx: number; hint: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <details className="group border border-[var(--border-subtle)] rounded-xl bg-[var(--surface-base)] overflow-hidden transition-colors">
-      <summary className="flex items-center justify-between px-3.5 py-2.5 text-xs font-mono text-[var(--text-muted)] cursor-pointer select-none hover:text-[var(--text-main)] transition-colors list-none [&::-webkit-details-marker]:hidden mimo-press">
+    <div className="border border-[var(--border-subtle)] rounded-xl bg-[var(--surface-base)] overflow-hidden transition-colors">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-expanded={isOpen}
+        className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-mono text-[var(--text-muted)] cursor-pointer select-none hover:text-[var(--text-main)] transition-colors mimo-press focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--accent-primary)]"
+      >
         <span className="flex items-center gap-2">
-          <ChevronRight className="w-3.5 h-3.5 text-[var(--text-tertiary)] group-open:rotate-90 group-open:text-[var(--accent-amber)] transition-transform duration-200" />
-          <span className="font-medium text-[var(--text-main)]">Hint {String(idx + 1).padStart(2, "0")}</span>
+          <ChevronRight
+            className={`w-3.5 h-3.5 transition-transform duration-200 ease-out ${
+              isOpen
+                ? "rotate-90 text-[var(--accent-amber)]"
+                : "rotate-0 text-[var(--text-tertiary)]"
+            }`}
+          />
+          <span className="font-medium text-[var(--text-main)]">
+            Hint {String(idx + 1).padStart(2, "0")}
+          </span>
         </span>
-        <span className="text-[var(--text-tertiary)] text-[10px] group-open:hidden">click to reveal</span>
-      </summary>
+        <span className="text-[var(--text-tertiary)] text-[10px] transition-opacity duration-150">
+          {isOpen ? "click to hide" : "click to reveal"}
+        </span>
+      </button>
 
       <AnimatePresence initial={false}>
-        <motion.div
-          key="content"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ type: "spring", damping: 26, stiffness: 320 }}
-          className="overflow-hidden border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]"
-        >
-          <div className="px-3.5 py-3 text-xs text-[var(--text-main)] font-sans leading-relaxed select-text">
-            <Markdown>{hint}</Markdown>
-          </div>
-        </motion.div>
+        {isOpen && (
+          <motion.div
+            key="content"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{
+              height: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
+              opacity: { duration: 0.16, ease: "easeOut" },
+            }}
+            className="overflow-hidden border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]"
+          >
+            <div className="px-3.5 py-3 text-xs text-[var(--text-main)] font-sans leading-relaxed select-text">
+              <Markdown>{hint}</Markdown>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
-    </details>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Search, X, RotateCcw } from "lucide-react";
+import { motion } from "motion/react";
 import { problems } from "../lib/problems";
 import { useProgress } from "../lib/useProgress";
 import { type Category, type Difficulty, CATEGORY_INFO } from "../lib/types";
@@ -160,14 +161,21 @@ export default function Home() {
                 <button
                   key={diff.id}
                   onClick={() => setSelectedDifficulty(diff.id)}
-                  className={`px-3 py-1 rounded-full border text-xs font-mono transition-colors cursor-pointer mimo-press flex items-center gap-1.5 ${
+                  className={`relative px-3 py-1 rounded-full border text-xs font-mono transition-colors cursor-pointer mimo-press flex items-center gap-1.5 ${
                     active
-                      ? "bg-[var(--accent-primary)] border-[var(--accent-primary)] text-white font-medium"
+                      ? "border-[var(--accent-primary)] text-white font-medium"
                       : "bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-main)]"
                   }`}
                 >
-                  {diff.color && <span className={`w-1.5 h-1.5 rounded-full ${diff.color}`} />}
-                  <span>{diff.label}</span>
+                  {active && (
+                    <motion.div
+                      layoutId="difficulty-active-pill"
+                      transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                      className="absolute inset-0 bg-[var(--accent-primary)] rounded-full -z-10"
+                    />
+                  )}
+                  {diff.color && <span className={`w-1.5 h-1.5 rounded-full ${diff.color} relative z-10`} />}
+                  <span className="relative z-10">{diff.label}</span>
                 </button>
               );
             })}

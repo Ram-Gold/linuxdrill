@@ -36,27 +36,42 @@ export default function Navbar({
           </span>
         </Link>
 
-        {/* Center: Minimal nav links */}
-        <nav className="flex items-center gap-4 sm:gap-6">
+        {/* Center: Sliding mode pill segmented control */}
+        <nav className="relative flex items-center p-1 rounded-xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)]">
           <Link
             to="/"
-            className={`text-sm transition-colors py-1 ${
+            className={`relative px-3.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer mimo-press ${
               !isTerminal
-                ? "text-[var(--text-main)] font-semibold border-b-2 border-[var(--accent-primary)]"
+                ? "text-[var(--text-main)] font-semibold"
                 : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
             }`}
           >
-            Challenges
+            {!isTerminal && (
+              <motion.div
+                layoutId="navbar-mode-pill"
+                transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                className="absolute inset-0 bg-[var(--surface-base)] rounded-lg border border-[var(--border-strong)] shadow-xs"
+              />
+            )}
+            <span className="relative z-10">Challenges</span>
           </Link>
+
           <Link
             to="/terminal"
-            className={`text-sm transition-colors py-1 ${
+            className={`relative px-3.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer mimo-press ${
               isTerminal
-                ? "text-[var(--text-main)] font-semibold border-b-2 border-[var(--accent-primary)]"
+                ? "text-[var(--text-main)] font-semibold"
                 : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
             }`}
           >
-            Sandbox
+            {isTerminal && (
+              <motion.div
+                layoutId="navbar-mode-pill"
+                transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                className="absolute inset-0 bg-[var(--surface-base)] rounded-lg border border-[var(--border-strong)] shadow-xs"
+              />
+            )}
+            <span className="relative z-10">Sandbox</span>
           </Link>
         </nav>
 

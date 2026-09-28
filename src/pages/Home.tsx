@@ -73,10 +73,10 @@ export default function Home() {
               <span className="text-[var(--text-main)] font-semibold">{solvedCount}</span>
               <span>/{totalCount} completed</span>
               <span className="text-[var(--text-tertiary)]"> ({progressPercent}%)</span>
-              <span className="mx-1.5 text-[var(--border-strong)]">·</span>
+              <span className="mx-1.5 text-[var(--text-tertiary)]">·</span>
               <span className="text-[var(--accent-amber)] font-medium">{totalPoints} pts</span>
             </div>
-            <div className="w-48 h-1.5 rounded-full bg-[var(--surface-subtle)] overflow-hidden border border-[var(--border-subtle)]">
+            <div className="w-48 h-2 rounded-full bg-[var(--surface-subtle)] overflow-hidden">
               <div
                 className="h-full bg-[var(--accent-primary)] transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
@@ -84,7 +84,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="h-px w-full bg-[var(--border-subtle)]" />
       </div>
 
       {/* Filter Action Bar (Unified Compact UX) */}
@@ -110,7 +109,7 @@ export default function Home() {
           hasActiveSearchOrFilter={Boolean(hasActiveFilter)}
         />
       ) : (
-        <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-base)] p-12 text-center max-w-lg mx-auto">
+        <div className="rounded-2xl bg-[var(--surface-base)] p-12 text-center max-w-lg mx-auto">
           <p className="text-sm text-[var(--text-muted)] mb-4">
             No challenges match your current search and filters.
           </p>

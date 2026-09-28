@@ -362,7 +362,7 @@ export function SoundSettingsModal({ isOpen, onClose }: SoundSettingsModalProps)
                   aria-haspopup="listbox"
                   className={`h-11 px-3.5 rounded-xl flex items-center justify-between gap-2.5 transition-all cursor-pointer font-mono text-xs w-full text-left border-0 ${
                     isDropdownOpen
-                      ? "bg-[var(--surface-active)] ring-2 ring-[var(--accent-primary)] text-[var(--text-main)] shadow-sm"
+                      ? "bg-[var(--surface-active)] text-[var(--text-main)] shadow-sm"
                       : "bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
                   }`}
                 >

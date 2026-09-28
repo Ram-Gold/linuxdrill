@@ -42,25 +42,25 @@ export default function SuccessConfirmation({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 8 }}
         transition={{ type: "spring", damping: 26, stiffness: 320 }}
-        className="relative w-full max-w-lg rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-base)] p-6 sm:p-7 shadow-[var(--modal-shadow)] text-[var(--text-main)]"
+        className="relative w-full max-w-lg rounded-2xl bg-[var(--surface-base)] p-6 sm:p-7 shadow-[var(--modal-shadow)] text-[var(--text-main)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
           aria-label="Close dialog"
-          className="absolute top-4 right-4 h-7 w-7 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)] flex items-center justify-center transition-colors cursor-pointer mimo-press"
+          className="absolute top-4 right-4 h-7 w-7 rounded-lg bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)] flex items-center justify-center transition-colors cursor-pointer mimo-press"
         >
           <X className="w-3.5 h-3.5" />
         </button>
 
         {/* Badge & Icon */}
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--accent-green-bg)] border border-[var(--accent-green)]/20 text-[var(--accent-green)] mb-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--accent-green-bg)] text-[var(--accent-green)] mb-3">
             <CheckCircle2 className="w-6 h-6" />
           </div>
 
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent-green)]/20 bg-[var(--accent-green-bg)] px-3 py-0.5 text-[11px] font-mono font-medium text-[var(--accent-green)] mb-2">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent-green-bg)] px-3 py-1 text-[11px] font-mono font-medium text-[var(--accent-green)] mb-2">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-green)]" />
             <span>VERIFICATION PASSED</span>
           </div>
@@ -73,7 +73,7 @@ export default function SuccessConfirmation({
           </p>
 
           {/* Points Highlight */}
-          <div className="w-full flex items-center justify-around rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] py-3 px-4 mb-4">
+          <div className="w-full flex items-center justify-around rounded-2xl bg-[var(--surface-subtle)] py-3 px-4 mb-4">
             <div className="text-center">
               <span className="block text-[10px] uppercase tracking-wider text-[var(--text-muted)] font-mono">
                 Points Earned
@@ -83,7 +83,7 @@ export default function SuccessConfirmation({
               </span>
             </div>
             {totalScore !== undefined && (
-              <div className="h-6 w-px bg-[var(--border-subtle)]" />
+              <div className="h-6 w-px bg-[var(--surface-active)]" />
             )}
             {totalScore !== undefined && (
               <div className="text-center">
@@ -99,7 +99,7 @@ export default function SuccessConfirmation({
 
           {/* Checks passed breakdown */}
           {checks.length > 0 && (
-            <div className="w-full text-left mb-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] p-3 max-h-36 overflow-y-auto">
+            <div className="w-full text-left mb-4 rounded-2xl bg-[var(--surface-subtle)] p-3.5 max-h-36 overflow-y-auto">
               <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider font-mono block mb-2">
                 Passed Verification Checks:
               </span>

@@ -7,6 +7,8 @@
 
   --color-canvas: var(--bg-canvas);
   --color-surface-base: var(--surface-base);
+  --color-surface-card: var(--surface-card);
+  --color-surface-card-hover: var(--surface-card-hover);
   --color-surface-subtle: var(--surface-subtle);
   --color-surface-elevated: var(--surface-elevated);
   --color-surface-active: var(--surface-active);
@@ -19,22 +21,24 @@
 
 /* ══════════════════════════════════════════════════════════════════
    MIMO DARK TOKENS (Primary — dark-first design)
-   Deep navy canvas, purple accents, flat depth via borders
+   Deep navy canvas, purple accents, clean borderless elevation
    ══════════════════════════════════════════════════════════════════ */
 :root, :root.dark, :root.theme-dark {
   color-scheme: dark;
 
   /* Surfaces — Mimo navy stack */
-  --bg-canvas: #1a1d3a;
-  --surface-base: #252746;
-  --surface-subtle: #2c2f53;
-  --surface-elevated: #333661;
-  --surface-active: #3f4273;
+  --bg-canvas: #151728;
+  --surface-base: #1f233a;
+  --surface-card: #141625;
+  --surface-card-hover: #1b1d31;
+  --surface-subtle: #272c48;
+  --surface-elevated: #2f3556;
+  --surface-active: #3a426b;
 
-  /* Borders — restrained blue-violet, structure over shadow */
-  --border-subtle: #3f4273;
-  --border-strong: #555893;
-  --border-dark: #333661;
+  /* Borders — completely borderless */
+  --border-subtle: transparent;
+  --border-strong: transparent;
+  --border-dark: transparent;
 
   /* Typography */
   --text-main: #ffffff;
@@ -68,35 +72,39 @@
   --accent-cyan-light: var(--accent-primary-soft);
   --accent-cyan-bg: var(--accent-primary-bg);
 
-  /* Elevation — flat, no shadows. Borders do the work. */
-  --card-shadow: none;
-  --modal-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  /* Elevation — soft diffuse shadows, no harsh borders */
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25), 0 2px 6px -1px rgba(0, 0, 0, 0.15);
+  --card-shadow-hover: 0 8px 28px -4px rgba(0, 0, 0, 0.35), 0 4px 12px -2px rgba(0, 0, 0, 0.2);
+  --modal-shadow: 0 24px 56px -8px rgba(0, 0, 0, 0.65);
 
   /* Scrollbars */
-  --scrollbar-thumb: rgba(255, 255, 255, 0.22);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.38);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.18);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
 
   /* Terminal */
-  --terminal-outer-bg: #1a1d3a;
-  --terminal-header-bg: #252746;
-  --terminal-body-bg: #111329;
+  --terminal-outer-bg: #151728;
+  --terminal-header-bg: #1c2035;
+  --terminal-body-bg: #111322;
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   MIMO LIGHT TOKENS (Secondary — for users who prefer light)
+   MIMO LIGHT TOKENS (Secondary — clean borderless iOS/Mimo light)
    ══════════════════════════════════════════════════════════════════ */
 :root.light, :root.theme-light {
   color-scheme: light;
 
-  --bg-canvas: #f4f3f8;
+  --bg-canvas: #f6f7fb;
   --surface-base: #ffffff;
-  --surface-subtle: #eeedf5;
+  --surface-card: #edeff7;
+  --surface-card-hover: #e0e3f0;
+  --surface-subtle: #eeeff6;
   --surface-elevated: #ffffff;
-  --surface-active: #e0dfe9;
+  --surface-active: #e2e4ef;
 
-  --border-subtle: #d5d4e0;
-  --border-strong: #b3b2c4;
-  --border-dark: #d5d4e0;
+  /* Borders — completely borderless */
+  --border-subtle: transparent;
+  --border-strong: transparent;
+  --border-dark: transparent;
 
   --text-main: #1a1d3a;
   --text-muted: #6b6e8a;
@@ -126,14 +134,15 @@
   --accent-cyan-light: var(--accent-primary-soft);
   --accent-cyan-bg: var(--accent-primary-bg);
 
-  --card-shadow: none;
-  --modal-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+  --card-shadow: 0 4px 16px -2px rgba(26, 29, 58, 0.05), 0 2px 6px -1px rgba(26, 29, 58, 0.03);
+  --card-shadow-hover: 0 8px 24px -4px rgba(26, 29, 58, 0.08), 0 4px 10px -2px rgba(26, 29, 58, 0.04);
+  --modal-shadow: 0 20px 48px -8px rgba(26, 29, 58, 0.14), 0 6px 16px -2px rgba(26, 29, 58, 0.07);
 
-  --scrollbar-thumb: rgba(0, 0, 0, 0.2);
-  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.38);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
 
   --terminal-outer-bg: #ffffff;
-  --terminal-header-bg: #eeedf5;
+  --terminal-header-bg: #eeeff6;
   --terminal-body-bg: #111329;
 }
 
@@ -154,14 +163,16 @@
   /* Surfaces — Catppuccin Mocha hierarchy */
   --bg-canvas: #1e1e2e;
   --surface-base: #181825;
+  --surface-card: #11111b;
+  --surface-card-hover: #161622;
   --surface-subtle: #313244;
   --surface-elevated: #313244;
   --surface-active: #45475a;
 
-  /* Borders — Catppuccin Mocha structure */
-  --border-subtle: #313244;
-  --border-strong: #45475a;
-  --border-dark: #181825;
+  /* Borders — completely borderless */
+  --border-subtle: transparent;
+  --border-strong: transparent;
+  --border-dark: transparent;
 
   /* Typography */
   --text-main: #cdd6f4;
@@ -196,7 +207,8 @@
   --accent-cyan-bg: var(--accent-primary-bg);
 
   /* Elevation */
-  --card-shadow: none;
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25), 0 2px 6px -1px rgba(0, 0, 0, 0.15);
+  --card-shadow-hover: 0 8px 28px -4px rgba(0, 0, 0, 0.35);
   --modal-shadow: 0 20px 40px rgba(0, 0, 0, 0.55);
 
   /* Scrollbars */
@@ -217,7 +229,7 @@
    - Base/Nav: dark0 (#282828)
    - Subtle/Elevated: dark0_soft (#32302f) / dark1 (#3c3836)
    - Active: dark2 (#504945)
-   - Borders: dark1 (#3c3836) & dark2 (#504945)
+   - Borders: transparent
    - Text: light1 (#ebdbb2), light4 (#a89984), gray (#928374)
    - Primary Accent: bright_orange (#fe8019) & bright_yellow (#fabd2f)
    ══════════════════════════════════════════════════════════════════ */
@@ -228,14 +240,16 @@
   /* Surfaces — Gruvbox dark stack */
   --bg-canvas: #1d2021;
   --surface-base: #282828;
+  --surface-card: #191b1c;
+  --surface-card-hover: #212324;
   --surface-subtle: #32302f;
   --surface-elevated: #3c3836;
   --surface-active: #504945;
 
-  /* Borders */
-  --border-subtle: #3c3836;
-  --border-strong: #504945;
-  --border-dark: #282828;
+  /* Borders — completely borderless */
+  --border-subtle: transparent;
+  --border-strong: transparent;
+  --border-dark: transparent;
 
   /* Typography */
   --text-main: #ebdbb2;
@@ -270,7 +284,8 @@
   --accent-cyan-bg: rgba(142, 192, 124, 0.12);
 
   /* Elevation */
-  --card-shadow: none;
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25), 0 2px 6px -1px rgba(0, 0, 0, 0.15);
+  --card-shadow-hover: 0 8px 28px -4px rgba(0, 0, 0, 0.35);
   --modal-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
 
   /* Scrollbars */
@@ -288,7 +303,7 @@
    Official Tokyo Night Palette:
    - Canvas: #1a1b26
    - Surfaces: #24283b, #292e42, #414868
-   - Borders: #414868 & #565f89
+   - Borders: transparent
    - Typography: text (#c0caf5), subtext (#a9b1d6), muted (#565f89)
    - Primary Accent: #7aa2f7 (Tokyo Blue) & #bb9af7 (Magenta)
    - Semantic Accents: green (#9ece6a), yellow (#e0af68), red (#f7768e), orange (#ff9e64), cyan (#73daca)
@@ -300,14 +315,16 @@
   /* Surfaces — Tokyo Night stack */
   --bg-canvas: #1a1b26;
   --surface-base: #24283b;
+  --surface-card: #161620;
+  --surface-card-hover: #1e202e;
   --surface-subtle: #292e42;
   --surface-elevated: #2f3549;
   --surface-active: #414868;
 
-  /* Borders */
-  --border-subtle: #414868;
-  --border-strong: #565f89;
-  --border-dark: #1a1b26;
+  /* Borders — completely borderless */
+  --border-subtle: transparent;
+  --border-strong: transparent;
+  --border-dark: transparent;
 
   /* Typography */
   --text-main: #c0caf5;
@@ -342,7 +359,8 @@
   --accent-cyan-bg: rgba(115, 218, 202, 0.12);
 
   /* Elevation */
-  --card-shadow: none;
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25), 0 2px 6px -1px rgba(0, 0, 0, 0.15);
+  --card-shadow-hover: 0 8px 28px -4px rgba(0, 0, 0, 0.35);
   --modal-shadow: 0 20px 40px rgba(0, 0, 0, 0.65);
 
   /* Scrollbars */
@@ -361,7 +379,7 @@
    Inspired by classical Japanese woodblock prints:
    - Canvas: sumiInk3 (#1f1f28)
    - Surfaces: sumiInk1 (#181820), sumiInk4 (#2a2a37), sumiInk5 (#363646)
-   - Borders: sumiInk4 (#2a2a37) & sumiInk6 (#54546d)
+   - Borders: transparent
    - Typography: fujiWhite (#dcd7ba), oldWhite (#c8c093), fujiGray (#727169)
    - Primary Accent: oniViolet (#957fb8) & crystalBlue (#7e9cd8)
    - Semantic Accents: springGreen (#98bb6c), carpYellow (#e6c384), waveRed (#e46876), surimiOrange (#ffa066), waveAqua (#7aa89f)
@@ -373,14 +391,16 @@
   /* Surfaces — Kanagawa Wave ink stack */
   --bg-canvas: #1f1f28;          /* sumiInk3 */
   --surface-base: #181820;       /* sumiInk1 */
+  --surface-card: #121217;       /* sumiInk0 */
+  --surface-card-hover: #16161d;
   --surface-subtle: #2a2a37;     /* sumiInk4 */
   --surface-elevated: #2a2a37;   /* sumiInk4 */
   --surface-active: #363646;     /* sumiInk5 */
 
-  /* Borders */
-  --border-subtle: #2a2a37;      /* sumiInk4 */
-  --border-strong: #54546d;      /* sumiInk6 */
-  --border-dark: #181820;        /* sumiInk1 */
+  /* Borders — completely borderless */
+  --border-subtle: transparent;
+  --border-strong: transparent;
+  --border-dark: transparent;
 
   /* Typography */
   --text-main: #dcd7ba;          /* fujiWhite */
@@ -415,7 +435,8 @@
   --accent-cyan-bg: rgba(122, 168, 159, 0.12);
 
   /* Elevation */
-  --card-shadow: none;
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25), 0 2px 6px -1px rgba(0, 0, 0, 0.15);
+  --card-shadow-hover: 0 8px 28px -4px rgba(0, 0, 0, 0.35);
   --modal-shadow: 0 20px 40px rgba(0, 0, 0, 0.65);
 
   /* Scrollbars */
@@ -494,9 +515,9 @@ code, kbd, pre, .font-mono {
 .prose :where(code):not(:where([class~=not-prose],[class~=not-prose] *)) {
   color: var(--accent-primary-soft) !important;
   background-color: var(--surface-subtle);
-  border: 1px solid var(--border-subtle);
+  border: none;
   padding: 0.14em 0.42em;
-  border-radius: 5px;
+  border-radius: 6px;
   font-weight: 500;
   font-size: 0.9em;
   letter-spacing: -0.01em;
@@ -599,7 +620,7 @@ code, kbd, pre, .font-mono {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   MIMO COMPONENT SYSTEM (from design.md)
+   MIMO COMPONENT SYSTEM (Clean, borderless, elevated design)
    ══════════════════════════════════════════════════════════════════ */
 .btn-mimo-primary {
   display: inline-flex;
@@ -613,14 +634,14 @@ code, kbd, pre, .font-mono {
   color: var(--surface-base);
   font-size: 14px;
   font-weight: 600;
-  border: 1px solid transparent;
+  border: none;
   cursor: pointer;
   user-select: none;
   transition: transform 80ms ease, background-color 100ms ease, box-shadow 120ms ease;
 }
 .btn-mimo-primary:hover {
   opacity: 0.95;
-  box-shadow: 0 0 0 2px rgba(126, 75, 222, 0.4);
+  box-shadow: 0 4px 14px rgba(126, 75, 222, 0.35);
 }
 .btn-mimo-primary:active {
   transform: scale(0.98);
@@ -638,13 +659,14 @@ code, kbd, pre, .font-mono {
   color: #ffffff;
   font-size: 14px;
   font-weight: 500;
-  border: 1px solid transparent;
+  border: none;
   cursor: pointer;
   user-select: none;
-  transition: transform 80ms ease, background-color 100ms ease;
+  transition: transform 80ms ease, background-color 100ms ease, box-shadow 120ms ease;
 }
 .btn-mimo-secondary:hover {
   background-color: var(--accent-primary-hover);
+  box-shadow: 0 4px 14px rgba(126, 75, 222, 0.4);
 }
 .btn-mimo-secondary:active {
   transform: scale(0.98);
@@ -656,21 +678,20 @@ code, kbd, pre, .font-mono {
   justify-content: center;
   gap: 0.5rem;
   height: 40px;
-  padding: 0 14px;
+  padding: 0 16px;
   border-radius: 12px;
-  background-color: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
+  background-color: var(--surface-subtle);
+  border: none;
+  color: var(--text-main);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   user-select: none;
-  transition: transform 80ms ease, border-color 100ms ease, color 100ms ease, background-color 100ms ease;
+  transition: transform 80ms ease, color 100ms ease, background-color 100ms ease;
 }
 .btn-mimo-outline:hover {
-  border-color: var(--border-strong);
+  background-color: var(--surface-active);
   color: var(--text-main);
-  background-color: var(--surface-subtle);
 }
 .btn-mimo-outline:active {
   transform: scale(0.98);
@@ -693,16 +714,16 @@ code, kbd, pre, .font-mono {
 .input-mimo {
   height: 40px;
   background-color: var(--surface-subtle);
-  border: 1px solid var(--border-subtle);
+  border: none;
   color: var(--text-main);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 0 14px;
   font-size: 14px;
-  transition: border-color 120ms ease;
+  transition: box-shadow 120ms ease, background-color 120ms ease;
 }
 .input-mimo:focus {
   outline: none;
-  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-primary);
 }
 .input-mimo::placeholder {
   color: var(--text-tertiary);
@@ -710,21 +731,24 @@ code, kbd, pre, .font-mono {
 
 .card-mimo {
   background-color: var(--surface-base);
-  border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  box-shadow: none;
-  transition: border-color 120ms ease, background-color 120ms ease;
+  border: none;
+  border-radius: 18px;
+  box-shadow: var(--card-shadow);
+  transition: box-shadow 150ms ease, background-color 120ms ease;
+}
+.card-mimo:hover {
+  box-shadow: var(--card-shadow-hover);
 }
 
 .chip-mimo {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 9999px;
-  background-color: var(--surface-elevated);
+  background-color: var(--surface-subtle);
   color: var(--text-muted);
-  border: 1px solid var(--border-subtle);
+  border: none;
   font-size: 12px;
   line-height: 16px;
   cursor: pointer;
@@ -733,11 +757,10 @@ code, kbd, pre, .font-mono {
 }
 .chip-mimo:hover {
   color: var(--text-main);
-  border-color: var(--border-strong);
+  background-color: var(--surface-active);
 }
 .chip-mimo.active {
   background-color: var(--accent-primary);
-  border-color: var(--accent-primary);
   color: #ffffff;
   font-weight: 500;
 }

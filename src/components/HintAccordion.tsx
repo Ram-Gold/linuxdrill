@@ -29,7 +29,7 @@ function HintItem({ idx, hint }: { idx: number; hint: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border border-[var(--border-subtle)] rounded-xl bg-[var(--surface-base)] overflow-hidden transition-colors">
+    <div className="rounded-2xl bg-[var(--surface-base)] shadow-xs overflow-hidden transition-colors">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -64,7 +64,7 @@ function HintItem({ idx, hint }: { idx: number; hint: string }) {
               height: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
               opacity: { duration: 0.16, ease: "easeOut" },
             }}
-            className="overflow-hidden border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]"
+            className="overflow-hidden bg-[var(--surface-subtle)]"
           >
             <div className="px-3.5 py-3 text-sm text-[var(--text-main)] font-sans leading-relaxed select-text">
               <Markdown>{hint}</Markdown>

@@ -25,11 +25,11 @@ export default function TerminalPlayground() {
   return (
     <div className="space-y-6 w-full select-none">
       {/* Header Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-subtle)] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
         <div>
           <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text-main)] flex items-center gap-3 tracking-tight">
             <span>Terminal Sandbox</span>
-            <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-[var(--surface-elevated)] text-[var(--accent-primary-soft)] border border-[var(--border-subtle)] font-medium">
+            <span className="text-xs font-mono px-3 py-1 rounded-full bg-[var(--surface-elevated)] text-[var(--accent-primary-soft)] font-medium">
               CentOS 9 POSIX
             </span>
           </h1>
@@ -51,7 +51,7 @@ export default function TerminalPlayground() {
         {/* Sidebar Cards */}
         <div className="lg:col-span-4 space-y-4 text-xs text-[var(--text-muted)]">
           {/* Quick Commands Card */}
-          <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-base)] p-5 space-y-3">
+          <div className="rounded-2xl bg-[var(--surface-base)] shadow-[var(--card-shadow)] p-5 space-y-3">
             <h3 className="font-semibold text-[var(--text-main)] text-xs flex items-center gap-2">
               <TerminalIcon className="w-3.5 h-3.5 text-[var(--accent-primary-soft)]" />
               <span>Quick Commands</span>
@@ -61,7 +61,7 @@ export default function TerminalPlayground() {
                 <li
                   key={cmd}
                   onClick={() => handleCopy(cmd)}
-                  className="flex items-center justify-between bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] p-2.5 rounded-xl border border-[var(--border-subtle)] cursor-pointer transition-colors mimo-press group"
+                  className="flex items-center justify-between bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] p-2.5 rounded-xl cursor-pointer transition-colors mimo-press group"
                   title="Click to copy command"
                 >
                   <span className="text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors">{label}:</span>
@@ -79,7 +79,7 @@ export default function TerminalPlayground() {
           </div>
 
           {/* Simulator Architecture Card */}
-          <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-base)] p-5 space-y-3">
+          <div className="rounded-2xl bg-[var(--surface-base)] shadow-[var(--card-shadow)] p-5 space-y-3">
             <h3 className="font-semibold text-[var(--text-main)] text-xs flex items-center gap-2">
               <Cpu className="w-3.5 h-3.5 text-[var(--accent-green)]" />
               <span>Simulator Architecture</span>
@@ -95,7 +95,7 @@ export default function TerminalPlayground() {
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-3.5 h-3.5 text-[var(--accent-green)] shrink-0" />
-                <span>Tab auto-completion & shell history (<kbd className="font-mono text-[var(--text-main)] bg-[var(--surface-subtle)] px-1 py-0.5 rounded border border-[var(--border-subtle)]">↑/↓</kbd>)</span>
+                <span>Tab auto-completion & shell history (<kbd className="font-mono text-[var(--text-main)] bg-[var(--surface-subtle)] px-1.5 py-0.5 rounded-md">↑/↓</kbd>)</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-3.5 h-3.5 text-[var(--accent-green)] shrink-0" />

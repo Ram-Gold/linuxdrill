@@ -103,7 +103,7 @@ export default function FilterActionBar({
   return (
     <div className="space-y-2.5">
       {/* Unified Compact Control Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-1.5 bg-[var(--surface-base)] border border-[var(--border-subtle)] rounded-2xl shadow-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-1.5 bg-[var(--surface-base)] rounded-2xl">
         {/* Search input with integrated clear */}
         <div className="relative flex-1 min-w-[200px]">
           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[var(--text-tertiary)]">
@@ -114,7 +114,7 @@ export default function FilterActionBar({
             placeholder="Search drills by command (sed, grep), concept, or ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-10 bg-[var(--surface-subtle)] border border-transparent focus:border-[var(--accent-primary)] text-[var(--text-main)] text-sm rounded-xl pl-10 pr-9 placeholder-[var(--text-tertiary)] transition-colors focus:outline-none"
+            className="w-full h-10 bg-[var(--surface-subtle)] text-[var(--text-main)] text-sm rounded-xl pl-10 pr-9 placeholder-[var(--text-tertiary)] transition-all focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/40"
           />
           {searchQuery && (
             <button
@@ -136,10 +136,10 @@ export default function FilterActionBar({
                 setTopicOpen(!topicOpen);
                 setDiffOpen(false);
               }}
-              className={`h-10 px-3.5 rounded-xl border text-xs font-medium flex items-center gap-2 cursor-pointer transition-all mimo-press ${
+              className={`h-10 px-3.5 rounded-xl text-xs font-medium flex items-center gap-2 cursor-pointer transition-all mimo-press ${
                 selectedCategory !== "ALL"
-                  ? "bg-[var(--accent-primary)] border-[var(--accent-primary)] text-white shadow-sm"
-                  : "bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-main)] hover:border-[var(--border-strong)]"
+                  ? "bg-[var(--accent-primary)] text-white shadow-sm"
+                  : "bg-[var(--surface-subtle)] text-[var(--text-main)] hover:bg-[var(--surface-active)]"
               }`}
               title="Filter by topic"
             >
@@ -164,9 +164,9 @@ export default function FilterActionBar({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 4, scale: 0.98 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute left-0 sm:right-0 sm:left-auto top-full mt-2 w-64 bg-[var(--surface-base)] border border-[var(--border-strong)] rounded-2xl shadow-xl z-50 p-1.5 overflow-hidden backdrop-blur-md"
+                  className="absolute left-0 sm:right-0 sm:left-auto top-full mt-2 w-64 bg-[var(--surface-base)] rounded-2xl shadow-2xl z-50 p-2 overflow-hidden backdrop-blur-md"
                 >
-                  <div className="px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] border-b border-[var(--border-subtle)] mb-1">
+                  <div className="px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] mb-1">
                     Select Topic
                   </div>
                   <div className="max-h-72 overflow-y-auto space-y-0.5 scrollbar-subtle pr-0.5">
@@ -190,7 +190,7 @@ export default function FilterActionBar({
                             {cat.id !== "ALL" ? (
                               <CategoryIcon category={cat.id} className="w-3.5 h-3.5 shrink-0" />
                             ) : (
-                              <div className="w-3.5 h-3.5 rounded-full border border-dashed border-[var(--text-muted)] shrink-0" />
+                              <div className="w-3.5 h-3.5 rounded-full bg-[var(--surface-elevated)] shrink-0" />
                             )}
                             <span className="truncate">{cat.label}</span>
                           </div>
@@ -216,10 +216,10 @@ export default function FilterActionBar({
                 setDiffOpen(!diffOpen);
                 setTopicOpen(false);
               }}
-              className={`h-10 px-3.5 rounded-xl border text-xs font-mono flex items-center gap-2 cursor-pointer transition-all mimo-press ${
+              className={`h-10 px-3.5 rounded-xl text-xs font-mono flex items-center gap-2 cursor-pointer transition-all mimo-press ${
                 selectedDifficulty !== "ALL"
-                  ? "bg-[var(--surface-subtle)] border-[var(--accent-primary)] text-[var(--text-main)] font-medium"
-                  : "bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-main)]"
+                  ? "bg-[var(--surface-subtle)] text-[var(--text-main)] font-medium"
+                  : "bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:bg-[var(--surface-active)] hover:text-[var(--text-main)]"
               }`}
               title="Filter by difficulty"
             >
@@ -242,9 +242,9 @@ export default function FilterActionBar({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 4, scale: 0.98 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 w-48 bg-[var(--surface-base)] border border-[var(--border-strong)] rounded-2xl shadow-xl z-50 p-1.5 overflow-hidden backdrop-blur-md"
+                  className="absolute right-0 top-full mt-2 w-48 bg-[var(--surface-base)] rounded-2xl shadow-2xl z-50 p-2 overflow-hidden backdrop-blur-md"
                 >
-                  <div className="px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] border-b border-[var(--border-subtle)] mb-1">
+                  <div className="px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)] mb-1">
                     Difficulty Level
                   </div>
                   <div className="space-y-0.5">
@@ -290,10 +290,10 @@ export default function FilterActionBar({
           {/* Hide Solved Toggle */}
           <button
             onClick={() => setHideSolved((prev) => !prev)}
-            className={`h-10 px-3 rounded-xl border text-xs font-mono flex items-center gap-1.5 cursor-pointer transition-all mimo-press ${
+            className={`h-10 px-3.5 rounded-xl text-xs font-mono flex items-center gap-1.5 cursor-pointer transition-all mimo-press ${
               hideSolved
-                ? "bg-[var(--accent-primary)] border-[var(--accent-primary)] text-white font-medium"
-                : "bg-[var(--surface-subtle)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text-main)]"
+                ? "bg-[var(--accent-primary)] text-white font-medium"
+                : "bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:bg-[var(--surface-active)] hover:text-[var(--text-main)]"
             }`}
             title="Hide completed drills"
           >
@@ -328,7 +328,7 @@ export default function FilterActionBar({
               Filtered by:
             </span>
             {selectedCategory !== "ALL" && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] text-[11px]">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[var(--surface-subtle)] text-[var(--text-main)] text-[11px]">
                 <CategoryIcon category={selectedCategory} className="w-3 h-3 text-[var(--accent-primary-soft)]" />
                 <span>{currentCategoryLabel}</span>
                 <button
@@ -341,7 +341,7 @@ export default function FilterActionBar({
               </span>
             )}
             {selectedDifficulty !== "ALL" && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] text-[11px]">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[var(--surface-subtle)] text-[var(--text-main)] text-[11px]">
                 <span className={`w-1.5 h-1.5 rounded-full ${currentDiffObj?.color}`} />
                 <span>{currentDiffObj?.label}</span>
                 <button
@@ -354,7 +354,7 @@ export default function FilterActionBar({
               </span>
             )}
             {hideSolved && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] text-[11px]">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[var(--surface-subtle)] text-[var(--text-main)] text-[11px]">
                 <span>Unsolved only</span>
                 <button
                   onClick={() => setHideSolved(false)}
@@ -366,7 +366,7 @@ export default function FilterActionBar({
               </span>
             )}
             {searchQuery && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--surface-subtle)] border border-[var(--border-subtle)] text-[var(--text-main)] text-[11px]">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[var(--surface-subtle)] text-[var(--text-main)] text-[11px]">
                 <span>"{searchQuery}"</span>
                 <button
                   onClick={() => setSearchQuery("")}

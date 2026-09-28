@@ -137,7 +137,7 @@ export default function ProblemPage() {
   return (
     <div className="flex flex-col gap-3 select-none w-full">
       {/* ── Toolbar ───────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[var(--border-subtle)]">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
         {/* Left: Back + title */}
         <div className="flex items-center gap-3 min-w-0">
           <Link
@@ -167,24 +167,24 @@ export default function ProblemPage() {
             {prevProblem ? (
               <Link
                 to={`/p/${prevProblem.id}`}
-                className="text-xs px-2 py-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] transition-colors mimo-press"
+                className="text-xs px-2.5 py-1.5 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] transition-colors mimo-press"
               >
                 <ArrowLeft className="w-3 h-3" />
               </Link>
             ) : (
-              <span className="text-xs px-2 py-1 text-[var(--text-tertiary)]">
+              <span className="text-xs px-2.5 py-1.5 text-[var(--text-tertiary)]">
                 <ArrowLeft className="w-3 h-3" />
               </span>
             )}
             {nextProblem ? (
               <Link
                 to={`/p/${nextProblem.id}`}
-                className="text-xs px-2 py-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] transition-colors mimo-press"
+                className="text-xs px-2.5 py-1.5 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] transition-colors mimo-press"
               >
                 <ArrowRight className="w-3 h-3" />
               </Link>
             ) : (
-              <span className="text-xs px-2 py-1 text-[var(--text-tertiary)]">
+              <span className="text-xs px-2.5 py-1.5 text-[var(--text-tertiary)]">
                 <ArrowRight className="w-3 h-3" />
               </span>
             )}
@@ -193,7 +193,7 @@ export default function ProblemPage() {
           {/* Split toggle */}
           <button
             onClick={() => setSpecCollapsed(!specCollapsed)}
-            className="hidden lg:flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] px-2 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--border-strong)] transition-colors cursor-pointer mimo-press"
+            className="hidden lg:flex items-center gap-1.5 rounded-xl bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] px-2.5 py-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer mimo-press"
           >
             {specCollapsed ? <Columns2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           </button>
@@ -221,15 +221,15 @@ export default function ProblemPage() {
       </div>
 
       {/* ── Mobile tabs ───────────────────────────────────── */}
-      <div className="flex lg:hidden items-center gap-1 rounded-xl border border-[var(--border-subtle)] p-1 text-xs bg-[var(--surface-base)]">
+      <div className="flex lg:hidden items-center gap-1 rounded-2xl p-1 text-xs bg-[var(--surface-base)] shadow-sm">
         {(["spec", "term"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setMobileTab(tab)}
             className={clsx(
-              "flex-1 py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer mimo-press text-xs font-medium",
+              "flex-1 py-1.5 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer mimo-press text-xs font-medium",
               mobileTab === tab
-                ? "bg-[var(--accent-primary)] text-white"
+                ? "bg-[var(--accent-primary)] text-white shadow-xs"
                 : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
             )}
           >
@@ -239,29 +239,29 @@ export default function ProblemPage() {
       </div>
 
       {/* ── Split workstation ─────────────────────────────── */}
-      <div className="h-[calc(100vh-140px)] min-h-[640px] max-h-[960px] border border-[var(--border-subtle)] rounded-2xl overflow-hidden flex flex-col transition-colors" style={{ backgroundColor: 'var(--surface-base)' }}>
+      <div className="h-[calc(100vh-140px)] min-h-[640px] max-h-[960px] rounded-2xl overflow-hidden flex flex-col transition-colors shadow-[var(--card-shadow)]" style={{ backgroundColor: 'var(--surface-base)' }}>
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
 
           {/* ── Left: Spec pane ──────────────────────────────── */}
           {!specCollapsed && (
             <div
               className={clsx(
-                "lg:col-span-5 flex flex-col h-full border-r border-[var(--border-subtle)] min-h-0",
+                "lg:col-span-5 flex flex-col h-full min-h-0",
                 mobileTab === "term" ? "hidden lg:flex" : "flex"
               )}
               style={{ backgroundColor: 'var(--bg-canvas)' }}
             >
               {/* Pane toolbar */}
-              <div className="h-10 border-b border-[var(--border-subtle)] px-4 flex items-center justify-between shrink-0" style={{ backgroundColor: 'var(--surface-base)' }}>
+              <div className="h-11 px-4 flex items-center justify-between shrink-0 shadow-xs" style={{ backgroundColor: 'var(--surface-base)' }}>
                 <span className="text-xs text-[var(--text-muted)] font-medium">Specification</span>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => setShowSolution(!showSolution)}
                     className={clsx(
-                      "px-2.5 py-1 text-xs rounded-lg border transition-colors cursor-pointer mimo-press",
+                      "px-3 py-1 text-xs rounded-xl transition-colors cursor-pointer mimo-press",
                       showSolution
-                        ? "border-[var(--accent-green)]/40 text-[var(--accent-green)] bg-[var(--accent-green-bg)] font-medium"
-                        : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--border-strong)]"
+                        ? "text-[var(--accent-green)] bg-[var(--accent-green-bg)] font-medium"
+                        : "text-[var(--text-muted)] bg-[var(--surface-subtle)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)]"
                     )}
                   >
                     Solution
@@ -269,10 +269,10 @@ export default function ProblemPage() {
                   <button
                     onClick={() => setShowVerify(!showVerify)}
                     className={clsx(
-                      "px-2.5 py-1 text-xs rounded-lg border transition-colors cursor-pointer mimo-press",
+                      "px-3 py-1 text-xs rounded-xl transition-colors cursor-pointer mimo-press",
                       showVerify
-                        ? "border-[var(--accent-primary)]/40 text-[var(--accent-primary-soft)] bg-[var(--accent-primary-bg)] font-medium"
-                        : "border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--border-strong)]"
+                        ? "text-[var(--accent-primary-soft)] bg-[var(--accent-primary-bg)] font-medium"
+                        : "text-[var(--text-muted)] bg-[var(--surface-subtle)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)]"
                     )}
                   >
                     Verify Guide
@@ -283,13 +283,13 @@ export default function ProblemPage() {
               {/* Pane body */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4 select-text">
                 {/* Title */}
-                <div className="pb-3 border-b border-[var(--border-subtle)]">
-                  <h2 className="text-base sm:text-[17px] font-medium text-[var(--text-main)] mb-1">{problem.title}</h2>
+                <div className="pb-1">
+                  <h2 className="text-base sm:text-[17px] font-semibold text-[var(--text-main)] mb-1">{problem.title}</h2>
                   <p className="text-sm text-[var(--text-muted)] leading-relaxed">{problem.description}</p>
                 </div>
 
                 {/* Task */}
-                <div className="rounded-lg border border-[var(--border-subtle)] p-4 space-y-2" style={{ backgroundColor: 'var(--surface-base)' }}>
+                <div className="rounded-2xl p-4 space-y-2 shadow-xs" style={{ backgroundColor: 'var(--surface-base)' }}>
                   <div className="flex items-center gap-1.5 text-xs text-[var(--accent-primary)] font-medium mb-2">
                     <FileText className="w-3.5 h-3.5" />
                     <span>Task</span>
@@ -301,7 +301,7 @@ export default function ProblemPage() {
 
                 {/* Setup */}
                 {problem.setup && (
-                  <div className="rounded-lg border border-[var(--accent-amber)]/30 p-4 space-y-2" style={{ backgroundColor: 'var(--surface-base)' }}>
+                  <div className="rounded-2xl p-4 space-y-2 shadow-xs" style={{ backgroundColor: 'var(--surface-base)' }}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="flex items-center gap-1.5 text-xs text-[var(--accent-amber)] font-medium">
                         <Play className="w-3.5 h-3.5" />
@@ -309,7 +309,7 @@ export default function ProblemPage() {
                       </span>
                       <button
                         onClick={() => terminalRef.current?.runSetup()}
-                        className="text-[11px] text-[var(--accent-amber)] border border-[var(--accent-amber)]/30 rounded-md px-2 py-0.5 hover:opacity-80 transition-colors cursor-pointer mimo-press"
+                        className="text-[11px] text-[var(--accent-amber)] bg-[var(--accent-amber-bg)] rounded-lg px-2.5 py-1 hover:opacity-80 transition-colors cursor-pointer mimo-press font-medium"
                       >
                         Run
                       </button>
@@ -329,12 +329,7 @@ export default function ProblemPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 4 }}
                       transition={{ duration: 0.15 }}
-                      className={clsx(
-                        "rounded-lg border p-4 space-y-2",
-                        verifyPass
-                          ? "border-[var(--accent-green)]/30"
-                          : "border-[var(--accent-amber)]/30"
-                      )}
+                      className="rounded-2xl p-4 space-y-2 shadow-xs"
                       style={{ backgroundColor: 'var(--surface-base)' }}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -373,7 +368,7 @@ export default function ProblemPage() {
                       </ul>
 
                       {verificationFeedback?.hint && (
-                        <div className="flex items-start gap-1.5 text-xs text-[var(--accent-amber)] border-t border-[var(--border-subtle)] pt-2 mt-1">
+                        <div className="flex items-start gap-1.5 text-xs text-[var(--accent-amber)] bg-[var(--surface-subtle)] p-2.5 rounded-xl mt-2">
                           <Lightbulb className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                           <span>{verificationFeedback.hint}</span>
                         </div>
@@ -391,7 +386,7 @@ export default function ProblemPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 4 }}
                       transition={{ duration: 0.15 }}
-                      className="rounded-lg border border-[var(--accent-green)]/30 p-4 space-y-2"
+                      className="rounded-2xl p-4 space-y-2 shadow-xs"
                       style={{ backgroundColor: 'var(--surface-base)' }}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -404,7 +399,7 @@ export default function ProblemPage() {
                             const clean = problem.solution.replace(/```[a-z]*\n?/g, "").replace(/```/g, "").trim();
                             navigator.clipboard.writeText(clean);
                           }}
-                          className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-main)] border border-[var(--border-subtle)] px-2 py-0.5 rounded-md transition-colors cursor-pointer mimo-press"
+                          className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] px-2.5 py-1 rounded-lg transition-colors cursor-pointer mimo-press"
                         >
                           copy
                         </button>
@@ -413,7 +408,7 @@ export default function ProblemPage() {
                         <Markdown>{problem.solution}</Markdown>
                       </div>
                       {problem.watchOut && (
-                        <div className="border-t border-[var(--border-subtle)] pt-2 text-sm text-[var(--accent-amber)]">
+                        <div className="bg-[var(--surface-subtle)] p-3 rounded-xl text-sm text-[var(--accent-amber)] mt-2">
                           <span className="text-[11px] uppercase tracking-wider block mb-1 font-medium">Watch out</span>
                           <Markdown>{problem.watchOut}</Markdown>
                         </div>
@@ -431,7 +426,7 @@ export default function ProblemPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 4 }}
                       transition={{ duration: 0.15 }}
-                      className="rounded-lg border border-[var(--accent-primary)]/30 p-4 space-y-2"
+                      className="rounded-2xl p-4 space-y-2 shadow-xs"
                       style={{ backgroundColor: 'var(--surface-base)' }}
                     >
                       <div className="flex items-center gap-1.5 text-xs text-[var(--accent-primary)] font-medium mb-1">

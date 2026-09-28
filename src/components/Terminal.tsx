@@ -527,10 +527,10 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
       className={`flex flex-col font-mono transition-all select-none ${
         embedded
           ? "h-full w-full bg-[var(--terminal-body-bg)] border-0 rounded-none shadow-none overflow-hidden"
-          : "rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-base)] shadow-[var(--card-shadow)] overflow-hidden"
+          : "rounded-2xl bg-[var(--surface-base)] shadow-[var(--card-shadow)] overflow-hidden"
       } ${
         isMaximized
-          ? "!fixed !inset-3 !z-50 !h-[calc(100vh-1.5rem)] !w-[calc(100vw-1.5rem)] !rounded-2xl !border !border-[var(--border-strong)] !shadow-2xl !bg-[var(--terminal-body-bg)]"
+          ? "!fixed !inset-3 !z-50 !h-[calc(100vh-1.5rem)] !w-[calc(100vw-1.5rem)] !rounded-2xl !shadow-2xl !bg-[var(--terminal-body-bg)]"
           : ""
       } ${className}`}
       style={{ height: isMaximized || embedded ? undefined : defaultHeight }}
@@ -544,7 +544,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
     >
       {/* macOS Pro Terminal Header Toolbar */}
       <div
-        className={`flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--surface-subtle)] px-3.5 select-none gap-2 shrink-0 ${
+        className={`flex items-center justify-between bg-[var(--surface-subtle)] px-3.5 select-none gap-2 shrink-0 ${
           embedded ? "h-10" : "h-11"
         }`}
       >
@@ -552,10 +552,10 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
           {embedded ? (
             <div className="flex items-center gap-2">
               <span
-                className={`rounded-lg px-2 py-0.5 text-[11px] font-mono ${
+                className={`rounded-lg px-2.5 py-1 text-[11px] font-mono ${
                   isRoot
-                    ? "bg-rose-500/10 text-rose-500 border border-rose-500/20 font-semibold"
-                    : "bg-[var(--surface-base)] text-[var(--text-muted)] border border-[var(--border-subtle)]"
+                    ? "bg-rose-500/10 text-rose-500 font-semibold"
+                    : "bg-[var(--surface-base)] text-[var(--text-muted)]"
                 }`}
               >
                 {shell.session.username}@{shell.session.hostname}:{displayCwd}
@@ -566,10 +566,10 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               <span className="text-xs font-semibold text-[var(--text-main)]">{title}</span>
 
               <span
-                className={`rounded-lg px-2 py-0.5 text-[11px] font-mono font-medium ${
+                className={`rounded-lg px-2.5 py-1 text-[11px] font-mono font-medium ${
                   isRoot
-                    ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-                    : "bg-[var(--surface-base)] text-[var(--accent-primary-soft)] border border-[var(--border-subtle)]"
+                    ? "bg-rose-500/10 text-rose-500"
+                    : "bg-[var(--surface-base)] text-[var(--accent-primary-soft)]"
                 }`}
               >
                 {shell.session.username}@{shell.session.hostname}:{displayCwd}
@@ -583,7 +583,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               </div>
 
               {isSolved && (
-                <span className="inline-flex items-center gap-1 rounded-lg bg-[var(--accent-green-bg)] text-[var(--accent-green)] border border-[var(--accent-green)]/20 text-[10px] font-semibold px-2 py-0.5">
+                <span className="inline-flex items-center gap-1 rounded-lg bg-[var(--accent-green-bg)] text-[var(--accent-green)] text-[10px] font-semibold px-2 py-0.5">
                   <Check className="w-3 h-3" />
                   <span>Solved</span>
                 </span>
@@ -613,10 +613,10 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                 e.stopPropagation();
                 handleRunSetup();
               }}
-              className={`flex items-center space-x-1.5 rounded-lg px-2.5 py-1 text-[11px] font-mono transition-colors cursor-pointer border mimo-press ${
+              className={`flex items-center space-x-1.5 rounded-xl px-2.5 py-1 text-[11px] font-mono transition-colors cursor-pointer mimo-press ${
                 setupRun
-                  ? "bg-[var(--accent-green-bg)] text-[var(--accent-green)] border-[var(--accent-green)]/30 font-medium"
-                  : "bg-[var(--surface-base)] hover:bg-[var(--surface-active)] text-[var(--accent-amber)] border-[var(--border-subtle)]"
+                  ? "bg-[var(--accent-green-bg)] text-[var(--accent-green)] font-medium"
+                  : "bg-[var(--surface-base)] hover:bg-[var(--surface-active)] text-[var(--accent-amber)]"
               }`}
               title="Execute challenge setup script"
             >
@@ -639,7 +639,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               e.stopPropagation();
               handleReset();
             }}
-            className="flex items-center space-x-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
+            className="flex items-center space-x-1.5 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
             title="Reset VM State"
           >
             <RotateCcw className="w-3 h-3" />
@@ -651,7 +651,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               e.stopPropagation();
               handleCopy();
             }}
-            className="flex items-center space-x-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
+            className="flex items-center space-x-1.5 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
             title="Copy Terminal Output"
           >
             {copied ? (
@@ -672,7 +672,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               e.stopPropagation();
               setIsMaximized(!isMaximized);
             }}
-            className="flex items-center space-x-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] mimo-press"
+            className="flex items-center space-x-1 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] mimo-press"
             title={isMaximized ? "Restore Split View" : "Maximize Terminal"}
           >
             {isMaximized ? (
@@ -727,7 +727,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
 
           {/* Authentic Less Pager Status / Search Bar */}
           {pager.isSearching ? (
-            <div className="flex items-center text-xs font-mono bg-slate-900 border-t border-slate-800 px-3 py-1.5 text-cyan-300 shrink-0">
+            <div className="flex items-center text-xs font-mono bg-slate-900 px-3 py-1.5 text-cyan-300 shrink-0">
               <span className="font-bold mr-1.5 text-slate-400">/</span>
               <input
                 ref={searchInputRef}
@@ -752,9 +752,9 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               />
             </div>
           ) : (
-            <div className="flex items-center justify-between text-[11px] font-mono bg-slate-900 border-t border-slate-800 px-3 py-1.5 text-slate-300 select-none shrink-0">
+            <div className="flex items-center justify-between text-[11px] font-mono bg-slate-900 px-3 py-1.5 text-slate-300 select-none shrink-0">
               <div className="flex items-center gap-2">
-                <span className="bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800 font-bold text-[10px]">
+                <span className="bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded-md font-bold text-[10px]">
                   {pager.title}
                 </span>
                 <span className="text-slate-400 text-[10px]">

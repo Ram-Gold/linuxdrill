@@ -16,7 +16,7 @@ export type ThemeOrigin =
  * then sets CSS custom properties on documentElement for the circular reveal clip-path.
  * Reference: https://jamiewarburton.dev/writing/building-a-cool-circular-reveal-for-light-dark-mode/
  */
-function setTransitionOrigin(origin?: ThemeOrigin) {
+export function setTransitionOrigin(origin?: ThemeOrigin) {
   if (typeof window === "undefined") return;
 
   let x = window.innerWidth / 2;

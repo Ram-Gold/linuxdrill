@@ -1,9 +1,19 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, Sparkles, ChevronDown, ChevronRight, Play } from "lucide-react";
+import {
+  Check,
+  Sparkles,
+  ChevronDown,
+  ChevronRight,
+  Play,
+  LayoutGrid,
+  List,
+} from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import type { Problem } from "../lib/types";
+import type { Problem, Category } from "../lib/types";
+import { CATEGORY_INFO } from "../lib/types";
 import CategoryIcon from "./CategoryIcon";
+import ProblemCard from "./ProblemCard";
 
 interface CuratedRoadmapProps {
   problems: Problem[];
@@ -20,7 +30,10 @@ export default function CuratedRoadmap({
   const upNextDrill = problems.find((p) => !solved.includes(p.id)) || problems[0];
   const isUpNextSolved = upNextDrill ? solved.includes(upNextDrill.id) : false;
 
-  // 2. Group problems into tracks by category/topic
+  // 2. View mode: separate cards vs compact list
+  const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
+
+  // 3. Group problems into tracks by category/topic
   const tracksMap = new Map<string, { topic: string; topicName: string; drills: Problem[] }>();
 
   problems.forEach((problem) => {
@@ -38,7 +51,7 @@ export default function CuratedRoadmap({
   const tracks = Array.from(tracksMap.values());
   const upNextTrackKey = upNextDrill?.topic || (tracks[0]?.topic ?? "");
 
-  // 3. User explicit toggle overrides (topicKey -> boolean)
+  // 4. User explicit toggle overrides (topicKey -> boolean)
   const [userOverrides, setUserOverrides] = useState<Record<string, boolean>>({});
 
   const isTrackExpanded = (topicKey: string): boolean => {
@@ -88,9 +101,7 @@ export default function CuratedRoadmap({
     <div className="space-y-8 select-none">
       {/* 1. UP NEXT SPOTLIGHT (Cures "where do I start?" paralysis) */}
       {upNextDrill && (
-        <div className="relative overflow-hidden rounded-2xl border border-[var(--accent-primary)]/40 bg-gradient-to-r from-[var(--surface-base)] via-[var(--surface-subtle)] to-[var(--surface-base)] p-5 sm:p-6 transition-all duration-200 hover:border-[var(--accent-primary)]">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-primary)]/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-
+        <div className="relative overflow-hidden rounded-2xl border border-[var(--accent-primary)]/40 bg-[var(--surface-base)] p-5 sm:p-6 transition-all duration-200 hover:border-[var(--accent-primary)]">
           <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1.5 max-w-2xl">
               <div className="flex items-center gap-2">
@@ -134,10 +145,10 @@ export default function CuratedRoadmap({
         </div>
       )}
 
-      {/* 2. CURATED TRACK ROADMAP WITH COLLAPSIBLE MODULES */}
+      {/* 2. CURATED TRACK ROADMAP WITH SEPARATE CARDS & COLLAPSIBLE MODULES */}
       <div className="space-y-4">
-        {/* Roadmap section header + Expand/Collapse All toggle */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
+        {/* Roadmap section header + View switcher + Expand/Collapse toggle */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
           <div>
             <h3 className="text-base font-semibold text-[var(--text-main)]">
               Curated Learning Roadmap
@@ -147,10 +158,57 @@ export default function CuratedRoadmap({
             </p>
           </div>
 
-          <div className="flex items-center gap-3 self-start sm:self-auto">
-            <span className="text-xs font-mono text-[var(--text-tertiary)] hidden sm:inline">
+          <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
+            <span className="text-xs font-mono text-[var(--text-tertiary)] hidden md:inline">
               {tracks.length} Tracks · {problems.length} Total Drills
             </span>
+
+            {/* View Mode Toggle: Cards vs List (Icon only with spring sliding pill) */}
+            <div className="relative flex items-center p-0.5 rounded-lg bg-[var(--surface-base)] border border-[var(--border-subtle)]">
+              <button
+                type="button"
+                onClick={() => setViewMode("cards")}
+                className={`relative w-8 h-8 rounded-md flex items-center justify-center cursor-pointer mimo-press transition-colors ${
+                  viewMode === "cards"
+                    ? "text-white"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                }`}
+                title="Cards View"
+                aria-label="Cards View"
+              >
+                {viewMode === "cards" && (
+                  <motion.div
+                    layoutId="roadmap-view-mode-pill"
+                    transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                    className="absolute inset-0 bg-[var(--accent-primary)] rounded-md shadow-xs"
+                  />
+                )}
+                <LayoutGrid className="w-4 h-4 relative z-10" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                className={`relative w-8 h-8 rounded-md flex items-center justify-center cursor-pointer mimo-press transition-colors ${
+                  viewMode === "list"
+                    ? "text-white"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                }`}
+                title="Compact List View"
+                aria-label="Compact List View"
+              >
+                {viewMode === "list" && (
+                  <motion.div
+                    layoutId="roadmap-view-mode-pill"
+                    transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                    className="absolute inset-0 bg-[var(--accent-primary)] rounded-md shadow-xs"
+                  />
+                )}
+                <List className="w-4 h-4 relative z-10" />
+              </button>
+            </div>
+
+            <div className="w-px h-3.5 bg-[var(--border-subtle)] hidden sm:block" />
 
             <button
               type="button"
@@ -170,13 +228,15 @@ export default function CuratedRoadmap({
             const trackTotal = track.drills.length;
             const isCompleted = trackSolvedCount === trackTotal && trackTotal > 0;
             const percent = Math.round((trackSolvedCount / trackTotal) * 100);
+            const topicInfo = CATEGORY_INFO[track.topic as Category];
+            const topicDesc = topicInfo?.description;
 
             return (
               <div
                 key={track.topic}
                 className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
                   isExpanded
-                    ? "bg-[var(--surface-base)] border-[var(--border-strong)]"
+                    ? "bg-[var(--surface-base)] border-[var(--border-strong)] shadow-xs"
                     : "bg-[var(--surface-base)]/80 border-[var(--border-subtle)] hover:border-[var(--border-strong)]"
                 }`}
               >
@@ -189,18 +249,18 @@ export default function CuratedRoadmap({
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div
-                      className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 transition-colors ${
+                      className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 transition-colors ${
                         isCompleted
                           ? "bg-[var(--accent-green)]/15 border-[var(--accent-green)]/30 text-[var(--accent-green)]"
                           : "bg-[var(--surface-elevated)] border-[var(--border-subtle)] text-[var(--accent-primary-soft)]"
                       }`}
                     >
-                      <CategoryIcon category={track.topic} className="w-4 h-4" />
+                      <CategoryIcon category={track.topic} className="w-5 h-5" />
                     </div>
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono text-[var(--text-tertiary)]">
+                        <span className="text-xs font-mono text-[var(--text-tertiary)] uppercase tracking-wider">
                           Track 0{trackIdx + 1}
                         </span>
                         {isCompleted && (
@@ -213,11 +273,16 @@ export default function CuratedRoadmap({
                       <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)] truncate">
                         {track.topicName}
                       </h4>
+                      {topicDesc && (
+                        <p className="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5 hidden sm:block">
+                          {topicDesc}
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   {/* Right side: Progress Bar & Accordion Chevron */}
-                  <div className="flex items-center gap-4 shrink-0">
+                  <div className="flex items-center gap-3 sm:gap-4 shrink-0">
                     <div className="text-right">
                       <div className="text-xs font-mono text-[var(--text-muted)]">
                         <span className="text-[var(--text-main)] font-semibold">{trackSolvedCount}</span>
@@ -225,7 +290,7 @@ export default function CuratedRoadmap({
                       </div>
                     </div>
 
-                    <div className="w-20 sm:w-24 h-1.5 rounded-full bg-[var(--surface-elevated)] overflow-hidden border border-[var(--border-subtle)] hidden xs:block">
+                    <div className="w-16 sm:w-24 h-1.5 rounded-full bg-[var(--surface-elevated)] overflow-hidden border border-[var(--border-subtle)] hidden xs:block">
                       <div
                         className={`h-full transition-all duration-300 ${
                           isCompleted ? "bg-[var(--accent-green)]" : "bg-[var(--accent-primary)]"
@@ -281,66 +346,94 @@ export default function CuratedRoadmap({
                       }}
                       className="overflow-hidden"
                     >
-                      <div className="border-t border-[var(--border-subtle)] divide-y divide-[var(--border-subtle)] bg-[var(--surface-subtle)]/20">
-                        {track.drills.map((drill, idx) => {
-                          const isSolved = solved.includes(drill.id);
-                          const diff = getDiffBadge(drill.difficulty);
+                      {viewMode === "cards" ? (
+                        <div className="p-4 sm:p-5 pt-3.5 border-t border-[var(--border-subtle)] bg-[var(--surface-subtle)]/15 space-y-3.5">
+                          {/* Module summary line */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-[var(--text-muted)]">
+                            <p className="line-clamp-1">
+                              {topicDesc || `${track.drills.length} interactive exercises in this track`}
+                            </p>
+                            <span className="font-mono text-[var(--text-tertiary)] shrink-0">
+                              {trackSolvedCount} of {trackTotal} completed ({percent}%)
+                            </span>
+                          </div>
 
-                          return (
-                            <Link
-                              key={drill.id}
-                              to={`/p/${drill.id}`}
-                              className={`group px-4 sm:px-5 py-3.5 flex items-center justify-between gap-4 transition-colors cursor-pointer ${
-                                isSolved
-                                  ? "bg-[var(--surface-base)]/40 hover:bg-[var(--surface-subtle)]/70"
-                                  : "hover:bg-[var(--surface-subtle)]"
-                              }`}
-                            >
-                              {/* Step number + Title + Short description */}
-                              <div className="flex items-center gap-3.5 min-w-0">
-                                <div
-                                  className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-mono shrink-0 transition-colors ${
-                                    isSolved
-                                      ? "bg-[var(--accent-green)]/15 text-[var(--accent-green)] font-semibold"
-                                      : "bg-[var(--surface-elevated)] text-[var(--text-tertiary)] group-hover:text-[var(--text-main)]"
-                                  }`}
-                                >
-                                  {isSolved ? (
-                                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                                  ) : (
-                                    <span>{String(idx + 1).padStart(2, "0")}</span>
-                                  )}
-                                </div>
+                          {/* Separate Cards Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-3.5">
+                            {track.drills.map((drill, idx) => (
+                              <ProblemCard
+                                key={drill.id}
+                                problem={drill}
+                                isSolved={solved.includes(drill.id)}
+                                stepIndex={idx + 1}
+                                isUpNext={upNextDrill?.id === drill.id && !solved.includes(drill.id)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        /* Compact List View */
+                        <div className="border-t border-[var(--border-subtle)] divide-y divide-[var(--border-subtle)] bg-[var(--surface-subtle)]/20">
+                          {track.drills.map((drill, idx) => {
+                            const isSolved = solved.includes(drill.id);
+                            const diff = getDiffBadge(drill.difficulty);
 
-                                <div className="min-w-0">
-                                  <div className="text-sm font-medium text-[var(--text-main)] group-hover:text-[var(--accent-primary-soft)] transition-colors truncate">
-                                    {drill.title}
+                            return (
+                              <Link
+                                key={drill.id}
+                                to={`/p/${drill.id}`}
+                                className={`group px-4 sm:px-5 py-3.5 flex items-center justify-between gap-4 transition-colors cursor-pointer ${
+                                  isSolved
+                                    ? "bg-[var(--surface-base)]/40 hover:bg-[var(--surface-subtle)]/70"
+                                    : "hover:bg-[var(--surface-subtle)]"
+                                }`}
+                              >
+                                {/* Step number + Title + Short description */}
+                                <div className="flex items-center gap-3.5 min-w-0">
+                                  <div
+                                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-mono shrink-0 transition-colors ${
+                                      isSolved
+                                        ? "bg-[var(--accent-green)]/15 text-[var(--accent-green)] font-semibold"
+                                        : "bg-[var(--surface-elevated)] text-[var(--text-tertiary)] group-hover:text-[var(--text-main)]"
+                                    }`}
+                                  >
+                                    {isSolved ? (
+                                      <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                    ) : (
+                                      <span>{String(idx + 1).padStart(2, "0")}</span>
+                                    )}
                                   </div>
-                                  <div className="text-xs text-[var(--text-tertiary)] truncate mt-0.5">
-                                    {drill.description || drill.task}
+
+                                  <div className="min-w-0">
+                                    <div className="text-sm font-medium text-[var(--text-main)] group-hover:text-[var(--accent-primary-soft)] transition-colors truncate">
+                                      {drill.title}
+                                    </div>
+                                    <div className="text-xs text-[var(--text-tertiary)] truncate mt-0.5">
+                                      {drill.description || drill.task}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
 
-                              {/* Metadata: Level, points, right chevron */}
-                              <div className="flex items-center gap-3 shrink-0">
-                                <div className="hidden sm:flex items-center gap-1.5 text-xs font-mono">
-                                  <span className={`w-1.5 h-1.5 rounded-full ${diff.dot}`} />
-                                  <span className={diff.text}>{diff.label}</span>
+                                {/* Metadata: Level, points, right chevron */}
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <div className="hidden sm:flex items-center gap-1.5 text-xs font-mono">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${diff.dot}`} />
+                                    <span className={diff.text}>{diff.label}</span>
+                                  </div>
+
+                                  <span className="text-xs font-mono text-[var(--text-muted)]">
+                                    {drill.points} pts
+                                  </span>
+
+                                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[var(--text-tertiary)] group-hover:text-[var(--text-main)] group-hover:translate-x-0.5 transition-all">
+                                    <ChevronRight className="w-4 h-4" />
+                                  </div>
                                 </div>
-
-                                <span className="text-xs font-mono text-[var(--text-muted)]">
-                                  {drill.points} pts
-                                </span>
-
-                                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[var(--text-tertiary)] group-hover:text-[var(--text-main)] group-hover:translate-x-0.5 transition-all">
-                                  <ChevronRight className="w-4 h-4" />
-                                </div>
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>

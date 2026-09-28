@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Sun, Moon, Volume2, VolumeX } from "lucide-react";
+import { Sun, Moon, Volume2, VolumeX, Palette, Check } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTheme } from "../lib/useTheme";
 import { useSoundpack } from "../lib/useSoundpack";
+import { useThemePreset } from "../lib/useThemePreset";
 import { SoundSettingsModal } from "./SoundSettingsModal";
 
 interface NavbarProps {
@@ -18,11 +19,38 @@ export default function Navbar({
   totalPoints,
 }: NavbarProps) {
   const [isSoundModalOpen, setIsSoundModalOpen] = useState(false);
+  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  const themeDropdownRef = useRef<HTMLDivElement>(null);
+
   const location = useLocation();
   const isTerminal = location.pathname.startsWith("/terminal");
   const isChallenges = location.pathname === "/";
   const { isDark, toggleTheme } = useTheme();
   const { isEnabled } = useSoundpack();
+  const { presets, activePresetId, setThemePreset } = useThemePreset();
+
+  // Close theme dropdown on outside click or Escape key
+  useEffect(() => {
+    if (!isThemeDropdownOpen) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (themeDropdownRef.current && !themeDropdownRef.current.contains(event.target as Node)) {
+        setIsThemeDropdownOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsThemeDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isThemeDropdownOpen]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border-subtle)] px-5 lg:px-8 transition-colors duration-120" style={{ backgroundColor: 'var(--surface-base)' }}>
@@ -41,11 +69,10 @@ export default function Navbar({
         <nav className="relative flex items-center p-1 rounded-xl bg-[var(--surface-subtle)] border border-[var(--border-subtle)]">
           <Link
             to="/"
-            className={`relative px-3.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer mimo-press ${
-              !isTerminal
-                ? "text-[var(--text-main)] font-semibold"
-                : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
-            }`}
+            className={`relative px-3.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer mimo-press ${!isTerminal
+              ? "text-[var(--text-main)] font-semibold"
+              : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+              }`}
           >
             {!isTerminal && (
               <motion.div
@@ -59,11 +86,10 @@ export default function Navbar({
 
           <Link
             to="/terminal"
-            className={`relative px-3.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer mimo-press ${
-              isTerminal
-                ? "text-[var(--text-main)] font-semibold"
-                : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
-            }`}
+            className={`relative px-3.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer mimo-press ${isTerminal
+              ? "text-[var(--text-main)] font-semibold"
+              : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+              }`}
           >
             {isTerminal && (
               <motion.div
@@ -107,6 +133,77 @@ export default function Navbar({
               <VolumeX className="w-4 h-4" />
             )}
           </button>
+
+          {/* Theme Palette / Appearance Dropdown Trigger */}
+          <div className="relative" ref={themeDropdownRef}>
+            <button
+              onClick={() => setIsThemeDropdownOpen((prev) => !prev)}
+              className={`w-9 h-9 rounded-lg border flex items-center justify-center transition-colors cursor-pointer mimo-press ${isThemeDropdownOpen
+                ? "border-[var(--accent-primary)] bg-[var(--surface-active)] text-[var(--text-main)] shadow-xs"
+                : "border-[var(--border-subtle)] bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--border-strong)]"
+                }`}
+              title="Themes"
+              aria-label="Themes"
+              aria-expanded={isThemeDropdownOpen}
+            >
+              <Palette className="w-4 h-4" />
+            </button>
+
+            {/* Themes Popover (Small, minimal, positioned at top right) */}
+            <AnimatePresence>
+              {isThemeDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-56 bg-[var(--surface-base)] border border-[var(--border-strong)] rounded-2xl shadow-xl z-50 p-1.5 overflow-hidden backdrop-blur-md"
+                >
+                  <div className="px-2.5 py-1.5 text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)]">
+                    Theme
+                  </div>
+                  <div className="space-y-0.5">
+                    {presets.map((preset) => {
+                      const isActive = activePresetId === preset.id;
+                      return (
+                        <button
+                          key={preset.id}
+                          onClick={() => setThemePreset(preset.id)}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs cursor-pointer transition-colors text-left group mimo-press ${isActive
+                            ? "bg-[var(--surface-active)] text-[var(--text-main)] font-medium"
+                            : "text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-subtle)]"
+                            }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {/* Capsule with 3 overlapping circles */}
+                            <div className="flex items-center px-1.5 py-0.5 rounded-full bg-[var(--surface-subtle)] border border-[var(--border-subtle)] shrink-0">
+                              <div className="flex items-center -space-x-1.5">
+                                {preset.swatches.map((color, i) => (
+                                  <span
+                                    key={i}
+                                    className="relative inline-block w-3.5 h-3.5 rounded-full border border-[var(--surface-base)] shadow-xs shrink-0"
+                                    style={{
+                                      backgroundColor: color,
+                                      zIndex: preset.swatches.length - i,
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            <span className="truncate">{preset.name}</span>
+                          </div>
+
+                          {isActive && (
+                            <Check className="w-3.5 h-3.5 text-[var(--accent-primary-soft)] shrink-0 ml-1.5" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Theme toggle */}
           <button

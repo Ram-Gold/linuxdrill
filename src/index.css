@@ -137,6 +137,297 @@
   --terminal-body-bg: #111329;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   CATPPUCCIN MOCHA TOKENS
+   Official Catppuccin Mocha Palette (https://github.com/catppuccin/catppuccin)
+   Strict Style Guide Implementation:
+   - Background Pane: Base (#1e1e2e)
+   - Secondary Panes / Cards / Nav: Mantle (#181825) & Surface 0 (#313244)
+   - Interactive & Active Surfaces: Surface 1 (#45475a) & Surface 2 (#585b70)
+   - Text & Subtext: Text (#cdd6f4), Subtext 0 (#a6adc8), Overlay 1 (#7f849c)
+   - Primary Accent: Mauve (#cba6f7)
+   ══════════════════════════════════════════════════════════════════ */
+:root[data-theme-preset="catppuccin-mocha"]:not(.light),
+:root.theme-catppuccin-mocha:not(.light) {
+  color-scheme: dark;
+
+  /* Surfaces — Catppuccin Mocha hierarchy */
+  --bg-canvas: #1e1e2e;
+  --surface-base: #181825;
+  --surface-subtle: #313244;
+  --surface-elevated: #313244;
+  --surface-active: #45475a;
+
+  /* Borders — Catppuccin Mocha structure */
+  --border-subtle: #313244;
+  --border-strong: #45475a;
+  --border-dark: #181825;
+
+  /* Typography */
+  --text-main: #cdd6f4;
+  --text-muted: #a6adc8;
+  --text-tertiary: #7f849c;
+
+  /* Primary — Mauve */
+  --accent-primary: #cba6f7;
+  --accent-primary-hover: #b4befe;
+  --accent-primary-soft: #b4befe;
+  --accent-primary-bg: rgba(203, 166, 247, 0.15);
+
+  /* Semantic accents */
+  --accent-green: #a6e3a1;
+  --accent-green-bg: rgba(166, 227, 161, 0.12);
+
+  --accent-amber: #f9e2af;
+  --accent-amber-bg: rgba(249, 226, 175, 0.12);
+
+  --accent-red: #f38ba8;
+  --accent-red-bg: rgba(243, 139, 168, 0.12);
+
+  --accent-blue: #89b4fa;
+  --accent-blue-bg: rgba(137, 180, 250, 0.12);
+
+  --accent-orange: #fab387;
+  --accent-orange-bg: rgba(250, 179, 135, 0.12);
+
+  /* Legacy aliases */
+  --accent-cyan: var(--accent-primary);
+  --accent-cyan-light: var(--accent-primary-soft);
+  --accent-cyan-bg: var(--accent-primary-bg);
+
+  /* Elevation */
+  --card-shadow: none;
+  --modal-shadow: 0 20px 40px rgba(0, 0, 0, 0.55);
+
+  /* Scrollbars */
+  --scrollbar-thumb: rgba(205, 214, 244, 0.2);
+  --scrollbar-thumb-hover: rgba(205, 214, 244, 0.35);
+
+  /* Terminal */
+  --terminal-outer-bg: #181825;
+  --terminal-header-bg: #11111b;
+  --terminal-body-bg: #11111b;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   GRUVBOX DARK TOKENS
+   Official Gruvbox Palette (morhetz/gruvbox)
+   Retro groove color scheme with warm, earthy contrast:
+   - Canvas: dark0_hard (#1d2021)
+   - Base/Nav: dark0 (#282828)
+   - Subtle/Elevated: dark0_soft (#32302f) / dark1 (#3c3836)
+   - Active: dark2 (#504945)
+   - Borders: dark1 (#3c3836) & dark2 (#504945)
+   - Text: light1 (#ebdbb2), light4 (#a89984), gray (#928374)
+   - Primary Accent: bright_orange (#fe8019) & bright_yellow (#fabd2f)
+   ══════════════════════════════════════════════════════════════════ */
+:root[data-theme-preset="gruvbox"]:not(.light),
+:root.theme-gruvbox:not(.light) {
+  color-scheme: dark;
+
+  /* Surfaces — Gruvbox dark stack */
+  --bg-canvas: #1d2021;
+  --surface-base: #282828;
+  --surface-subtle: #32302f;
+  --surface-elevated: #3c3836;
+  --surface-active: #504945;
+
+  /* Borders */
+  --border-subtle: #3c3836;
+  --border-strong: #504945;
+  --border-dark: #282828;
+
+  /* Typography */
+  --text-main: #ebdbb2;
+  --text-muted: #a89984;
+  --text-tertiary: #928374;
+
+  /* Primary — Gruvbox Orange */
+  --accent-primary: #fe8019;
+  --accent-primary-hover: #ff9940;
+  --accent-primary-soft: #fabd2f;
+  --accent-primary-bg: rgba(254, 128, 25, 0.15);
+
+  /* Semantic accents */
+  --accent-green: #b8bb26;
+  --accent-green-bg: rgba(184, 187, 38, 0.12);
+
+  --accent-amber: #fabd2f;
+  --accent-amber-bg: rgba(250, 189, 47, 0.12);
+
+  --accent-red: #fb4934;
+  --accent-red-bg: rgba(251, 73, 52, 0.12);
+
+  --accent-blue: #83a598;
+  --accent-blue-bg: rgba(131, 165, 152, 0.12);
+
+  --accent-orange: #fe8019;
+  --accent-orange-bg: rgba(254, 128, 25, 0.12);
+
+  /* Legacy aliases */
+  --accent-cyan: #8ec07c;
+  --accent-cyan-light: #8ec07c;
+  --accent-cyan-bg: rgba(142, 192, 124, 0.12);
+
+  /* Elevation */
+  --card-shadow: none;
+  --modal-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+
+  /* Scrollbars */
+  --scrollbar-thumb: rgba(235, 219, 178, 0.2);
+  --scrollbar-thumb-hover: rgba(235, 219, 178, 0.35);
+
+  /* Terminal */
+  --terminal-outer-bg: #1d2021;
+  --terminal-header-bg: #282828;
+  --terminal-body-bg: #1d2021;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TOKYO NIGHT TOKENS
+   Official Tokyo Night Palette:
+   - Canvas: #1a1b26
+   - Surfaces: #24283b, #292e42, #414868
+   - Borders: #414868 & #565f89
+   - Typography: text (#c0caf5), subtext (#a9b1d6), muted (#565f89)
+   - Primary Accent: #7aa2f7 (Tokyo Blue) & #bb9af7 (Magenta)
+   - Semantic Accents: green (#9ece6a), yellow (#e0af68), red (#f7768e), orange (#ff9e64), cyan (#73daca)
+   ══════════════════════════════════════════════════════════════════ */
+:root[data-theme-preset="tokyo-night"]:not(.light),
+:root.theme-tokyo-night:not(.light) {
+  color-scheme: dark;
+
+  /* Surfaces — Tokyo Night stack */
+  --bg-canvas: #1a1b26;
+  --surface-base: #24283b;
+  --surface-subtle: #292e42;
+  --surface-elevated: #2f3549;
+  --surface-active: #414868;
+
+  /* Borders */
+  --border-subtle: #414868;
+  --border-strong: #565f89;
+  --border-dark: #1a1b26;
+
+  /* Typography */
+  --text-main: #c0caf5;
+  --text-muted: #a9b1d6;
+  --text-tertiary: #565f89;
+
+  /* Primary — Tokyo Blue */
+  --accent-primary: #7aa2f7;
+  --accent-primary-hover: #7dcfff;
+  --accent-primary-soft: #bb9af7;
+  --accent-primary-bg: rgba(122, 162, 247, 0.15);
+
+  /* Semantic accents */
+  --accent-green: #9ece6a;
+  --accent-green-bg: rgba(158, 206, 106, 0.12);
+
+  --accent-amber: #e0af68;
+  --accent-amber-bg: rgba(224, 175, 104, 0.12);
+
+  --accent-red: #f7768e;
+  --accent-red-bg: rgba(247, 118, 142, 0.12);
+
+  --accent-blue: #7dcfff;
+  --accent-blue-bg: rgba(125, 207, 255, 0.12);
+
+  --accent-orange: #ff9e64;
+  --accent-orange-bg: rgba(255, 158, 100, 0.12);
+
+  /* Legacy aliases */
+  --accent-cyan: #73daca;
+  --accent-cyan-light: #b4f9f8;
+  --accent-cyan-bg: rgba(115, 218, 202, 0.12);
+
+  /* Elevation */
+  --card-shadow: none;
+  --modal-shadow: 0 20px 40px rgba(0, 0, 0, 0.65);
+
+  /* Scrollbars */
+  --scrollbar-thumb: rgba(192, 202, 245, 0.2);
+  --scrollbar-thumb-hover: rgba(192, 202, 245, 0.35);
+
+  /* Terminal */
+  --terminal-outer-bg: #1a1b26;
+  --terminal-header-bg: #16161e;
+  --terminal-body-bg: #16161e;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   KANAGAWA WAVE TOKENS
+   Official Kanagawa Wave Palette (rebelot/kanagawa.nvim)
+   Inspired by classical Japanese woodblock prints:
+   - Canvas: sumiInk3 (#1f1f28)
+   - Surfaces: sumiInk1 (#181820), sumiInk4 (#2a2a37), sumiInk5 (#363646)
+   - Borders: sumiInk4 (#2a2a37) & sumiInk6 (#54546d)
+   - Typography: fujiWhite (#dcd7ba), oldWhite (#c8c093), fujiGray (#727169)
+   - Primary Accent: oniViolet (#957fb8) & crystalBlue (#7e9cd8)
+   - Semantic Accents: springGreen (#98bb6c), carpYellow (#e6c384), waveRed (#e46876), surimiOrange (#ffa066), waveAqua (#7aa89f)
+   ══════════════════════════════════════════════════════════════════ */
+:root[data-theme-preset="kanagawa-wave"]:not(.light),
+:root.theme-kanagawa-wave:not(.light) {
+  color-scheme: dark;
+
+  /* Surfaces — Kanagawa Wave ink stack */
+  --bg-canvas: #1f1f28;          /* sumiInk3 */
+  --surface-base: #181820;       /* sumiInk1 */
+  --surface-subtle: #2a2a37;     /* sumiInk4 */
+  --surface-elevated: #2a2a37;   /* sumiInk4 */
+  --surface-active: #363646;     /* sumiInk5 */
+
+  /* Borders */
+  --border-subtle: #2a2a37;      /* sumiInk4 */
+  --border-strong: #54546d;      /* sumiInk6 */
+  --border-dark: #181820;        /* sumiInk1 */
+
+  /* Typography */
+  --text-main: #dcd7ba;          /* fujiWhite */
+  --text-muted: #c8c093;         /* oldWhite */
+  --text-tertiary: #727169;      /* fujiGray */
+
+  /* Primary — Oni Violet */
+  --accent-primary: #957fb8;     /* oniViolet */
+  --accent-primary-hover: #b8b4d0; /* oniViolet2 */
+  --accent-primary-soft: #7e9cd8; /* crystalBlue */
+  --accent-primary-bg: rgba(149, 127, 184, 0.15);
+
+  /* Semantic accents */
+  --accent-green: #98bb6c;       /* springGreen */
+  --accent-green-bg: rgba(152, 187, 108, 0.12);
+
+  --accent-amber: #e6c384;       /* carpYellow */
+  --accent-amber-bg: rgba(230, 195, 132, 0.12);
+
+  --accent-red: #e46876;         /* waveRed */
+  --accent-red-bg: rgba(228, 104, 118, 0.12);
+
+  --accent-blue: #7e9cd8;        /* crystalBlue */
+  --accent-blue-bg: rgba(126, 156, 216, 0.12);
+
+  --accent-orange: #ffa066;      /* surimiOrange */
+  --accent-orange-bg: rgba(255, 160, 102, 0.12);
+
+  /* Legacy aliases */
+  --accent-cyan: #7aa89f;        /* waveAqua2 */
+  --accent-cyan-light: #7fb4ca;  /* springBlue */
+  --accent-cyan-bg: rgba(122, 168, 159, 0.12);
+
+  /* Elevation */
+  --card-shadow: none;
+  --modal-shadow: 0 20px 40px rgba(0, 0, 0, 0.65);
+
+  /* Scrollbars */
+  --scrollbar-thumb: rgba(220, 215, 186, 0.2);
+  --scrollbar-thumb-hover: rgba(220, 215, 186, 0.35);
+
+  /* Terminal */
+  --terminal-outer-bg: #1f1f28;  /* sumiInk3 */
+  --terminal-header-bg: #16161d; /* sumiInk0 */
+  --terminal-body-bg: #16161d;   /* sumiInk0 */
+}
+
 body {
   background-color: var(--bg-canvas);
   color: var(--text-main);
@@ -146,6 +437,7 @@ body {
   margin: 0;
   padding: 0;
   letter-spacing: -0.011em;
+  transition: background-color 150ms ease-in, color 150ms ease-in;
 }
 
 /* ══════════════════════════════════════════════════════════════════

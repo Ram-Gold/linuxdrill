@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useBlocker } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { clsx } from "clsx";
 import {
@@ -8,13 +8,16 @@ import {
   ArrowRight,
   Check,
   CheckSquare,
+  ChevronRight,
+  Copy,
   FileCode,
   FileText,
   HelpCircle,
   Lightbulb,
+  PanelLeftOpen,
   Play,
-  Columns2,
-  Maximize2,
+  RotateCcw,
+  X,
 } from "lucide-react";
 import { problems } from "../lib/problems";
 import { useProgress } from "../lib/useProgress";
@@ -26,15 +29,34 @@ import Markdown from "../components/Markdown";
 import Terminal, { type TerminalHandle } from "../components/Terminal";
 import SuccessConfirmation from "../components/SuccessConfirmation";
 import HintAccordion from "../components/HintAccordion";
+import ExitConfirmationModal from "../components/ExitConfirmationModal";
+
 
 export default function ProblemPage() {
   const { id } = useParams();
   const problem = problems.find((p) => p.id === id);
   const { solved, markSolved, unmarkSolved } = useProgress();
+  const isSolved = problem ? solved.includes(problem.id) : false;
+
+  // Navigation blocker: alert user when navigating away from an unfinished task
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      !isSolved && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  // Tab close / reload protection for active scenario
+  useEffect(() => {
+    if (isSolved) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isSolved]);
 
   const [showSolution, setShowSolution] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
-  const [specCollapsed, setSpecCollapsed] = useState(false);
   const [mobileTab, setMobileTab] = useState<"spec" | "term">("spec");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [lastChecks, setLastChecks] = useState<{ name: string; passed: boolean }[]>([]);
@@ -43,7 +65,158 @@ export default function ProblemPage() {
     message: string;
     hint?: string;
   } | null>(null);
+  const [copiedTerminal, setCopiedTerminal] = useState(false);
+
+  // Resizable split ratio (percentage for left specification pane)
+  const [splitRatio, setSplitRatio] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("linuxdrill_split_ratio");
+      if (saved) {
+        const val = parseFloat(saved);
+        if (!isNaN(val) && val >= 0 && val <= 80) return val;
+      }
+    } catch {
+      // ignore
+    }
+    return 42;
+  });
+  const [lastRatio, setLastRatio] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("linuxdrill_split_ratio");
+      if (saved) {
+        const val = parseFloat(saved);
+        if (!isNaN(val) && val >= 20 && val <= 80) return val;
+      }
+    } catch {
+      // ignore
+    }
+    return 42;
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(
+    typeof window !== "undefined" ? window.innerWidth >= 1024 : true
+  );
+
   const terminalRef = useRef<TerminalHandle>(null);
+  const workstationRef = useRef<HTMLDivElement>(null);
+  const specScrollRef = useRef<HTMLDivElement>(null);
+  const [prevId, setPrevId] = useState(id);
+  if (id !== prevId) {
+    setPrevId(id);
+    setShowSolution(false);
+    setShowVerify(false);
+    setShowConfirmation(false);
+    setVerificationFeedback(null);
+    setLastChecks([]);
+    setCopiedTerminal(false);
+    setMobileTab("spec");
+  }
+
+  // Scroll spec pane back to top when navigating to another problem
+  useEffect(() => {
+    specScrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [id]);
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const SNAP_THRESHOLD = 14; // Percentage threshold below which pane snaps to left (fullscreen terminal)
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+
+    const onPointerMove = (moveEvent: PointerEvent) => {
+      if (!workstationRef.current) return;
+      const rect = workstationRef.current.getBoundingClientRect();
+      if (rect.width <= 0) return;
+      const currentX = moveEvent.clientX - rect.left;
+      const percentage = (currentX / rect.width) * 100;
+
+      if (percentage < SNAP_THRESHOLD) {
+        setSplitRatio(0);
+      } else {
+        const clamped = Math.min(75, Math.max(20, percentage));
+        setSplitRatio(clamped);
+        setLastRatio(clamped);
+      }
+    };
+
+    const onPointerUp = (upEvent: PointerEvent) => {
+      setIsDragging(false);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+
+      if (workstationRef.current) {
+        const rect = workstationRef.current.getBoundingClientRect();
+        if (rect.width > 0) {
+          const currentX = upEvent.clientX - rect.left;
+          const percentage = (currentX / rect.width) * 100;
+          if (percentage < SNAP_THRESHOLD) {
+            setSplitRatio(0);
+            try {
+              localStorage.setItem("linuxdrill_split_ratio", "0");
+            } catch {
+              // ignore
+            }
+          } else {
+            const clamped = Math.min(75, Math.max(20, percentage));
+            setSplitRatio(clamped);
+            setLastRatio(clamped);
+            try {
+              localStorage.setItem("linuxdrill_split_ratio", clamped.toFixed(1));
+            } catch {
+              // ignore
+            }
+          }
+        }
+      }
+    };
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+  };
+
+  const handleRevert = () => {
+    const target = lastRatio >= 20 ? lastRatio : 42;
+    setSplitRatio(target);
+    try {
+      localStorage.setItem("linuxdrill_split_ratio", target.toFixed(1));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleResetRatio = () => {
+    if (splitRatio === 0) {
+      handleRevert();
+    } else {
+      setSplitRatio(42);
+      setLastRatio(42);
+      try {
+        localStorage.setItem("linuxdrill_split_ratio", "42");
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  const handleCopyTerminal = () => {
+    terminalRef.current?.copyOutput();
+    setCopiedTerminal(true);
+    setTimeout(() => setCopiedTerminal(false), 1500);
+  };
+
+  const handleResetTerminal = () => {
+    terminalRef.current?.resetVm();
+  };
 
   const handleCheckAnswer = useCallback(
     (customShell?: ShellContext) => {
@@ -107,7 +280,6 @@ export default function ProblemPage() {
     );
   }
 
-  const isSolved = solved.includes(problem.id);
   const idx = problems.findIndex((p) => p.id === id);
   const prevProblem = idx > 0 ? problems[idx - 1] : null;
   const nextProblem = idx >= 0 && idx + 1 < problems.length ? problems[idx + 1] : null;
@@ -138,84 +310,114 @@ export default function ProblemPage() {
     <div className="flex flex-col gap-3 select-none w-full">
       {/* ── Toolbar ───────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
-        {/* Left: Back + title */}
-        <div className="flex items-center gap-3 min-w-0">
+        {/* Left: Back button only (cleaned up redundancy) */}
+        <div className="flex items-center min-w-0">
           <Link
             to="/"
-            className="text-sm text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors flex items-center gap-1"
+            className="h-8 px-3 rounded-xl text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] transition-colors inline-flex items-center gap-1.5 mimo-press"
+            title="Back to challenges"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Back</span>
+            <span>Back</span>
           </Link>
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="font-mono text-xs text-[var(--text-tertiary)]">{problem.id}</span>
-            <span className="text-sm font-medium text-[var(--text-main)] truncate">{problem.title}</span>
-          </div>
         </div>
 
-        {/* Right: Actions */}
+        {/* Right: Actions (all uniform h-8 buttons with same sizes) */}
         <div className="flex items-center gap-2 flex-wrap">
           {isSolved && (
-            <span className="text-xs text-[var(--accent-green)] flex items-center gap-1">
-              <Check className="w-3 h-3" />
+            <span className="h-8 px-2.5 rounded-xl bg-[var(--accent-green-bg)] text-[var(--accent-green)] text-xs font-medium inline-flex items-center gap-1.5 shadow-xs">
+              <Check className="w-3.5 h-3.5" />
               <span>+{problem.points} pts</span>
             </span>
           )}
 
-          {/* Prev / Next */}
+          {/* Prev / Next Pagination */}
           <div className="flex items-center gap-1">
             {prevProblem ? (
               <Link
                 to={`/p/${prevProblem.id}`}
-                className="text-xs px-2.5 py-1.5 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] transition-colors mimo-press"
+                className="h-8 w-8 rounded-xl text-xs text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] transition-colors inline-flex items-center justify-center mimo-press"
+                title={`Previous: ${prevProblem.title}`}
               >
-                <ArrowLeft className="w-3 h-3" />
+                <ArrowLeft className="w-3.5 h-3.5" />
               </Link>
             ) : (
-              <span className="text-xs px-2.5 py-1.5 text-[var(--text-tertiary)]">
-                <ArrowLeft className="w-3 h-3" />
+              <span className="h-8 w-8 rounded-xl text-xs text-[var(--text-tertiary)] bg-[var(--surface-subtle)]/40 inline-flex items-center justify-center opacity-40 cursor-not-allowed">
+                <ArrowLeft className="w-3.5 h-3.5" />
               </span>
             )}
             {nextProblem ? (
               <Link
                 to={`/p/${nextProblem.id}`}
-                className="text-xs px-2.5 py-1.5 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] transition-colors mimo-press"
+                className="h-8 w-8 rounded-xl text-xs text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] transition-colors inline-flex items-center justify-center mimo-press"
+                title={`Next: ${nextProblem.title}`}
               >
-                <ArrowRight className="w-3 h-3" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             ) : (
-              <span className="text-xs px-2.5 py-1.5 text-[var(--text-tertiary)]">
-                <ArrowRight className="w-3 h-3" />
+              <span className="h-8 w-8 rounded-xl text-xs text-[var(--text-tertiary)] bg-[var(--surface-subtle)]/40 inline-flex items-center justify-center opacity-40 cursor-not-allowed">
+                <ArrowRight className="w-3.5 h-3.5" />
               </span>
             )}
           </div>
 
-          {/* Split toggle */}
+          {/* Copy Terminal Output */}
           <button
-            onClick={() => setSpecCollapsed(!specCollapsed)}
-            className="hidden lg:flex items-center gap-1.5 rounded-xl bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] px-2.5 py-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer mimo-press"
+            onClick={handleCopyTerminal}
+            className="h-8 px-3 rounded-xl text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] transition-colors inline-flex items-center gap-1.5 cursor-pointer mimo-press"
+            title="Copy terminal output"
           >
-            {specCollapsed ? <Columns2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            {copiedTerminal ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-[var(--accent-green)]" />
+                <span className="text-[var(--accent-green)]">Copied</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Copy</span>
+              </>
+            )}
           </button>
 
-          {/* Check Answer */}
+          {/* Reset VM */}
+          <button
+            onClick={handleResetTerminal}
+            className="h-8 px-3 rounded-xl text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] transition-colors inline-flex items-center gap-1.5 cursor-pointer mimo-press"
+            title="Reset terminal VM state"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Reset VM</span>
+          </button>
+
+          {/* Mark / Unmark Solved */}
+          <button
+            id="mark-solved-btn"
+            onClick={handleToggleSolved}
+            className={clsx(
+              "h-8 px-3 rounded-xl text-xs font-medium transition-colors inline-flex items-center gap-1.5 cursor-pointer mimo-press",
+              isSolved
+                ? "bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] text-[var(--accent-green)]"
+                : "bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
+            )}
+            title={isSolved ? "Mark challenge as unsolved" : "Mark challenge as solved"}
+          >
+            <Check className={clsx("w-3.5 h-3.5", isSolved ? "text-[var(--accent-green)]" : "opacity-50")} />
+            <span>{isSolved ? "Solved" : "Mark Solved"}</span>
+          </button>
+
+          {/* Check Answer (strictly h-8 matching all other buttons) */}
           <button
             id="check-answer-btn"
             onClick={() => handleCheckAnswer()}
-            className="btn-mimo-primary h-8 px-3 text-xs"
+            className="h-8 px-3.5 rounded-xl text-xs font-semibold bg-[var(--text-main)] text-[var(--surface-base)] inline-flex items-center justify-center gap-2 cursor-pointer transition-all hover:opacity-95 active:scale-[0.98] shadow-xs mimo-press"
             title="Check your solution (Ctrl+Enter)"
           >
             <CheckSquare className="w-3.5 h-3.5" />
             <span>Check Answer</span>
-          </button>
-
-          {/* Mark/Unmark */}
-          <button
-            id="mark-solved-btn"
-            onClick={handleToggleSolved}
-            className="btn-mimo-outline h-8 px-3 text-xs"
-          >
-            {isSolved ? "Unmark" : "Mark Solved"}
+            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-normal rounded bg-[var(--surface-base)]/15 text-[var(--surface-base)]">
+              Ctrl ↵
+            </kbd>
           </button>
         </div>
       </div>
@@ -239,20 +441,43 @@ export default function ProblemPage() {
       </div>
 
       {/* ── Split workstation ─────────────────────────────── */}
-      <div className="h-[calc(100vh-140px)] min-h-[640px] max-h-[960px] rounded-2xl overflow-hidden flex flex-col transition-colors shadow-[var(--card-shadow)]" style={{ backgroundColor: 'var(--surface-base)' }}>
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
+      <div
+        ref={workstationRef}
+        className="h-[calc(100vh-140px)] min-h-[640px] max-h-[960px] rounded-2xl overflow-hidden flex flex-col transition-colors shadow-[var(--card-shadow)] relative"
+        style={{ backgroundColor: "var(--surface-base)" }}
+      >
+        {/* Floating restore button when left pane is snapped full screen */}
+        {splitRatio === 0 && isDesktop && (
+          <button
+            onClick={handleRevert}
+            className="absolute top-2 left-2 z-30 h-7 px-2.5 rounded-lg text-xs font-medium text-[var(--text-main)] bg-[var(--surface-base)] hover:bg-[var(--surface-active)] shadow-md inline-flex items-center gap-1.5 transition-all mimo-press cursor-pointer border border-[var(--surface-subtle)]"
+            title="Restore specification pane"
+          >
+            <PanelLeftOpen className="w-3.5 h-3.5 text-[var(--accent-primary-soft)]" />
+            <span>Show Specification</span>
+          </button>
+        )}
 
+        <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden relative">
           {/* ── Left: Spec pane ──────────────────────────────── */}
-          {!specCollapsed && (
-            <div
-              className={clsx(
-                "lg:col-span-5 flex flex-col h-full min-h-0",
-                mobileTab === "term" ? "hidden lg:flex" : "flex"
-              )}
-              style={{ backgroundColor: 'var(--bg-canvas)' }}
-            >
+          <div
+            className={clsx(
+              "flex flex-col h-full min-h-0 overflow-hidden",
+              mobileTab === "term" ? "hidden lg:flex" : "flex",
+              isDragging
+                ? "transition-none select-none pointer-events-none"
+                : "transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
+            )}
+            style={{
+              backgroundColor: "var(--bg-canvas)",
+              width: isDesktop ? `${splitRatio}%` : "100%",
+              opacity: isDesktop && splitRatio === 0 ? 0 : 1,
+              pointerEvents: isDesktop && splitRatio === 0 ? "none" : undefined,
+            }}
+          >
+            <div className="w-full min-w-[320px] flex flex-col h-full min-h-0">
               {/* Pane toolbar */}
-              <div className="h-11 px-4 flex items-center justify-between shrink-0 shadow-xs" style={{ backgroundColor: 'var(--surface-base)' }}>
+              <div className="h-10 px-4 flex items-center justify-between shrink-0 shadow-xs" style={{ backgroundColor: 'var(--surface-base)' }}>
                 <span className="text-xs text-[var(--text-muted)] font-medium">Specification</span>
                 <div className="flex items-center gap-1.5">
                   <button
@@ -281,7 +506,7 @@ export default function ProblemPage() {
               </div>
 
               {/* Pane body */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 select-text">
+              <div ref={specScrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 select-text">
                 {/* Title */}
                 <div className="pb-1">
                   <h2 className="text-base sm:text-[17px] font-semibold text-[var(--text-main)] mb-1">{problem.title}</h2>
@@ -394,15 +619,25 @@ export default function ProblemPage() {
                           <FileCode className="w-3.5 h-3.5" />
                           <span>Solution</span>
                         </span>
-                        <button
-                          onClick={() => {
-                            const clean = problem.solution.replace(/```[a-z]*\n?/g, "").replace(/```/g, "").trim();
-                            navigator.clipboard.writeText(clean);
-                          }}
-                          className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] px-2.5 py-1 rounded-lg transition-colors cursor-pointer mimo-press"
-                        >
-                          copy
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              const clean = problem.solution.replace(/```[a-z]*\n?/g, "").replace(/```/g, "").trim();
+                              navigator.clipboard.writeText(clean);
+                            }}
+                            className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] px-2.5 py-1 rounded-lg transition-colors cursor-pointer mimo-press font-medium"
+                          >
+                            copy
+                          </button>
+                          <button
+                            onClick={() => setShowSolution(false)}
+                            className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] p-1 rounded-lg transition-colors cursor-pointer mimo-press inline-flex items-center justify-center"
+                            title="Close solution"
+                            aria-label="Close solution"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                       <div className="text-sm text-[var(--text-main)]">
                         <Markdown>{problem.solution}</Markdown>
@@ -429,9 +664,19 @@ export default function ProblemPage() {
                       className="rounded-2xl p-4 space-y-2 shadow-xs"
                       style={{ backgroundColor: 'var(--surface-base)' }}
                     >
-                      <div className="flex items-center gap-1.5 text-xs text-[var(--accent-primary)] font-medium mb-1">
-                        <HelpCircle className="w-3.5 h-3.5" />
-                        <span>How It's Verified</span>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5 text-xs text-[var(--accent-primary)] font-medium">
+                          <HelpCircle className="w-3.5 h-3.5" />
+                          <span>How It's Verified</span>
+                        </div>
+                        <button
+                          onClick={() => setShowVerify(false)}
+                          className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] p-1 rounded-lg transition-colors cursor-pointer mimo-press inline-flex items-center justify-center"
+                          title="Close verify guide"
+                          aria-label="Close verify guide"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                       <div className="text-sm text-[var(--text-main)]">
                         <Markdown>{problem.verify}</Markdown>
@@ -441,20 +686,68 @@ export default function ProblemPage() {
                 </AnimatePresence>
 
                 {/* Hints */}
-                <HintAccordion hints={problem.hints} />
+                <HintAccordion key={problem.id} hints={problem.hints} />
               </div>
             </div>
-          )}
+          </div>
+
+          {/* ── Resizer handle (Desktop only) ─────────────────── */}
+          <div
+            onPointerDown={handlePointerDown}
+            onDoubleClick={handleResetRatio}
+            onClick={splitRatio === 0 ? handleRevert : undefined}
+            className={clsx(
+              "hidden lg:flex items-center justify-center relative cursor-col-resize shrink-0 z-20 group",
+              splitRatio === 0 ? "w-3 hover:w-4 bg-[var(--surface-base)]" : "w-2",
+              isDragging
+                ? "bg-[var(--accent-primary)]/40 transition-none"
+                : "transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:bg-[var(--accent-primary)]/20"
+            )}
+            title={
+              splitRatio === 0
+                ? "Click or drag right to restore specification"
+                : "Drag to resize panes (Drag far left to collapse, double-click to reset)"
+            }
+          >
+            {splitRatio === 0 ? (
+              <ChevronRight className="w-3 h-3 text-[var(--accent-primary-soft)] group-hover:scale-125 transition-transform" />
+            ) : (
+              <>
+                {/* Thin divider line */}
+                <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[1px] bg-[var(--surface-subtle)] group-hover:bg-[var(--accent-primary)] transition-colors" />
+
+                {/* Tactile Grab Handle */}
+                <div
+                  className={clsx(
+                    "relative z-10 flex flex-col gap-1 items-center justify-center py-2 px-0.5 rounded-full transition-all duration-150",
+                    isDragging
+                      ? "bg-[var(--accent-primary)] scale-110 shadow-sm"
+                      : "bg-[var(--surface-elevated)] group-hover:bg-[var(--accent-primary)] shadow-xs"
+                  )}
+                >
+                  <div className="w-0.5 h-1 rounded-full bg-[var(--text-tertiary)] group-hover:bg-white transition-colors" />
+                  <div className="w-0.5 h-1 rounded-full bg-[var(--text-tertiary)] group-hover:bg-white transition-colors" />
+                  <div className="w-0.5 h-1 rounded-full bg-[var(--text-tertiary)] group-hover:bg-white transition-colors" />
+                </div>
+              </>
+            )}
+          </div>
 
           {/* ── Right: Terminal ──────────────────────────────── */}
           <div
             className={clsx(
-              specCollapsed ? "lg:col-span-12" : "lg:col-span-7",
-              "flex flex-col h-full min-h-0",
-              mobileTab === "spec" ? "hidden lg:flex" : "flex"
+              "flex flex-col h-full min-h-0 overflow-hidden",
+              mobileTab === "spec" ? "hidden lg:flex" : "flex",
+              isDragging
+                ? "transition-none select-none pointer-events-none"
+                : "transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
             )}
+            style={{
+              width: isDesktop ? `${100 - splitRatio}%` : "100%",
+            }}
           >
             <Terminal
+              key={problem.id}
               ref={terminalRef}
               embedded={true}
               title={`${problem.id} Practice Environment`}
@@ -477,6 +770,23 @@ export default function ProblemPage() {
           onClose={() => setShowConfirmation(false)}
         />
       )}
+
+      {/* Exit Without Finishing Confirmation Modal */}
+      <ExitConfirmationModal
+        isOpen={blocker.state === "blocked"}
+        onConfirm={() => {
+          if (blocker.state === "blocked") {
+            blocker.proceed();
+          }
+        }}
+        onCancel={() => {
+          if (blocker.state === "blocked") {
+            blocker.reset();
+          }
+        }}
+        problemTitle={problem.title}
+        problemId={problem.id}
+      />
     </div>
   );
 }

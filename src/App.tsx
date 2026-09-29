@@ -1,7 +1,4 @@
-import { Route, Routes } from "react-router-dom";
-import Home from "./pages/Home";
-import ProblemPage from "./pages/ProblemPage";
-import TerminalPlayground from "./pages/TerminalPlayground";
+import { Outlet } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { problems } from "./lib/problems";
 import { useProgress } from "./lib/useProgress";
@@ -23,12 +20,9 @@ export default function App() {
       />
 
       <main className="w-full flex-1 px-5 lg:px-8 py-6">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/p/:id" element={<ProblemPage />} />
-          <Route path="/terminal" element={<TerminalPlayground />} />
-        </Routes>
+        <Outlet />
       </main>
     </div>
   );
 }
+

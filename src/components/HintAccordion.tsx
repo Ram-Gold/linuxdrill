@@ -18,7 +18,7 @@ export default function HintAccordion({ hints }: HintAccordionProps) {
       </p>
       <div className="space-y-1.5">
         {hints.map((hint, idx) => (
-          <HintItem key={idx} idx={idx} hint={hint} />
+          <HintItem key={`${idx}-${hint.slice(0, 24)}`} idx={idx} hint={hint} />
         ))}
       </div>
     </div>

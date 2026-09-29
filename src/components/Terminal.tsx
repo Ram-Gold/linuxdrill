@@ -25,6 +25,7 @@ export interface TerminalHandle {
   appendOutput: (stdout: string, stderr?: string) => void;
   resetVm: () => void;
   runSetup: () => void;
+  copyOutput: () => void;
 }
 
 interface TerminalProps {
@@ -279,6 +280,13 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
   const handlePagerKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (!pager.active || pager.isSearching) return;
 
+    // Ctrl+Enter or Cmd+Enter to verify/check answer
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      onVerify?.(shell);
+      return;
+    }
+
     // Exit pager on 'q' or 'Q'
     if (e.key === "q" || e.key === "Q") {
       e.preventDefault();
@@ -415,9 +423,13 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
       return;
     }
 
-    // Enter to submit
+    // Enter to submit or Ctrl+Enter to check answer
     if (e.key === "Enter") {
       e.preventDefault();
+      if (e.ctrlKey || e.metaKey) {
+        onVerify?.(shell);
+        return;
+      }
       executeCommand(inputVal);
       setInputVal("");
       setHistoryIndex(-1);
@@ -516,6 +528,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
     },
     resetVm: () => handleReset(),
     runSetup: () => handleRunSetup(),
+    copyOutput: () => handleCopy(),
   }));
 
   const isRoot = shell.session.username === "root";
@@ -524,15 +537,13 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
 
   return (
     <div
-      className={`flex flex-col font-mono transition-all select-none ${
-        embedded
+      className={`flex flex-col font-mono transition-all select-none ${embedded
           ? "h-full w-full bg-[var(--terminal-body-bg)] border-0 rounded-none shadow-none overflow-hidden"
           : "rounded-2xl bg-[var(--surface-base)] shadow-[var(--card-shadow)] overflow-hidden"
-      } ${
-        isMaximized
+        } ${isMaximized
           ? "!fixed !inset-3 !z-50 !h-[calc(100vh-1.5rem)] !w-[calc(100vw-1.5rem)] !rounded-2xl !shadow-2xl !bg-[var(--terminal-body-bg)]"
           : ""
-      } ${className}`}
+        } ${className}`}
       style={{ height: isMaximized || embedded ? undefined : defaultHeight }}
       onClick={() => {
         if (!pager.active) {
@@ -542,35 +553,26 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
         }
       }}
     >
-      {/* macOS Pro Terminal Header Toolbar */}
+      {/* Terminal Header Toolbar */}
       <div
-        className={`flex items-center justify-between bg-[var(--surface-subtle)] px-3.5 select-none gap-2 shrink-0 ${
-          embedded ? "h-10" : "h-11"
-        }`}
+        className={`flex items-center justify-between select-none gap-2 shrink-0 ${embedded
+            ? "h-10 px-4 shadow-xs"
+            : "h-11 px-3.5 bg-[var(--surface-subtle)]"
+          }`}
+        style={embedded ? { backgroundColor: "var(--surface-base)" } : undefined}
       >
-        <div className="flex items-center space-x-2 text-xs">
-          {embedded ? (
-            <div className="flex items-center gap-2">
-              <span
-                className={`rounded-lg px-2.5 py-1 text-[11px] font-mono ${
-                  isRoot
-                    ? "bg-rose-500/10 text-rose-500 font-semibold"
-                    : "bg-[var(--surface-base)] text-[var(--text-muted)]"
-                }`}
-              >
-                {shell.session.username}@{shell.session.hostname}:{displayCwd}
-              </span>
-            </div>
-          ) : (
+        {embedded ? (
+          <span className="text-xs text-[var(--text-muted)] font-medium">Terminal</span>
+        ) : (
+          <div className="flex items-center space-x-2 text-xs">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-[var(--text-main)]">{title}</span>
 
               <span
-                className={`rounded-lg px-2.5 py-1 text-[11px] font-mono font-medium ${
-                  isRoot
+                className={`rounded-lg px-2.5 py-1 text-[11px] font-mono font-medium ${isRoot
                     ? "bg-rose-500/10 text-rose-500"
                     : "bg-[var(--surface-base)] text-[var(--accent-primary-soft)]"
-                }`}
+                  }`}
               >
                 {shell.session.username}@{shell.session.hostname}:{displayCwd}
               </span>
@@ -589,99 +591,100 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                 </span>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div className="flex items-center space-x-1.5 text-xs">
-          {onVerify && !embedded && (
+        {!embedded && (
+          <div className="flex items-center space-x-1.5 text-xs">
+            {onVerify && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onVerify(shell);
+                }}
+                className="btn-mimo-primary h-7 px-2.5 text-xs"
+                title="Verify if solution meets problem requirements"
+              >
+                <CheckSquare className="w-3.5 h-3.5" />
+                <span>Check Answer</span>
+              </button>
+            )}
+
+            {initialSetup && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRunSetup();
+                }}
+                className={`flex items-center space-x-1.5 rounded-xl px-2.5 py-1 text-[11px] font-mono transition-colors cursor-pointer mimo-press ${setupRun
+                    ? "bg-[var(--accent-green-bg)] text-[var(--accent-green)] font-medium"
+                    : "bg-[var(--surface-base)] hover:bg-[var(--surface-active)] text-[var(--accent-amber)]"
+                  }`}
+                title="Execute challenge setup script"
+              >
+                {setupRun ? (
+                  <>
+                    <Check className="w-3 h-3" />
+                    <span>Setup Done</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-3 h-3" />
+                    <span>Run Setup</span>
+                  </>
+                )}
+              </button>
+            )}
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onVerify(shell);
+                handleReset();
               }}
-              className="btn-mimo-primary h-7 px-2.5 text-xs"
-              title="Verify if solution meets problem requirements"
+              className="flex items-center space-x-1.5 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
+              title="Reset VM State"
             >
-              <CheckSquare className="w-3.5 h-3.5" />
-              <span>Check Answer</span>
+              <RotateCcw className="w-3 h-3" />
+              <span className="hidden sm:inline">Reset VM</span>
             </button>
-          )}
 
-          {initialSetup && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleRunSetup();
+                handleCopy();
               }}
-              className={`flex items-center space-x-1.5 rounded-xl px-2.5 py-1 text-[11px] font-mono transition-colors cursor-pointer mimo-press ${
-                setupRun
-                  ? "bg-[var(--accent-green-bg)] text-[var(--accent-green)] font-medium"
-                  : "bg-[var(--surface-base)] hover:bg-[var(--surface-active)] text-[var(--accent-amber)]"
-              }`}
-              title="Execute challenge setup script"
+              className="flex items-center space-x-1.5 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
+              title="Copy Terminal Output"
             >
-              {setupRun ? (
+              {copied ? (
                 <>
-                  <Check className="w-3 h-3" />
-                  <span>Setup Done</span>
+                  <Check className="w-3 h-3 text-[var(--accent-green)]" />
+                  <span className="hidden sm:inline">Copied</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-3 h-3" />
-                  <span>Run Setup</span>
+                  <Copy className="w-3 h-3" />
+                  <span className="hidden sm:inline">Copy</span>
                 </>
               )}
             </button>
-          )}
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleReset();
-            }}
-            className="flex items-center space-x-1.5 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
-            title="Reset VM State"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span className="hidden sm:inline">Reset VM</span>
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCopy();
-            }}
-            className="flex items-center space-x-1.5 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
-            title="Copy Terminal Output"
-          >
-            {copied ? (
-              <>
-                <Check className="w-3 h-3 text-[var(--accent-green)]" />
-                <span className="hidden sm:inline">Copied</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3 h-3" />
-                <span className="hidden sm:inline">Copy</span>
-              </>
-            )}
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsMaximized(!isMaximized);
-            }}
-            className="flex items-center space-x-1 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] mimo-press"
-            title={isMaximized ? "Restore Split View" : "Maximize Terminal"}
-          >
-            {isMaximized ? (
-              <Minimize2 className="w-3.5 h-3.5" />
-            ) : (
-              <Maximize2 className="w-3.5 h-3.5" />
-            )}
-          </button>
-        </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMaximized(!isMaximized);
+              }}
+              className="flex items-center space-x-1 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] mimo-press"
+              title={isMaximized ? "Restore Split View" : "Maximize Terminal"}
+            >
+              {isMaximized ? (
+                <Minimize2 className="w-3.5 h-3.5" />
+              ) : (
+                <Maximize2 className="w-3.5 h-3.5" />
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       {pager.active ? (
@@ -709,15 +712,14 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                 <div
                   key={idx}
                   id={`pager-line-${idx}`}
-                  className={`whitespace-pre-wrap font-mono ${
-                    isCurrentMatch
+                  className={`whitespace-pre-wrap font-mono ${isCurrentMatch
                       ? "bg-cyan-900/80 text-white font-bold px-1 rounded shadow-sm"
                       : isMatch
-                      ? "bg-amber-950/70 text-amber-200 px-1 rounded"
-                      : isHeader
-                      ? "text-cyan-400 font-bold tracking-wider pt-2"
-                      : "text-slate-300"
-                  }`}
+                        ? "bg-amber-950/70 text-amber-200 px-1 rounded"
+                        : isHeader
+                          ? "text-cyan-400 font-bold tracking-wider pt-2"
+                          : "text-slate-300"
+                    }`}
                 >
                   {line || "\u00A0"}
                 </div>

@@ -24,6 +24,7 @@ import { useProgress } from "../lib/useProgress";
 import { fireGrandCelebration } from "../lib/confetti";
 import { playSuccessChime } from "../lib/sound";
 import { verifyProblem, type VerificationResult } from "../lib/verifyProblem";
+import { completeDailyReviewDrill, recordDailyStreakActivity } from "../lib/useDailyReview";
 import type { ShellContext } from "../lib/vfs/commands";
 import Markdown from "../components/Markdown";
 import Terminal, { type TerminalHandle } from "../components/Terminal";
@@ -233,6 +234,8 @@ export default function ProblemPage() {
 
       if (result.passed) {
         markSolved(problem.id);
+        completeDailyReviewDrill(problem.id);
+        recordDailyStreakActivity();
         fireGrandCelebration();
         playSuccessChime();
         setShowConfirmation(true);
@@ -293,6 +296,8 @@ export default function ProblemPage() {
       setVerificationFeedback(null);
     } else {
       markSolved(problem.id);
+      completeDailyReviewDrill(problem.id);
+      recordDailyStreakActivity();
       fireGrandCelebration();
       playSuccessChime();
       setLastChecks([{ name: `Challenge ${problem.id} task requirements completed`, passed: true }]);

@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Check,
-  Sparkles,
   ChevronDown,
   ChevronRight,
-  Play,
   LayoutGrid,
   List,
+  ChevronsDownUp,
+  ChevronsUpDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import type { Problem, Category } from "../lib/types";
@@ -28,7 +28,6 @@ export default function CuratedRoadmap({
 }: CuratedRoadmapProps) {
   // 1. Find recommended next drill: first unsolved drill, or problem #1
   const upNextDrill = problems.find((p) => !solved.includes(p.id)) || problems[0];
-  const isUpNextSolved = upNextDrill ? solved.includes(upNextDrill.id) : false;
 
   // 2. View mode: separate cards vs compact list
   const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
@@ -99,53 +98,7 @@ export default function CuratedRoadmap({
 
   return (
     <div className="space-y-8 select-none">
-      {/* 1. UP NEXT SPOTLIGHT (Cures "where do I start?" paralysis) */}
-      {upNextDrill && (
-        <div className="relative overflow-hidden rounded-2xl bg-[var(--surface-base)] p-5 sm:p-6 transition-all duration-200">
-          <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1.5 max-w-2xl">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[var(--accent-primary)] text-white">
-                  <Sparkles className="w-3 h-3" />
-                  <span>{isUpNextSolved ? "Review Drill" : "Recommended Next Drill"}</span>
-                </span>
-                <span className="text-xs font-mono text-[var(--text-tertiary)]">
-                  {upNextDrill.topicName}
-                </span>
-              </div>
-
-              <h2 className="text-lg sm:text-xl font-semibold text-[var(--text-main)]">
-                {upNextDrill.title}
-              </h2>
-
-              <p className="text-xs sm:text-sm text-[var(--text-muted)] line-clamp-2 leading-relaxed">
-                {upNextDrill.description || upNextDrill.task}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 shrink-0 pt-2 md:pt-0">
-              <div className="text-right hidden sm:block">
-                <div className="text-xs font-mono font-medium text-[var(--accent-amber)]">
-                  +{upNextDrill.points} pts
-                </div>
-                <div className="text-[11px] text-[var(--text-tertiary)] capitalize">
-                  {upNextDrill.difficulty} level
-                </div>
-              </div>
-
-              <Link
-                to={`/p/${upNextDrill.id}`}
-                className="btn-mimo-primary flex items-center gap-2 px-5 py-2.5 rounded-xl shadow-sm hover:scale-[1.02] transition-transform cursor-pointer"
-              >
-                <Play className="w-4 h-4 fill-current" />
-                <span>{isUpNextSolved ? "Replay Drill" : "Start Drill"}</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 2. CURATED TRACK ROADMAP WITH SEPARATE CARDS & COLLAPSIBLE MODULES */}
+      {/* CURATED TRACK ROADMAP WITH SEPARATE CARDS & COLLAPSIBLE MODULES */}
       <div className="space-y-4">
         {/* Roadmap section header + View switcher + Expand/Collapse toggle */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
@@ -211,9 +164,15 @@ export default function CuratedRoadmap({
             <button
               type="button"
               onClick={toggleAllTracks}
-              className="text-xs font-mono text-[var(--accent-primary-soft)] hover:text-white transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-xl bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] text-[var(--text-muted)] hover:text-[var(--text-main)] flex items-center justify-center transition-colors cursor-pointer mimo-press"
+              title={areAllExpanded ? "Collapse All Tracks" : "Expand All Tracks"}
+              aria-label={areAllExpanded ? "Collapse All Tracks" : "Expand All Tracks"}
             >
-              {areAllExpanded ? "Collapse All Tracks" : "Expand All Tracks"}
+              {areAllExpanded ? (
+                <ChevronsDownUp className="w-4 h-4" />
+              ) : (
+                <ChevronsUpDown className="w-4 h-4" />
+              )}
             </button>
           </div>
         </div>

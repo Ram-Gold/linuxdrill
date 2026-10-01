@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { problems } from "../lib/problems";
 import { useProgress } from "../lib/useProgress";
 import { type Category, type Difficulty } from "../lib/types";
+import HomeHero from "../components/HomeHero";
 import CuratedRoadmap from "../components/CuratedRoadmap";
 import FilterActionBar from "../components/FilterActionBar";
 
@@ -53,38 +54,22 @@ export default function Home() {
     .filter((p) => solved.includes(p.id))
     .reduce((sum, p) => sum + p.points, 0);
 
-  return (
-    <div className="max-w-[1400px] mx-auto select-none space-y-7">
-      {/* Header section */}
-      <div className="pt-2">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text-main)] tracking-tight">
-              Linux Systems Challenges
-            </h1>
-            <p className="text-sm text-[var(--text-muted)] mt-1.5 max-w-xl leading-relaxed">
-              Master POSIX utilities, system administration, and shell diagnostics in a live CentOS sandbox.
-            </p>
-          </div>
+  const nextProblem = useMemo(() => {
+    return problems.find((p) => !solved.includes(p.id)) || problems[0];
+  }, [solved]);
 
-          {/* Minimal progress tracker */}
-          <div className="shrink-0 flex flex-col items-start md:items-end gap-1.5">
-            <div className="text-xs font-mono text-[var(--text-muted)]">
-              <span className="text-[var(--text-main)] font-semibold">{solvedCount}</span>
-              <span>/{totalCount} completed</span>
-              <span className="text-[var(--text-tertiary)]"> ({progressPercent}%)</span>
-              <span className="mx-1.5 text-[var(--text-tertiary)]">·</span>
-              <span className="text-[var(--accent-amber)] font-medium">{totalPoints} pts</span>
-            </div>
-            <div className="w-48 h-2 rounded-full bg-[var(--surface-subtle)] overflow-hidden">
-              <div
-                className="h-full bg-[var(--accent-primary)] transition-all duration-300"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+  return (
+    <div className="max-w-[1400px] mx-auto select-none space-y-3.5 sm:space-y-4">
+      {/* Hero Section */}
+      <HomeHero
+        solvedCount={solvedCount}
+        totalCount={totalCount}
+        progressPercent={progressPercent}
+        totalPoints={totalPoints}
+        nextProblemId={nextProblem?.id}
+        nextProblemTitle={nextProblem?.title}
+        solved={solved}
+      />
 
       {/* Filter Action Bar (Unified Compact UX) */}
       <FilterActionBar

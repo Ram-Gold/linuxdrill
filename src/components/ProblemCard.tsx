@@ -43,46 +43,43 @@ export default function ProblemCard({
       className={`group relative rounded-2xl p-4 sm:p-5 flex flex-col justify-between cursor-pointer mimo-press transition-all duration-200 bg-[var(--surface-card)] hover:bg-[var(--surface-card-hover)] hover:-translate-y-0.5`}
     >
       <div>
-        {/* Top metadata bar: Step / Solved on left, Difficulty on right */}
+        {/* Top metadata bar: Step / Next / Solved on left, Difficulty on right */}
         <div className="flex items-center justify-between gap-2 mb-2.5">
-          <div className="flex items-center gap-2 min-w-0">
-            {typeof stepIndex === "number" ? (
-              <div
-                className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-mono font-medium shrink-0 transition-colors ${
-                  isSolved
-                    ? "bg-[var(--accent-green)]/15 text-[var(--accent-green)] font-semibold"
-                    : isUpNext
-                    ? "bg-[var(--accent-primary)] text-white font-bold"
-                    : "bg-[var(--surface-elevated)] text-[var(--text-tertiary)] group-hover:text-[var(--text-main)]"
-                }`}
-              >
-                {isSolved ? (
-                  <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                ) : (
-                  <span>{String(stepIndex).padStart(2, "0")}</span>
-                )}
-              </div>
-            ) : (
-              <span className="font-mono text-xs text-[var(--text-muted)] font-medium">
-                {problem.id}
-              </span>
-            )}
+          <div className="flex items-center gap-1.5 min-w-0">
+            {/* Step Number Pill */}
+            <span
+              className={`inline-flex items-center justify-center h-5 px-2 rounded-full font-mono text-[10px] font-semibold shrink-0 transition-colors ${
+                isSolved
+                  ? "bg-[var(--accent-green-bg)] text-[var(--accent-green)]"
+                  : isUpNext
+                  ? "bg-[var(--accent-primary-bg)] text-[var(--accent-primary-soft)] font-bold"
+                  : "bg-[var(--surface-base)] text-[var(--text-tertiary)] group-hover:text-[var(--text-main)]"
+              }`}
+            >
+              {typeof stepIndex === "number"
+                ? String(stepIndex).padStart(2, "0")
+                : problem.id}
+            </span>
 
+            {/* Next Pill */}
             {isUpNext && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--accent-primary)] text-white shrink-0">
+              <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-semibold bg-[var(--accent-primary)] text-white shrink-0">
                 <Sparkles className="w-2.5 h-2.5" />
                 <span>Next</span>
               </span>
             )}
 
+            {/* Solved Pill */}
             {isSolved && !isUpNext && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--accent-green)] shrink-0">
+              <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-semibold bg-[var(--accent-green-bg)] text-[var(--accent-green)] shrink-0">
+                <Check className="w-2.5 h-2.5 stroke-[2.5]" />
                 <span>Solved</span>
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--surface-base)] text-[11px] font-mono shrink-0">
+          {/* Difficulty Pill */}
+          <div className="inline-flex items-center gap-1.5 h-5 px-2 rounded-full bg-[var(--surface-base)] text-[10px] font-mono shrink-0">
             <span className={`w-1.5 h-1.5 rounded-full ${diffConfig.dot}`} />
             <span className={diffConfig.color}>{diffConfig.text}</span>
           </div>

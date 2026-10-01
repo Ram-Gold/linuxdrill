@@ -153,11 +153,15 @@ export default function Navbar({
             <AnimatePresence>
               {isThemeDropdownOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: 6, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 w-56 bg-[var(--surface-base)] rounded-2xl shadow-2xl z-50 p-2 overflow-hidden backdrop-blur-md"
+                  initial={{ opacity: 0, y: 8, scale: 0.94, filter: "blur(14px)" }}
+                  animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: 6, scale: 0.96, filter: "blur(10px)" }}
+                  transition={{
+                    duration: 0.5,
+                    ease: [0.16, 1, 0.3, 1], // Apple fluid motion curve
+                  }}
+                  style={{ willChange: "transform, opacity, filter" }}
+                  className="absolute right-0 top-full mt-2 w-56 bg-[var(--surface-base)]/95 rounded-2xl shadow-2xl z-50 p-2 overflow-hidden backdrop-blur-xl border border-[var(--surface-active)]/40 origin-top-right transform-gpu"
                 >
                   <div className="px-2.5 py-1.5 text-[11px] font-mono uppercase tracking-wider text-[var(--text-tertiary)]">
                     Theme

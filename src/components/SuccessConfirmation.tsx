@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Check, CheckCircle2, ArrowRight, X } from "lucide-react";
+import { Check, ArrowRight, X } from "lucide-react";
 import { motion } from "motion/react";
 import type { Problem } from "../lib/types";
 
@@ -54,16 +54,8 @@ export default function SuccessConfirmation({
           <X className="w-3.5 h-3.5" />
         </button>
 
-        {/* Badge & Icon */}
+        {/* Content */}
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--accent-green-bg)] text-[var(--accent-green)] mb-3">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent-green-bg)] px-3 py-1 text-[11px] font-mono font-medium text-[var(--accent-green)] mb-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-green)]" />
-            <span>VERIFICATION PASSED</span>
-          </div>
 
           <h2 id="confirmation-title" className="text-lg font-semibold tracking-tight text-[var(--text-main)] mb-1">
             Challenge Solved!
@@ -116,11 +108,7 @@ export default function SuccessConfirmation({
             </div>
           )}
 
-          <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-5">
-            Your CentOS 9 terminal satisfies all system requirements.
-          </p>
-
-          {/* Action Buttons */}
+          {/* Action Button */}
           <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full">
             {nextProblem ? (
               <Link
@@ -139,13 +127,6 @@ export default function SuccessConfirmation({
                 Continue Training
               </button>
             )}
-
-            <button
-              onClick={onClose}
-              className="btn-mimo-outline w-full sm:w-auto h-10 text-xs"
-            >
-              Done
-            </button>
           </div>
         </div>
       </motion.div>

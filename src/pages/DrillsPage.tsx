@@ -115,6 +115,7 @@ export default function DrillsPage() {
     typed,
     target,
     isLocked,
+    mistakes,
     mistakeChar,
     liveWpm,
     accuracy,
@@ -174,6 +175,7 @@ export default function DrillsPage() {
         typed={typed}
         target={target}
         isLocked={isLocked}
+        mistakes={mistakes}
         mistakeChar={mistakeChar}
         clozeTemplate={clozeTemplate}
         liveWpm={liveWpm}

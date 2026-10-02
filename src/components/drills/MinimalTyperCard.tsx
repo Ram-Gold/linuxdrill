@@ -12,6 +12,7 @@ interface MinimalTyperCardProps {
   typed: string;
   target: string;
   isLocked: boolean;
+  mistakes?: string;
   mistakeChar: string | null;
   clozeTemplate: string;
   liveWpm: number;
@@ -28,7 +29,7 @@ export default function MinimalTyperCard({
   domainName,
   typed,
   target,
-  isLocked,
+  mistakes,
   mistakeChar,
   clozeTemplate,
   liveWpm,
@@ -41,17 +42,14 @@ export default function MinimalTyperCard({
   // Auto-scroll cursor into view when typing long commands
   useEffect(() => {
     cursorRef.current?.scrollIntoView({ behavior: 'instant', inline: 'nearest', block: 'nearest' });
-  }, [typed]);
+  }, [typed, mistakes, mistakeChar]);
 
-  // Compute ghost remainder
-  let remainder = '';
-  if (stage === 1) {
-    remainder = target.slice(typed.length);
-  } else if (stage === 2) {
-    remainder = clozeTemplate.slice(typed.length);
-  } else if (stage === 3) {
-    remainder = '';
-  }
+  // Mistakes buffer: multiple errors appear beside each other
+  const errorText = mistakes ?? mistakeChar ?? '';
+
+  // Ghost remainder: follows all typed correct characters + any active mistakes
+  const fullTarget = stage === 2 ? clozeTemplate : target;
+  const remainingGhost = fullTarget.slice(typed.length + errorText.length);
 
   return (
     <div className="w-full flex-1 flex flex-col justify-between py-6 sm:py-10 max-w-5xl mx-auto select-none min-h-[calc(100vh-10rem)]">
@@ -101,32 +99,31 @@ export default function MinimalTyperCard({
         {/* Rounded Input Capsule Pill: [ ls /ram/home ] */}
         <div className="w-full flex flex-col items-center">
           <div className="relative w-full max-w-xl sm:max-w-2xl px-6 sm:px-8 py-4 sm:py-5 rounded-2xl sm:rounded-3xl bg-[var(--surface-subtle)]/40 border border-white/10 transition-colors flex items-center font-mono text-base sm:text-xl select-none cursor-text shadow-sm">
-            {/* Split character rendering */}
+            {/* Single continuous text line for inputs, mistakes beside each other, and ghost remainder */}
             <div className="flex items-center whitespace-pre overflow-x-auto scrollbar-none w-full">
               {/* Correctly typed text */}
               <span className="text-[var(--accent-green)] font-semibold">
                 {typed}
               </span>
 
-              {/* Error text (No card redness, no shaking — just the text goes red) */}
-              {isLocked ? (
-                <span
-                  ref={cursorRef}
-                  className="text-[var(--accent-red)] font-bold text-base sm:text-xl mx-0.5 underline decoration-[var(--accent-red)] underline-offset-4"
-                >
-                  {mistakeChar === ' ' ? '␣' : mistakeChar}
+              {/* Mistake characters rendered beside each other in red */}
+              {errorText.length > 0 && (
+                <span className="text-[var(--accent-red)] font-semibold">
+                  {errorText.replace(/ /g, '␣')}
                 </span>
-              ) : (
-                /* Steady cursor (No pulsing) */
-                <span
-                  ref={cursorRef}
-                  className="inline-block w-[2.5px] h-[1.3em] bg-[var(--accent-primary-soft)] rounded-full mx-0.5"
-                />
               )}
 
-              {/* Ghost remainder / Cloze mask */}
+              {/* Seamless steady cursor with ZERO layout spacing */}
+              <span
+                ref={cursorRef}
+                className="relative inline-block w-0 h-[1.2em] align-middle select-none pointer-events-none"
+              >
+                <span className="absolute top-0 bottom-0 left-0 w-[2px] bg-[var(--accent-primary-soft)] rounded-full -translate-x-[1px]" />
+              </span>
+
+              {/* Ghost remainder text on the same single text line */}
               {stage === 3 ? (
-                typed.length === 0 ? (
+                typed.length === 0 && errorText.length === 0 ? (
                   <span className="text-[var(--text-tertiary)]/40 italic text-sm ml-1 select-none">
                     type from memory...
                   </span>
@@ -136,21 +133,14 @@ export default function MinimalTyperCard({
                   className={`${
                     stage === 2
                       ? 'text-[var(--text-tertiary)]/60 tracking-widest font-bold'
-                      : 'text-[var(--text-tertiary)]/35 font-normal'
+                      : 'text-[var(--text-tertiary)]/40 font-normal'
                   }`}
                 >
-                  {remainder}
+                  {remainingGhost}
                 </span>
               )}
             </div>
           </div>
-
-          {/* Minimal text-only error prompt (No red card background) */}
-          {isLocked && (
-            <div className="mt-3 text-xs text-[var(--accent-red)] font-mono text-center">
-              Press Backspace to clear typo
-            </div>
-          )}
         </div>
       </div>
 

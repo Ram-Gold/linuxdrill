@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Check, Award, RotateCcw } from 'lucide-react';
 import { DRILL_DECKS, type DomainCode } from '../../data/drillDecks';
@@ -23,31 +23,52 @@ export default function DrillSettingsModal({
 }: DrillSettingsModalProps) {
   const { getDomainStats, globalStats, resetDomainProgress } = useDrillProgress();
   const modalRef = useRef<HTMLDivElement>(null);
+  const [stageOverride, setStageOverride] = useState<DrillStage | null>(null);
+
+  const pendingStage = stageOverride ?? currentStage;
+  const hasStageChanged = stageOverride !== null && stageOverride !== currentStage;
+
+  const handleClose = useCallback(() => {
+    setStageOverride(null);
+    onClose();
+  }, [onClose]);
+
+  const handleApplyStage = useCallback(() => {
+    if (stageOverride !== null) {
+      onSelectStage(stageOverride);
+    }
+    setStageOverride(null);
+    onClose();
+  }, [stageOverride, onSelectStage, onClose]);
 
   // Close on outside click
   useEffect(() => {
     if (!isOpen) return;
     function handleClickOutside(e: MouseEvent) {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-        onClose();
+        handleClose();
       }
     }
     window.addEventListener('mousedown', handleClickOutside);
     return () => window.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
 
-  // Handle Escape key
+  // Handle Escape key and Enter key (to confirm stage changes)
   useEffect(() => {
     if (!isOpen) return;
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         e.stopPropagation();
-        onClose();
+        handleClose();
+      } else if (e.key === 'Enter' && hasStageChanged) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleApplyStage();
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose, hasStageChanged, handleApplyStage]);
 
   return (
     <AnimatePresence>
@@ -89,7 +110,7 @@ export default function DrillSettingsModal({
 
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 className="p-1.5 rounded-xl text-[var(--text-tertiary)] hover:text-[var(--text-main)] hover:bg-[var(--surface-subtle)] cursor-pointer transition-colors"
                 aria-label="Close settings"
                 title="Close (Esc)"
@@ -100,27 +121,41 @@ export default function DrillSettingsModal({
 
             {/* Scaffolding Stage Mode Selector */}
             <div className="mb-6 space-y-2">
-              <span className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium font-mono px-0.5">
-                Practice Stage
-              </span>
+              <div className="flex items-center justify-between px-0.5">
+                <span className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium font-mono">
+                  Practice Stage
+                </span>
+                {hasStageChanged && (
+                  <span className="text-[10px] font-mono text-[var(--accent-amber)] font-medium">
+                    Unsaved stage change
+                  </span>
+                )}
+              </div>
+
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { stage: 1 as DrillStage, name: '1. Assist', desc: 'Full ghost text' },
                   { stage: 2 as DrillStage, name: '2. Cloze', desc: 'Syntax blanking' },
                   { stage: 3 as DrillStage, name: '3. Blind', desc: 'Pure recall' },
                 ].map((s) => {
-                  const isActive = currentStage === s.stage;
+                  const isActive = pendingStage === s.stage;
                   return (
                     <button
                       key={s.stage}
-                      onClick={() => onSelectStage(s.stage)}
+                      type="button"
+                      onClick={() => setStageOverride(s.stage === currentStage ? null : s.stage)}
                       className={`p-3 rounded-2xl text-left transition-all cursor-pointer border ${
                         isActive
                           ? 'bg-[var(--surface-active)] border-[var(--accent-primary)]/50 text-[var(--text-main)] shadow-sm'
                           : 'bg-[var(--surface-subtle)] border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)]/50'
                       }`}
                     >
-                      <div className="text-xs font-semibold font-mono">{s.name}</div>
+                      <div className="text-xs font-semibold font-mono flex items-center justify-between">
+                        <span>{s.name}</span>
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary-soft)]" />
+                        )}
+                      </div>
                       <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5">{s.desc}</div>
                     </button>
                   );
@@ -143,6 +178,9 @@ export default function DrillSettingsModal({
                     <button
                       key={deck.id}
                       onClick={() => {
+                        if (hasStageChanged) {
+                          onSelectStage(pendingStage);
+                        }
                         onSelectDomain(deck.id);
                         onClose();
                       }}
@@ -178,6 +216,31 @@ export default function DrillSettingsModal({
                 })}
               </div>
             </div>
+
+            {/* Confirm Stage Change Button appears at the bottom of the modal */}
+            <AnimatePresence>
+              {hasStageChanged && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, y: 8 }}
+                  animate={{ opacity: 1, height: 'auto', y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: 8 }}
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                  className="overflow-hidden mt-6"
+                >
+                  <button
+                    type="button"
+                    onClick={handleApplyStage}
+                    className="w-full py-2.5 px-4 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-xs font-semibold font-mono flex items-center justify-center gap-2 shadow-lg shadow-[var(--accent-primary)]/20 transition-all active:scale-[0.99] cursor-pointer"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Apply Changes & Confirm</span>
+                    <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-mono ml-1">
+                      Enter ↵
+                    </kbd>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Footer with Reset option */}
             <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-[var(--text-tertiary)] font-mono">

@@ -6,6 +6,7 @@ import { playSuccessChime } from './sound';
 export interface DrillEngineState {
   typed: string;
   isLocked: boolean;
+  mistakes: string;
   mistakeChar: string | null;
   mistakeCount: number;
   totalKeystrokes: number;
@@ -30,6 +31,15 @@ export interface UseDrillEngineProps {
   }) => void;
 }
 
+function deletePreviousWord(text: string): string {
+  // If ends with spaces, remove spaces and the preceding word
+  // e.g. "mkdir -p " -> "mkdir "
+  // e.g. "mkdir -p" -> "mkdir "
+  // e.g. "systemctl" -> ""
+  const match = text.match(/^(.*?)(\s*\S+)\s*$/);
+  return match ? match[1] : '';
+}
+
 export function useDrillEngine({
   drill,
   stage,
@@ -39,8 +49,8 @@ export function useDrillEngine({
   const targetCommand = drill.command;
 
   const [typed, setTyped] = useState('');
+  const [mistakes, setMistakes] = useState('');
   const [isLocked, setIsLocked] = useState(false);
-  const [mistakeChar, setMistakeChar] = useState<string | null>(null);
   const [mistakeCount, setMistakeCount] = useState(0);
   const [totalKeystrokes, setTotalKeystrokes] = useState(0);
   const [correctKeystrokes, setCorrectKeystrokes] = useState(0);
@@ -53,6 +63,7 @@ export function useDrillEngine({
   // References for low-latency event processing
   const stateRef = useRef({
     typed: '',
+    mistakes: '',
     isLocked: false,
     target: targetCommand,
     mistakeCount: 0,
@@ -66,6 +77,7 @@ export function useDrillEngine({
   // Keep ref synchronized
   useEffect(() => {
     stateRef.current.typed = typed;
+    stateRef.current.mistakes = mistakes;
     stateRef.current.isLocked = isLocked;
     stateRef.current.target = targetCommand;
     stateRef.current.mistakeCount = mistakeCount;
@@ -76,6 +88,7 @@ export function useDrillEngine({
     stateRef.current.endTime = endTime;
   }, [
     typed,
+    mistakes,
     isLocked,
     targetCommand,
     mistakeCount,
@@ -91,8 +104,8 @@ export function useDrillEngine({
 
   const resetDrill = useCallback(() => {
     setTyped('');
+    setMistakes('');
     setIsLocked(false);
-    setMistakeChar(null);
     setMistakeCount(0);
     setTotalKeystrokes(0);
     setCorrectKeystrokes(0);
@@ -104,6 +117,7 @@ export function useDrillEngine({
 
     stateRef.current = {
       typed: '',
+      mistakes: '',
       isLocked: false,
       target: targetCommand,
       mistakeCount: 0,
@@ -118,8 +132,8 @@ export function useDrillEngine({
   if (prevDrillKey !== currentDrillKey) {
     setPrevDrillKey(currentDrillKey);
     setTyped('');
+    setMistakes('');
     setIsLocked(false);
-    setMistakeChar(null);
     setMistakeCount(0);
     setTotalKeystrokes(0);
     setCorrectKeystrokes(0);
@@ -133,6 +147,7 @@ export function useDrillEngine({
   useEffect(() => {
     stateRef.current = {
       typed: '',
+      mistakes: '',
       isLocked: false,
       target: targetCommand,
       mistakeCount: 0,
@@ -193,14 +208,35 @@ export function useDrillEngine({
     (e: KeyboardEvent) => {
       if (!isEnabled || stateRef.current.isCompleted) return;
 
-      // Allow functional browser shortcuts through (Ctrl+C, Ctrl+V, F5, F12, etc.)
-      if (e.ctrlKey || e.altKey || e.metaKey) {
-        if (e.key === 'r' && e.ctrlKey) {
-          // Allow Ctrl+R to restart drill
-          e.preventDefault();
-          resetDrill();
-          return;
-        }
+      // Handle Ctrl+R to restart drill
+      if (e.key === 'r' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        resetDrill();
+        return;
+      }
+
+      // Handle Ctrl+U to clear whole line (POSIX readline / bash shortcut)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+        e.preventDefault();
+        setMistakes('');
+        setTyped('');
+        setIsLocked(false);
+        stateRef.current.mistakes = '';
+        stateRef.current.typed = '';
+        stateRef.current.isLocked = false;
+        return;
+      }
+
+      // Check if this is a word-delete or normal backspace:
+      // Ctrl+Backspace, Alt+Backspace, Cmd+Backspace, or Ctrl+W (POSIX word rubout)
+      const isWordDelete =
+        (e.key === 'Backspace' && (e.ctrlKey || e.altKey || e.metaKey)) ||
+        (e.ctrlKey && (e.key === 'w' || e.key === 'W'));
+
+      const isBackspace = e.key === 'Backspace' || (e.ctrlKey && (e.key === 'w' || e.key === 'W'));
+
+      // Allow other functional browser shortcuts through (Ctrl+C, Ctrl+V, F5, F12, etc.)
+      if ((e.ctrlKey || e.altKey || e.metaKey) && !isBackspace) {
         return;
       }
 
@@ -233,33 +269,37 @@ export function useDrillEngine({
         return;
       }
 
-      const { typed: curTyped, isLocked: curLocked, target } = stateRef.current;
+      const { typed: curTyped, mistakes: curMistakes, target } = stateRef.current;
 
-      // ─────────────────────────────────────────────────────────────
-      // STRICT ERROR LOCK MECHANICS:
-      // If locked, ONLY Backspace resumes progression.
-      // ─────────────────────────────────────────────────────────────
-      if (curLocked) {
-        if (e.key === 'Backspace') {
-          e.preventDefault();
-          setIsLocked(false);
-          setMistakeChar(null);
-          stateRef.current.isLocked = false;
-        } else if (e.key.length === 1) {
-          // If user strikes another key while locked, trigger red shake again!
-          e.preventDefault();
-          setShakeKey((k) => k + 1);
-          playErrorTick();
-        }
-        return;
-      }
-
-      // ─────────────────────────────────────────────────────────────
-      // UNLOCKED STATE:
-      // ─────────────────────────────────────────────────────────────
-      if (e.key === 'Backspace') {
+      // Handle Backspace or Word Delete:
+      if (isBackspace) {
         e.preventDefault();
-        if (curTyped.length > 0) {
+
+        if (isWordDelete) {
+          if (curMistakes.length > 0) {
+            // First clear mistakes in current word
+            const nextMistakes = deletePreviousWord(curMistakes);
+            setMistakes(nextMistakes);
+            setIsLocked(nextMistakes.length > 0);
+            stateRef.current.mistakes = nextMistakes;
+            stateRef.current.isLocked = nextMistakes.length > 0;
+          } else if (curTyped.length > 0) {
+            // If no mistakes, delete previous word from typed text
+            const nextTyped = deletePreviousWord(curTyped);
+            setTyped(nextTyped);
+            stateRef.current.typed = nextTyped;
+          }
+          return;
+        }
+
+        // Single character backspace
+        if (curMistakes.length > 0) {
+          const nextMistakes = curMistakes.slice(0, -1);
+          setMistakes(nextMistakes);
+          setIsLocked(nextMistakes.length > 0);
+          stateRef.current.mistakes = nextMistakes;
+          stateRef.current.isLocked = nextMistakes.length > 0;
+        } else if (curTyped.length > 0) {
           const nextTyped = curTyped.slice(0, -1);
           setTyped(nextTyped);
           stateRef.current.typed = nextTyped;
@@ -282,10 +322,28 @@ export function useDrillEngine({
         stateRef.current.startTime = nowStart;
       }
 
-      const expectedChar = target[curTyped.length];
       const newTotalStrokes = stateRef.current.totalKeystrokes + 1;
       setTotalKeystrokes(newTotalStrokes);
       stateRef.current.totalKeystrokes = newTotalStrokes;
+
+      // If user already has active mistakes, subsequent keystrokes go beside the previous ones
+      if (curMistakes.length > 0) {
+        const nextMistakes = curMistakes + e.key;
+        const newMistakeCount = stateRef.current.mistakeCount + 1;
+        setMistakes(nextMistakes);
+        setIsLocked(true);
+        setMistakeCount(newMistakeCount);
+        setShakeKey((k) => k + 1);
+
+        stateRef.current.mistakes = nextMistakes;
+        stateRef.current.isLocked = true;
+        stateRef.current.mistakeCount = newMistakeCount;
+        playErrorTick();
+        return;
+      }
+
+      // No active mistakes - check if typed key matches expected character
+      const expectedChar = target[curTyped.length];
 
       if (e.key === expectedChar) {
         // Correct character typed
@@ -327,13 +385,15 @@ export function useDrillEngine({
           }
         }
       } else {
-        // ❌ MISMATCH DETECTED: Strict Error Lock
+        // First mistake detected
+        const nextMistakes = e.key;
         const newMistakeCount = stateRef.current.mistakeCount + 1;
+        setMistakes(nextMistakes);
         setIsLocked(true);
-        setMistakeChar(e.key);
         setMistakeCount(newMistakeCount);
         setShakeKey((k) => k + 1);
 
+        stateRef.current.mistakes = nextMistakes;
         stateRef.current.isLocked = true;
         stateRef.current.mistakeCount = newMistakeCount;
         playErrorTick();
@@ -362,7 +422,8 @@ export function useDrillEngine({
     typed,
     target: targetCommand,
     isLocked,
-    mistakeChar,
+    mistakes,
+    mistakeChar: mistakes.length > 0 ? mistakes : null,
     mistakeCount,
     totalKeystrokes,
     correctKeystrokes,

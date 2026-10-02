@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { type DrillItem } from '../../data/drillDecks';
 import { type DrillStage } from '../../lib/useDrillProgress';
-import { Settings2, RotateCcw } from 'lucide-react';
+import { Settings2, RotateCcw, Zap } from 'lucide-react';
 
 interface MinimalTyperCardProps {
   drill: DrillItem;
@@ -17,6 +17,7 @@ interface MinimalTyperCardProps {
   clozeTemplate: string;
   liveWpm: number;
   accuracy: number;
+  isBlitzMode?: boolean;
   onReset: () => void;
   onOpenSettings: () => void;
 }
@@ -34,6 +35,7 @@ export default function MinimalTyperCard({
   clozeTemplate,
   liveWpm,
   accuracy,
+  isBlitzMode = false,
   onReset,
   onOpenSettings,
 }: MinimalTyperCardProps) {
@@ -66,6 +68,14 @@ export default function MinimalTyperCard({
         </button>
 
         <div className="flex items-center gap-3">
+          {/* Blitz Mode Status Pill */}
+          {isBlitzMode && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent-amber)]/10 border border-[var(--accent-amber)]/30 text-xs font-mono font-semibold text-[var(--accent-amber)] animate-in fade-in">
+              <Zap className="w-3.5 h-3.5 fill-[var(--accent-amber)]" />
+              <span>BLITZ</span>
+            </div>
+          )}
+
           {/* Subtle Live WPM & ACC Pill */}
           <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-[var(--surface-subtle)] text-xs font-mono text-[var(--text-muted)]">
             <span>
@@ -155,6 +165,11 @@ export default function MinimalTyperCard({
         </div>
 
         <div className="flex items-center gap-4">
+          {isBlitzMode && (
+            <span className="text-[var(--accent-amber)] font-medium">
+              Enter: Next
+            </span>
+          )}
           <button
             onClick={onReset}
             className="flex items-center gap-1.5 hover:text-[var(--text-main)] transition-colors cursor-pointer"

@@ -3,6 +3,7 @@ import { type DomainCode, DRILL_DECKS, getAllDrills } from '../data/drillDecks';
 
 const STORAGE_KEY = 'linuxdrill:drill_progress_v1';
 const STREAK_KEY = 'linuxdrill:drill_streak_v1';
+const PRACTICE_STAGE_KEY = 'linuxdrill:practice_stage_v1';
 
 export type DrillStage = 1 | 2 | 3;
 
@@ -41,9 +42,31 @@ function loadStreak(): StreakState {
   }
 }
 
+function loadPracticeStage(): DrillStage {
+  try {
+    const raw = localStorage.getItem(PRACTICE_STAGE_KEY);
+    if (raw === '1' || raw === '2' || raw === '3') {
+      return Number(raw) as DrillStage;
+    }
+  } catch {
+    // fallback
+  }
+  return 1;
+}
+
 export function useDrillProgress() {
   const [progress, setProgress] = useState<DrillProgress>(loadProgress);
   const [streakState, setStreakState] = useState<StreakState>(loadStreak);
+  const [practiceStage, setPracticeStageState] = useState<DrillStage>(loadPracticeStage);
+
+  const setPracticeStage = useCallback((stage: DrillStage) => {
+    setPracticeStageState(stage);
+    try {
+      localStorage.setItem(PRACTICE_STAGE_KEY, String(stage));
+    } catch {
+      // storage unavailable
+    }
+  }, []);
 
   // Sync to localStorage
   useEffect(() => {
@@ -269,6 +292,8 @@ export function useDrillProgress() {
 
   return {
     progress,
+    practiceStage,
+    setPracticeStage,
     getDrillProgress,
     recordCompletion,
     setDrillStage,

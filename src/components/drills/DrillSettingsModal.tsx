@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Check, Award, RotateCcw } from 'lucide-react';
+import { X, Check, Award, RotateCcw, Zap } from 'lucide-react';
+import SquishSwitch from '../SquishSwitch';
 import { DRILL_DECKS, type DomainCode } from '../../data/drillDecks';
 import { type DrillStage, useDrillProgress } from '../../lib/useDrillProgress';
 
@@ -11,6 +12,8 @@ interface DrillSettingsModalProps {
   onSelectDomain: (domain: DomainCode) => void;
   currentStage: DrillStage;
   onSelectStage: (stage: DrillStage) => void;
+  isBlitzMode: boolean;
+  onToggleBlitzMode: (enabled: boolean) => void;
 }
 
 export default function DrillSettingsModal({
@@ -20,6 +23,8 @@ export default function DrillSettingsModal({
   onSelectDomain,
   currentStage,
   onSelectStage,
+  isBlitzMode,
+  onToggleBlitzMode,
 }: DrillSettingsModalProps) {
   const { getDomainStats, globalStats, resetDomainProgress } = useDrillProgress();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -161,6 +166,29 @@ export default function DrillSettingsModal({
                   );
                 })}
               </div>
+            </div>
+
+            {/* Blitz Mode Toggle */}
+            <div className="mb-6 p-3 px-3.5 rounded-2xl bg-[var(--surface-subtle)] flex items-center justify-between">
+              <div className="flex items-center gap-2.5 text-xs font-semibold text-[var(--text-main)]">
+                <Zap className="w-4 h-4 text-[var(--accent-amber)]" />
+                <span>Blitz mode</span>
+              </div>
+
+              <SquishSwitch
+                checked={isBlitzMode}
+                onChange={onToggleBlitzMode}
+                trackColor="var(--surface-active)"
+                trackOnColor="var(--accent-primary)"
+                thumbColor="#ffffff"
+                thumbOnColor="#ffffff"
+                width={42}
+                height={22}
+                radius={11}
+                speed={60}
+                stretch={32}
+                ariaLabel="Toggle Blitz mode"
+              />
             </div>
 
             {/* Competency Track Decks */}

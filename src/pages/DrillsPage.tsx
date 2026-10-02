@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   DRILL_DECKS,
@@ -13,9 +13,28 @@ import MinimalStatsCard from '../components/drills/MinimalStatsCard';
 import DrillSettingsModal from '../components/drills/DrillSettingsModal';
 
 const LAST_DOMAIN_KEY = 'linuxdrill:last_domain';
+const BLITZ_MODE_KEY = 'linuxdrill:blitz_mode_v1';
 
 export default function DrillsPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Blitz mode toggle state (persistent across drills, decks, reloads, and sessions)
+  const [isBlitzMode, setIsBlitzMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(BLITZ_MODE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleBlitzMode = useCallback((enabled: boolean) => {
+    setIsBlitzMode(enabled);
+    try {
+      localStorage.setItem(BLITZ_MODE_KEY, String(enabled));
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Deck & drill selection
   const [selectedDomain, setSelectedDomain] = useState<DomainCode>(() => {
@@ -39,7 +58,13 @@ export default function DrillsPage() {
     isNewMastery: boolean;
   } | null>(null);
 
-  const { getDrillProgress, recordCompletion, setDrillStage } = useDrillProgress();
+  const {
+    getDrillProgress,
+    recordCompletion,
+    setDrillStage,
+    practiceStage,
+    setPracticeStage,
+  } = useDrillProgress();
 
   const currentDeck = useMemo(() => {
     return getDeckByDomain(selectedDomain) || DRILL_DECKS[0];
@@ -53,9 +78,8 @@ export default function DrillsPage() {
     return getDrillProgress(currentDrill.id);
   }, [getDrillProgress, currentDrill.id]);
 
-  // Stage scaffolding state
-  const [manualStage, setManualStage] = useState<DrillStage | null>(null);
-  const effectiveStage = manualStage ?? drillProgress.stage;
+  // Persistent practice stage across all drills, decks, and sessions
+  const effectiveStage = practiceStage;
 
   // Persist last selected domain
   useEffect(() => {
@@ -83,6 +107,34 @@ export default function DrillsPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isSettingsOpen, lastResult]);
 
+  const resetDrillRef = useRef<() => void>(() => {});
+  const isAdvancingRef = useRef(false);
+
+  // Advance to next drill in deck
+  const handleNextDrill = useCallback(() => {
+    setLastResult(null);
+    resetDrillRef.current?.();
+    if (currentIndex + 1 < currentDeck.items.length) {
+      setCurrentIndex((prev) => prev + 1);
+    } else {
+      // Completed entire deck -> loop back
+      setCurrentIndex(0);
+      if (!isBlitzMode) {
+        setIsSettingsOpen(true);
+      }
+    }
+  }, [currentIndex, currentDeck.items.length, isBlitzMode]);
+
+  // Immediate advancement in Blitz Mode (debounced to avoid accidental double-skips)
+  const advanceImmediately = useCallback(() => {
+    if (isAdvancingRef.current) return;
+    isAdvancingRef.current = true;
+    handleNextDrill();
+    setTimeout(() => {
+      isAdvancingRef.current = false;
+    }, 100);
+  }, [handleNextDrill]);
+
   // Completion handler called by typing engine
   const handleDrillComplete = useCallback(
     (result: {
@@ -91,23 +143,26 @@ export default function DrillsPage() {
       errors: number;
       elapsedSeconds: number;
     }) => {
-      const { isNewMastery, nextStage } = recordCompletion(
+      const { isNewMastery } = recordCompletion(
         currentDrill.id,
         effectiveStage,
         result.wpm,
         result.errors
       );
 
-      setLastResult({
-        ...result,
-        isNewMastery,
-      });
-
-      if (manualStage !== null) {
-        setManualStage(nextStage);
+      if (isBlitzMode) {
+        // In Blitz mode, advance immediately to next drill without showing stats dialog
+        setTimeout(() => {
+          advanceImmediately();
+        }, 75);
+      } else {
+        setLastResult({
+          ...result,
+          isNewMastery,
+        });
       }
     },
-    [recordCompletion, currentDrill.id, effectiveStage, manualStage]
+    [recordCompletion, currentDrill.id, effectiveStage, isBlitzMode, advanceImmediately]
   );
 
   // Hook into typing engine
@@ -125,21 +180,13 @@ export default function DrillsPage() {
     drill: currentDrill,
     stage: effectiveStage,
     isEnabled: !isSettingsOpen && !lastResult,
+    onEnter: isBlitzMode ? advanceImmediately : undefined,
     onComplete: handleDrillComplete,
   });
 
-  // Advance to next drill in deck
-  const handleNextDrill = () => {
-    setLastResult(null);
-    if (currentIndex + 1 < currentDeck.items.length) {
-      setCurrentIndex((prev) => prev + 1);
-      setManualStage(null);
-    } else {
-      // Completed entire deck -> loop back or open settings
-      setCurrentIndex(0);
-      setIsSettingsOpen(true);
-    }
-  };
+  useEffect(() => {
+    resetDrillRef.current = resetDrill;
+  }, [resetDrill]);
 
   // Repeat current drill
   const handleRetryDrill = () => {
@@ -151,13 +198,12 @@ export default function DrillsPage() {
   const handleSelectDomain = (domain: DomainCode) => {
     setSelectedDomain(domain);
     setCurrentIndex(0);
-    setManualStage(null);
     setLastResult(null);
   };
 
-  // Change stage
+  // Change stage globally and persist
   const handleSelectStage = (s: DrillStage) => {
-    setManualStage(s);
+    setPracticeStage(s);
     setDrillStage(currentDrill.id, s);
     setLastResult(null);
     resetDrill();
@@ -180,6 +226,7 @@ export default function DrillsPage() {
         clozeTemplate={clozeTemplate}
         liveWpm={liveWpm}
         accuracy={accuracy}
+        isBlitzMode={isBlitzMode}
         onReset={resetDrill}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
@@ -225,6 +272,8 @@ export default function DrillsPage() {
         onSelectDomain={handleSelectDomain}
         currentStage={effectiveStage}
         onSelectStage={handleSelectStage}
+        isBlitzMode={isBlitzMode}
+        onToggleBlitzMode={handleToggleBlitzMode}
       />
     </div>
   );

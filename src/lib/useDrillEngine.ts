@@ -23,6 +23,7 @@ export interface UseDrillEngineProps {
   drill: DrillItem;
   stage: DrillStage;
   isEnabled?: boolean;
+  onEnter?: () => void;
   onComplete?: (result: {
     wpm: number;
     accuracy: number;
@@ -44,6 +45,7 @@ export function useDrillEngine({
   drill,
   stage,
   isEnabled = true,
+  onEnter,
   onComplete,
 }: UseDrillEngineProps) {
   const targetCommand = drill.command;
@@ -269,6 +271,15 @@ export function useDrillEngine({
         return;
       }
 
+      // Enter key (e.g. Blitz Mode instant advance)
+      if (e.key === 'Enter') {
+        if (onEnter) {
+          e.preventDefault();
+          onEnter();
+          return;
+        }
+      }
+
       const { typed: curTyped, mistakes: curMistakes, target } = stateRef.current;
 
       // Handle Backspace or Word Delete:
@@ -399,7 +410,7 @@ export function useDrillEngine({
         playErrorTick();
       }
     },
-    [isEnabled, resetDrill, playErrorTick, onComplete]
+    [isEnabled, resetDrill, playErrorTick, onEnter, onComplete]
   );
 
   // Bind keydown listener

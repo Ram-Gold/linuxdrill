@@ -8,6 +8,7 @@ import {
 } from '../data/drillDecks';
 import { useDrillProgress, type DrillStage } from '../lib/useDrillProgress';
 import { useDrillEngine } from '../lib/useDrillEngine';
+import { ShellContext } from '../lib/vfs/commands';
 import MinimalTyperCard from '../components/drills/MinimalTyperCard';
 import MinimalStatsCard from '../components/drills/MinimalStatsCard';
 import DrillSettingsModal from '../components/drills/DrillSettingsModal';
@@ -64,7 +65,11 @@ export default function DrillsPage() {
     setDrillStage,
     practiceStage,
     setPracticeStage,
+    drillMode,
+    setDrillMode,
   } = useDrillProgress();
+
+  const [resetKey, setResetKey] = useState(0);
 
   const currentDeck = useMemo(() => {
     return getDeckByDomain(selectedDomain) || DRILL_DECKS[0];
@@ -73,6 +78,12 @@ export default function DrillsPage() {
   const currentDrill: DrillItem = useMemo(() => {
     return currentDeck.items[currentIndex] || currentDeck.items[0];
   }, [currentDeck, currentIndex]);
+
+  // Fresh isolated shell instance for semantic execution in Shell mode
+  const shellContext = useMemo(() => {
+    if (!currentDrill.id || !selectedDomain || resetKey < 0) return new ShellContext();
+    return new ShellContext();
+  }, [currentDrill.id, selectedDomain, resetKey]);
 
   const drillProgress = useMemo(() => {
     return getDrillProgress(currentDrill.id);
@@ -113,6 +124,7 @@ export default function DrillsPage() {
   // Advance to next drill in deck
   const handleNextDrill = useCallback(() => {
     setLastResult(null);
+    setResetKey((k) => k + 1);
     resetDrillRef.current?.();
     if (currentIndex + 1 < currentDeck.items.length) {
       setCurrentIndex((prev) => prev + 1);
@@ -165,7 +177,7 @@ export default function DrillsPage() {
     [recordCompletion, currentDrill.id, effectiveStage, isBlitzMode, advanceImmediately]
   );
 
-  // Hook into typing engine
+  // Hook into drill engine (supports both adaptive typer and freeform shell)
   const {
     typed,
     target,
@@ -175,10 +187,13 @@ export default function DrillsPage() {
     liveWpm,
     accuracy,
     clozeTemplate,
+    shellFeedback,
     resetDrill,
   } = useDrillEngine({
     drill: currentDrill,
     stage: effectiveStage,
+    mode: drillMode,
+    shellContext,
     isEnabled: !isSettingsOpen && !lastResult,
     onEnter: isBlitzMode ? advanceImmediately : undefined,
     onComplete: handleDrillComplete,
@@ -191,14 +206,22 @@ export default function DrillsPage() {
   // Repeat current drill
   const handleRetryDrill = () => {
     setLastResult(null);
+    setResetKey((k) => k + 1);
     resetDrill();
   };
+
+  // Toggle execution mode
+  const handleToggleMode = useCallback(() => {
+    setDrillMode(drillMode === 'typer' ? 'shell' : 'typer');
+    setLastResult(null);
+  }, [drillMode, setDrillMode]);
 
   // Change domain
   const handleSelectDomain = (domain: DomainCode) => {
     setSelectedDomain(domain);
     setCurrentIndex(0);
     setLastResult(null);
+    setResetKey((k) => k + 1);
   };
 
   // Change stage globally and persist
@@ -211,10 +234,11 @@ export default function DrillsPage() {
 
   return (
     <div className="w-full flex-1 flex flex-col justify-between">
-      {/* ─── Full-Screen Minimal Typer ─── */}
+      {/* ─── Full-Screen Minimal Typer / Shell Card ─── */}
       <MinimalTyperCard
         drill={currentDrill}
         stage={effectiveStage}
+        mode={drillMode}
         currentIndex={currentIndex}
         totalInDeck={currentDeck.items.length}
         domainName={currentDeck.name}
@@ -227,7 +251,9 @@ export default function DrillsPage() {
         liveWpm={liveWpm}
         accuracy={accuracy}
         isBlitzMode={isBlitzMode}
+        shellFeedback={shellFeedback}
         onReset={resetDrill}
+        onToggleMode={handleToggleMode}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
@@ -264,7 +290,7 @@ export default function DrillsPage() {
         )}
       </AnimatePresence>
 
-      {/* ─── Minimal Deck & Stage Switcher Modal (SoundSettingsModal style) ─── */}
+      {/* ─── Minimal Deck, Stage & Mode Switcher Modal (SoundSettingsModal style) ─── */}
       <DrillSettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
@@ -272,6 +298,8 @@ export default function DrillsPage() {
         onSelectDomain={handleSelectDomain}
         currentStage={effectiveStage}
         onSelectStage={handleSelectStage}
+        drillMode={drillMode}
+        onSelectDrillMode={setDrillMode}
         isBlitzMode={isBlitzMode}
         onToggleBlitzMode={handleToggleBlitzMode}
       />

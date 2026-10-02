@@ -4,8 +4,11 @@ import { type DomainCode, DRILL_DECKS, getAllDrills } from '../data/drillDecks';
 const STORAGE_KEY = 'linuxdrill:drill_progress_v1';
 const STREAK_KEY = 'linuxdrill:drill_streak_v1';
 const PRACTICE_STAGE_KEY = 'linuxdrill:practice_stage_v1';
+const DRILL_MODE_KEY = 'linuxdrill:drill_mode_v1';
 
 export type DrillStage = 1 | 2 | 3;
+export type DrillMode = 'typer' | 'shell';
+
 
 export interface DrillItemProgress {
   stage: DrillStage;
@@ -54,10 +57,33 @@ function loadPracticeStage(): DrillStage {
   return 1;
 }
 
+function loadDrillMode(): DrillMode {
+  try {
+    const raw = localStorage.getItem(DRILL_MODE_KEY);
+    if (raw === 'typer' || raw === 'shell') {
+      return raw;
+    }
+  } catch {
+    // fallback
+  }
+  return 'typer';
+}
+
 export function useDrillProgress() {
   const [progress, setProgress] = useState<DrillProgress>(loadProgress);
   const [streakState, setStreakState] = useState<StreakState>(loadStreak);
   const [practiceStage, setPracticeStageState] = useState<DrillStage>(loadPracticeStage);
+  const [drillMode, setDrillModeState] = useState<DrillMode>(loadDrillMode);
+
+  const setDrillMode = useCallback((mode: DrillMode) => {
+    setDrillModeState(mode);
+    try {
+      localStorage.setItem(DRILL_MODE_KEY, mode);
+    } catch {
+      // storage unavailable
+    }
+  }, []);
+
 
   const setPracticeStage = useCallback((stage: DrillStage) => {
     setPracticeStageState(stage);
@@ -294,6 +320,8 @@ export function useDrillProgress() {
     progress,
     practiceStage,
     setPracticeStage,
+    drillMode,
+    setDrillMode,
     getDrillProgress,
     recordCompletion,
     setDrillStage,

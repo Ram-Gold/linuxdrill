@@ -5,6 +5,7 @@ export interface DrillItem {
   domain: DomainCode;
   task: string;
   command: string;
+  acceptedCommands?: string[];
   clozeMask?: string;
   explanation?: string;
   tags: string[];
@@ -174,6 +175,19 @@ export const DRILL_DECKS: DomainDeck[] = [
         domain: 'USER',
         task: 'Create user alice with dedicated home directory and /bin/bash login shell',
         command: 'useradd -m -s /bin/bash alice',
+        acceptedCommands: [
+          'useradd alice',
+          'useradd -m alice',
+          'useradd -s /bin/bash alice',
+          'useradd -s /bin/bash -m alice',
+          'useradd -ms /bin/bash alice',
+          'useradd -m -s /bin/bash alice',
+          'useradd alice && passwd Pass@123',
+          'useradd -m -s /bin/bash alice && echo "alice:Pass@123" | chpasswd',
+          'useradd -m -s /bin/bash alice && echo \'alice:Pass@123\' | chpasswd',
+          'useradd alice && echo "alice:Pass@123" | chpasswd',
+          'useradd alice && echo \'alice:Pass@123\' | chpasswd',
+        ],
         clozeMask: 'useradd -_ -_ /bin/bash alice',
         explanation: '-m creates user home directory (/home/alice); -s sets default login shell.',
         tags: ['useradd', 'users', 'auth'],
@@ -183,6 +197,15 @@ export const DRILL_DECKS: DomainDeck[] = [
         domain: 'USER',
         task: 'Set password for user alice non-interactively using chpasswd',
         command: 'echo "alice:Pass@123" | chpasswd',
+        acceptedCommands: [
+          'echo \'alice:Pass@123\' | chpasswd',
+          'echo alice:Pass@123 | chpasswd',
+          'echo "Pass@123" | passwd --stdin alice',
+          'echo \'Pass@123\' | passwd --stdin alice',
+          'echo Pass@123 | passwd --stdin alice',
+          'passwd alice',
+          'passwd Pass@123',
+        ],
         clozeMask: 'echo "alice:Pass@123" | ________',
         explanation: 'chpasswd accepts username:password lines via standard input, ideal for scripts and automation.',
         tags: ['chpasswd', 'password', 'pipeline'],
@@ -201,6 +224,12 @@ export const DRILL_DECKS: DomainDeck[] = [
         domain: 'USER',
         task: 'Append user alice to supplementary group developers without removing existing groups',
         command: 'usermod -aG developers alice',
+        acceptedCommands: [
+          'usermod -a -G developers alice',
+          'usermod -G developers -a alice',
+          'usermod -aG developers alice',
+          'gpasswd -a alice developers',
+        ],
         clozeMask: 'usermod -___ developers alice',
         explanation: '-a appends to supplementary groups; omitting -a removes user from unspecified secondary groups.',
         tags: ['usermod', 'groups'],

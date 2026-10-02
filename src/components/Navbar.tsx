@@ -24,7 +24,8 @@ export default function Navbar({
 
   const location = useLocation();
   const isTerminal = location.pathname.startsWith("/terminal");
-  const isChallenges = location.pathname === "/";
+  const isDrills = location.pathname.startsWith("/drills") || location.pathname.startsWith("/typing");
+  const isChallenges = !isTerminal && !isDrills;
   const { isDark, toggleTheme } = useTheme();
   const { isEnabled } = useSoundpack();
   const { presets, activePresetId, setThemePreset } = useThemePreset();
@@ -54,7 +55,7 @@ export default function Navbar({
 
   return (
     <header className="sticky top-0 z-40 px-5 lg:px-8 transition-colors duration-120 shadow-[0_2px_12px_rgba(0,0,0,0.04)]" style={{ backgroundColor: 'var(--surface-base)' }}>
-      <div className={`${isChallenges ? "max-w-[1400px]" : "w-full"} mx-auto h-14 flex items-center justify-between`}>
+      <div className={`${!isTerminal ? "max-w-[1400px]" : "w-full"} mx-auto h-14 flex items-center justify-between`}>
         {/* Left: Logo */}
         <Link
           to="/"
@@ -69,12 +70,12 @@ export default function Navbar({
         <nav className="relative flex items-center p-1 rounded-xl bg-[var(--surface-subtle)]">
           <Link
             to="/"
-            className={`relative px-3.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer mimo-press ${!isTerminal
+            className={`relative px-3.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer mimo-press ${isChallenges
               ? "text-[var(--text-main)] font-semibold"
               : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
               }`}
           >
-            {!isTerminal && (
+            {isChallenges && (
               <motion.div
                 layoutId="navbar-mode-pill"
                 transition={{ type: "spring", stiffness: 420, damping: 32 }}
@@ -82,6 +83,23 @@ export default function Navbar({
               />
             )}
             <span className="relative z-10">Challenges</span>
+          </Link>
+
+          <Link
+            to="/drills"
+            className={`relative px-3.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer mimo-press ${isDrills
+              ? "text-[var(--text-main)] font-semibold"
+              : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+              }`}
+          >
+            {isDrills && (
+              <motion.div
+                layoutId="navbar-mode-pill"
+                transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                className="absolute inset-0 bg-[var(--surface-base)] rounded-lg shadow-sm"
+              />
+            )}
+            <span className="relative z-10">Drills</span>
           </Link>
 
           <Link

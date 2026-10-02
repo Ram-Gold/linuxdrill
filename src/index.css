@@ -765,3 +765,34 @@ code, kbd, pre, .font-mono {
   font-weight: 500;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   CLI SPEED & MUSCLE MEMORY DRILL TYPER ANIMATIONS
+   ══════════════════════════════════════════════════════════════════ */
+@keyframes drill-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+.animate-drill-shake {
+  animation: drill-shake 0.28s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes cursor-blink-fast {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-cursor-blink {
+  animation: cursor-blink-fast 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse-subtle-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 107, 107, 0); }
+}
+
+.animate-error-glow {
+  animation: pulse-subtle-glow 1s ease-in-out infinite;
+}
+

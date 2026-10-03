@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { type DrillItem } from '../../data/drillDecks';
 import { type DrillStage, type DrillMode } from '../../lib/useDrillProgress';
-import { Settings2, RotateCcw, Zap, Terminal, Keyboard, AlertCircle } from 'lucide-react';
+import { Settings2, Layers, Zap, Terminal, Keyboard, AlertCircle } from 'lucide-react';
 
 interface MinimalTyperCardProps {
   drill: DrillItem;
@@ -24,6 +24,7 @@ interface MinimalTyperCardProps {
   onReset: () => void;
   onToggleMode?: () => void;
   onOpenSettings: () => void;
+  onOpenDecks: () => void;
 }
 
 export default function MinimalTyperCard({
@@ -45,6 +46,7 @@ export default function MinimalTyperCard({
   onReset,
   onToggleMode,
   onOpenSettings,
+  onOpenDecks,
 }: MinimalTyperCardProps) {
   const cursorRef = useRef<HTMLSpanElement>(null);
 
@@ -65,9 +67,9 @@ export default function MinimalTyperCard({
       {/* ─── Top Header: Minimal Domain Tag + Mode Switch + Live Pill Telemetry ─── */}
       <div className="flex items-center justify-between text-xs font-mono text-[var(--text-tertiary)] w-full">
         <button
-          onClick={onOpenSettings}
+          onClick={onOpenDecks}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer"
-          title="Change Deck or Stage (Esc)"
+          title="Change Deck"
         >
           <span className="font-semibold text-[var(--text-main)]">{domainName}</span>
           <span>•</span>
@@ -115,11 +117,21 @@ export default function MinimalTyperCard({
             </span>
           </div>
 
-          {/* Quick Menu Button */}
+          {/* Competency Decks Button */}
+          <button
+            onClick={onOpenDecks}
+            className="p-1.5 rounded-xl text-[var(--text-tertiary)] hover:text-[var(--text-main)] hover:bg-[var(--surface-subtle)] transition-colors cursor-pointer"
+            title="Competency Decks"
+            aria-label="Competency Decks"
+          >
+            <Layers className="w-4 h-4" />
+          </button>
+
+          {/* Settings Button */}
           <button
             onClick={onOpenSettings}
             className="p-1.5 rounded-xl text-[var(--text-tertiary)] hover:text-[var(--text-main)] hover:bg-[var(--surface-subtle)] transition-colors cursor-pointer"
-            title="Drill Settings (Esc)"
+            title="Drill Settings"
             aria-label="Settings"
           >
             <Settings2 className="w-4 h-4" />
@@ -238,45 +250,6 @@ export default function MinimalTyperCard({
         </div>
       </div>
 
-      {/* ─── Bottom Footer: Stage badge & Shortcuts ─── */}
-      <div className="flex items-center justify-between text-xs font-mono text-[var(--text-tertiary)] w-full pt-4 border-t border-white/5">
-        <div className="flex items-center gap-2">
-          <span>
-            {mode === 'shell' ? (
-              <span className="text-[var(--accent-primary-soft)] font-medium">Freeform Shell Mode • Enter to Verify</span>
-            ) : (
-              <>
-                {stage === 1 && 'Stage 1 • Ghost Assist'}
-                {stage === 2 && 'Stage 2 • Cloze Blanking'}
-                {stage === 3 && 'Stage 3 • Blind Recall'}
-              </>
-            )}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4">
-          {mode === 'shell' ? (
-            <span className="text-[var(--accent-primary-soft)] font-medium">
-              Enter: Run
-            </span>
-          ) : (
-            isBlitzMode && (
-              <span className="text-[var(--accent-amber)] font-medium">
-                Enter: Next
-              </span>
-            )
-          )}
-          <button
-            onClick={onReset}
-            className="flex items-center gap-1.5 hover:text-[var(--text-main)] transition-colors cursor-pointer"
-            title="Restart command (Tab)"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Tab: Reset</span>
-          </button>
-          <span>Esc: Menu</span>
-        </div>
-      </div>
     </div>
   );
 }

@@ -12,12 +12,14 @@ import { ShellContext } from '../lib/vfs/commands';
 import MinimalTyperCard from '../components/drills/MinimalTyperCard';
 import MinimalStatsCard from '../components/drills/MinimalStatsCard';
 import DrillSettingsModal from '../components/drills/DrillSettingsModal';
+import CompetencyDecksModal from '../components/drills/CompetencyDecksModal';
 
 const LAST_DOMAIN_KEY = 'linuxdrill:last_domain';
 const BLITZ_MODE_KEY = 'linuxdrill:blitz_mode_v1';
 
 export default function DrillsPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isDecksOpen, setIsDecksOpen] = useState(false);
 
   // Blitz mode toggle state (persistent across drills, decks, reloads, and sessions)
   const [isBlitzMode, setIsBlitzMode] = useState<boolean>(() => {
@@ -101,22 +103,16 @@ export default function DrillsPage() {
     }
   }, [selectedDomain]);
 
-  // Listen for Escape key to toggle the Settings modal when not in completion state
+  // Listen for Escape key to dismiss the result card
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && !isSettingsOpen) {
-        if (lastResult) {
-          // If result card is open, dismiss it
-          setLastResult(null);
-        } else {
-          // Open settings modal
-          setIsSettingsOpen(true);
-        }
+      if (e.key === 'Escape' && !isSettingsOpen && !isDecksOpen && lastResult) {
+        setLastResult(null);
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSettingsOpen, lastResult]);
+  }, [isSettingsOpen, isDecksOpen, lastResult]);
 
   const resetDrillRef = useRef<() => void>(() => {});
   const isAdvancingRef = useRef(false);
@@ -194,7 +190,7 @@ export default function DrillsPage() {
     stage: effectiveStage,
     mode: drillMode,
     shellContext,
-    isEnabled: !isSettingsOpen && !lastResult,
+    isEnabled: !isSettingsOpen && !isDecksOpen && !lastResult,
     onEnter: isBlitzMode ? advanceImmediately : undefined,
     onComplete: handleDrillComplete,
   });
@@ -255,6 +251,7 @@ export default function DrillsPage() {
         onReset={resetDrill}
         onToggleMode={handleToggleMode}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenDecks={() => setIsDecksOpen(true)}
       />
 
       {/* ─── Completion Stats Modal (SoundSettingsModal style) ─── */}
@@ -294,14 +291,24 @@ export default function DrillsPage() {
       <DrillSettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        selectedDomain={selectedDomain}
-        onSelectDomain={handleSelectDomain}
         currentStage={effectiveStage}
         onSelectStage={handleSelectStage}
         drillMode={drillMode}
         onSelectDrillMode={setDrillMode}
         isBlitzMode={isBlitzMode}
         onToggleBlitzMode={handleToggleBlitzMode}
+      />
+
+      {/* ─── Competency Decks Modal ─── */}
+      <CompetencyDecksModal
+        isOpen={isDecksOpen}
+        onClose={() => setIsDecksOpen(false)}
+        selectedDomain={selectedDomain}
+        onSelectDomain={handleSelectDomain}
+        currentStage={effectiveStage}
+        pendingStage={effectiveStage}
+        onApplyPendingStage={() => {}}
+        hasStageChanged={false}
       />
     </div>
   );

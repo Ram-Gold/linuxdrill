@@ -1,15 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Check, Award, RotateCcw, Zap, Terminal, Keyboard, HelpCircle } from 'lucide-react';
+import { X, Check, Zap, Terminal, Keyboard, HelpCircle, Settings } from 'lucide-react';
 import SquishSwitch from '../SquishSwitch';
-import { DRILL_DECKS, type DomainCode } from '../../data/drillDecks';
 import { type DrillStage, type DrillMode, useDrillProgress } from '../../lib/useDrillProgress';
 
 interface DrillSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedDomain: DomainCode;
-  onSelectDomain: (domain: DomainCode) => void;
   currentStage: DrillStage;
   onSelectStage: (stage: DrillStage) => void;
   drillMode: DrillMode;
@@ -21,8 +18,6 @@ interface DrillSettingsModalProps {
 export default function DrillSettingsModal({
   isOpen,
   onClose,
-  selectedDomain,
-  onSelectDomain,
   currentStage,
   onSelectStage,
   drillMode,
@@ -30,7 +25,7 @@ export default function DrillSettingsModal({
   isBlitzMode,
   onToggleBlitzMode,
 }: DrillSettingsModalProps) {
-  const { getDomainStats, globalStats, resetDomainProgress } = useDrillProgress();
+  const { globalStats } = useDrillProgress();
   const modalRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const helpBtnRef = useRef<HTMLButtonElement>(null);
@@ -129,8 +124,9 @@ export default function DrillSettingsModal({
             {/* Header: Title + Close */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-base font-semibold tracking-tight text-[var(--text-main)]">
-                  Drill Setup & Competencies
+                <h2 className="text-base font-semibold tracking-tight text-[var(--text-main)] flex items-center gap-2">
+                  <Settings className="w-4 h-4 text-[var(--accent-primary-soft)]" />
+                  Drill Settings
                 </h2>
                 <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
                   {globalStats.totalMastered}/{globalStats.totalDrills} Mastered ({globalStats.masteryPercent}%) • Best: {globalStats.bestWpm} WPM
@@ -341,60 +337,6 @@ export default function DrillSettingsModal({
               />
             </div>
 
-            {/* Competency Track Decks */}
-            <div className="space-y-2">
-              <span className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium font-mono px-0.5">
-                Linux Competency Decks
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {DRILL_DECKS.map((deck) => {
-                  const stats = getDomainStats(deck.id);
-                  const isSelected = selectedDomain === deck.id;
-
-                  return (
-                    <button
-                      key={deck.id}
-                      onClick={() => {
-                        if (hasStageChanged) {
-                          onSelectStage(pendingStage);
-                        }
-                        onSelectDomain(deck.id);
-                        onClose();
-                      }}
-                      className={`p-3 rounded-2xl text-left transition-all cursor-pointer border flex items-center justify-between group ${
-                        isSelected
-                          ? 'bg-[var(--surface-active)] border-[var(--accent-primary)]/50 text-[var(--text-main)] shadow-sm'
-                          : 'bg-[var(--surface-subtle)] border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)]/50'
-                      }`}
-                    >
-                      <div className="min-w-0 pr-2">
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{ backgroundColor: deck.accentColor }}
-                          />
-                          <span className="text-xs font-semibold truncate text-[var(--text-main)]">
-                            {deck.name}
-                          </span>
-                        </div>
-                        <div className="text-[10px] font-mono text-[var(--text-tertiary)] mt-1 flex items-center gap-2">
-                          <span>{stats.mastered}/{stats.total} Mastered</span>
-                          {stats.avgWpm > 0 && <span>• {stats.avgWpm} WPM</span>}
-                        </div>
-                      </div>
-
-                      {isSelected ? (
-                        <Check className="w-4 h-4 text-[var(--accent-primary-soft)] shrink-0" />
-                      ) : stats.percentMastered === 100 ? (
-                        <Award className="w-4 h-4 text-[var(--accent-green)] shrink-0" />
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Confirm Stage Change Button appears at the bottom of the modal */}
             <AnimatePresence>
               {hasStageChanged && (
@@ -403,7 +345,7 @@ export default function DrillSettingsModal({
                   animate={{ opacity: 1, height: 'auto', y: 0 }}
                   exit={{ opacity: 0, height: 0, y: 8 }}
                   transition={{ duration: 0.18, ease: 'easeOut' }}
-                  className="overflow-hidden mt-6"
+                  className="overflow-hidden"
                 >
                   <button
                     type="button"
@@ -420,21 +362,8 @@ export default function DrillSettingsModal({
               )}
             </AnimatePresence>
 
-            {/* Footer with Reset option */}
-            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-[var(--text-tertiary)] font-mono">
-              <button
-                type="button"
-                onClick={() => {
-                  if (confirm(`Reset progress for ${selectedDomain} deck?`)) {
-                    resetDomainProgress(selectedDomain);
-                  }
-                }}
-                className="flex items-center gap-1.5 text-[var(--text-tertiary)] hover:text-[var(--accent-red)] transition-colors cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset {selectedDomain}</span>
-              </button>
-
+            {/* Footer */}
+            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-end text-xs text-[var(--text-tertiary)] font-mono">
               <span>Press Esc to close</span>
             </div>
           </motion.div>

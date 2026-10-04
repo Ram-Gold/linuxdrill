@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Terminal as TerminalIcon, FolderTree } from 'lucide-react';
+import { X, Terminal as TerminalIcon, FolderTree, PanelTop } from 'lucide-react';
 import MinimalSlider from './MinimalSlider';
+import GlideSelect from '../GlideSelect';
+import { useNavbarMode, type NavbarMode } from '../../lib/useNavbarMode';
 
 interface TerminalSettingsModalProps {
   isOpen: boolean;
@@ -10,6 +12,8 @@ interface TerminalSettingsModalProps {
   onTerminalFontSizeChange?: (size: number) => void;
   fileTreeFontSize?: number;
   onFileTreeFontSizeChange?: (size: number) => void;
+  navbarMode?: NavbarMode;
+  onNavbarModeChange?: (mode: NavbarMode) => void;
 }
 
 export default function TerminalSettingsModal({
@@ -19,8 +23,13 @@ export default function TerminalSettingsModal({
   onTerminalFontSizeChange,
   fileTreeFontSize = 12,
   onFileTreeFontSizeChange,
+  navbarMode: propNavbarMode,
+  onNavbarModeChange: propOnNavbarModeChange,
 }: TerminalSettingsModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const { navbarMode: hookNavbarMode, setNavbarMode: hookSetNavbarMode } = useNavbarMode();
+  const currentNavbarMode = propNavbarMode ?? hookNavbarMode;
+  const handleNavbarModeChange = propOnNavbarModeChange ?? hookSetNavbarMode;
 
   // Close on outside click
   useEffect(() => {
@@ -82,11 +91,8 @@ export default function TerminalSettingsModal({
                   id="terminal-settings-title"
                   className="text-base font-semibold tracking-tight text-[var(--text-main)]"
                 >
-                  Text & Appearance
+                  Workspace & Appearance
                 </h2>
-                <p className="text-xs text-[var(--text-tertiary)] font-mono mt-0.5">
-                  Adjust text sizing across the terminal and simulated file manager
-                </p>
               </div>
 
               <button
@@ -122,7 +128,7 @@ export default function TerminalSettingsModal({
               {/* Slider 2: File Directory Font Size */}
               {onFileTreeFontSizeChange && (
                 <MinimalSlider
-                  label="File Directory Text Size"
+                  label="File Text Size"
                   icon={<FolderTree className="w-3.5 h-3.5 text-blue-400" />}
                   value={fileTreeFontSize}
                   defaultValue={12}
@@ -137,9 +143,39 @@ export default function TerminalSettingsModal({
               )}
             </div>
 
+            {/* Navigation Bar Display Mode Section */}
+            <div className="mb-7 pt-5 border-t border-white/5 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2.5">
+                <span className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium flex items-center gap-1.5">
+                  <PanelTop className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Navigation Bar</span>
+                </span>
+              </div>
+
+              <GlideSelect
+                options={[
+                  { value: 'always', label: 'Always on', tag: 'Pinned' },
+                  { value: 'hover', label: 'Hovered', tag: 'Auto-hide' },
+                  { value: 'hide', label: 'Hide', tag: 'Zen' },
+                ]}
+                value={currentNavbarMode}
+                onChange={(val) => handleNavbarModeChange(val as NavbarMode)}
+                ariaLabel="Navigation bar visibility mode"
+                surfaceColor="var(--surface-subtle)"
+                menuSurfaceColor="var(--surface-elevated)"
+                highlightColor="var(--surface-active)"
+                accentColor="var(--accent-primary-soft)"
+                textColor="var(--text-main)"
+                size="md"
+                radius={16}
+                menuWidth={184}
+                placement="bottom"
+                align="right"
+              />
+            </div>
+
             {/* Clean borderless footer */}
-            <div className="pt-2 flex items-center justify-between text-xs text-[var(--text-tertiary)] font-mono">
-              <span>Settings save automatically</span>
+            <div className="pt-2 flex items-center justify-end text-xs">
               <button
                 type="button"
                 onClick={onClose}

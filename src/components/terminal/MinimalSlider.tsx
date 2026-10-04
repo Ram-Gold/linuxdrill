@@ -98,7 +98,7 @@ export default function MinimalSlider({
     <div className="flex flex-col gap-2.5 select-none">
       {/* Label and Value Header */}
       <div className="flex items-center justify-between px-0.5">
-        <span className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium font-mono flex items-center gap-1.5">
+        <span className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium flex items-center gap-1.5">
           {icon}
           <span>{label}</span>
         </span>

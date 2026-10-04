@@ -6,6 +6,7 @@ import { useTheme } from "../lib/useTheme";
 import { useSoundpack } from "../lib/useSoundpack";
 import { useThemePreset } from "../lib/useThemePreset";
 import { SoundSettingsModal } from "./SoundSettingsModal";
+import { useNavbarMode } from "../lib/useNavbarMode";
 
 const GITHUB_REPO_URL = "https://github.com/Ram-Gold/linuxdrill";
 const GITHUB_API_URL = "https://api.github.com/repos/Ram-Gold/linuxdrill";
@@ -115,9 +116,101 @@ export default function Navbar({
     };
   }, [isThemeDropdownOpen]);
 
+  const { navbarMode } = useNavbarMode();
+  const [isHoverRevealed, setIsHoverRevealed] = useState(false);
+  const hoverLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const isTerminalHidden = isTerminal && navbarMode === "hide";
+  const isTerminalHover = isTerminal && navbarMode === "hover";
+
+  // When in hover mode, keep navbar revealed while theme dropdown or sound settings are active
+  const isRevealed = !isTerminalHover || isHoverRevealed || isThemeDropdownOpen || isSoundModalOpen;
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => clearTimeout(hoverLeaveTimerRef.current);
+  }, []);
+
+  // Pointer move handler to smoothly detect when pointer reaches top 16px of window in terminal hover mode
+  useEffect(() => {
+    if (!isTerminalHover) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (e.clientY <= 16) {
+        if (hoverLeaveTimerRef.current) {
+          clearTimeout(hoverLeaveTimerRef.current);
+        }
+        setIsHoverRevealed(true);
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    return () => window.removeEventListener("pointermove", handlePointerMove);
+  }, [isTerminalHover]);
+
+  const handleHeaderMouseEnter = () => {
+    if (isTerminalHover) {
+      if (hoverLeaveTimerRef.current) {
+        clearTimeout(hoverLeaveTimerRef.current);
+      }
+      setIsHoverRevealed(true);
+    }
+  };
+
+  const handleHeaderMouseLeave = () => {
+    if (isTerminalHover && !isThemeDropdownOpen && !isSoundModalOpen) {
+      if (hoverLeaveTimerRef.current) {
+        clearTimeout(hoverLeaveTimerRef.current);
+      }
+      hoverLeaveTimerRef.current = setTimeout(() => {
+        setIsHoverRevealed(false);
+      }, 280);
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-40 px-5 lg:px-8 transition-colors duration-120 shadow-[0_2px_12px_rgba(0,0,0,0.04)]" style={{ backgroundColor: 'var(--surface-base)' }}>
-      <div className={`${!isTerminal ? "max-w-[1400px]" : "w-full"} mx-auto h-14 flex items-center justify-between`}>
+    <>
+      {/* Invisible top hover trigger zone for hover mode */}
+      {isTerminalHover && (
+        <div
+          onMouseEnter={handleHeaderMouseEnter}
+          className="fixed top-0 left-0 right-0 h-4 z-40 pointer-events-auto"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Discreet top peek pill indicator when retracted in hover mode */}
+      {isTerminalHover && (
+        <div
+          onMouseEnter={handleHeaderMouseEnter}
+          onClick={handleHeaderMouseEnter}
+          className={`fixed top-0 left-1/2 -translate-x-1/2 z-40 pt-1 pb-2 px-6 cursor-pointer transition-all duration-300 ${
+            isRevealed ? "opacity-0 pointer-events-none -translate-y-full" : "opacity-100 translate-y-0"
+          }`}
+          title="Hover or click to reveal navigation bar"
+          aria-label="Reveal navigation bar"
+        >
+          <div className="w-12 h-1 rounded-full bg-white/25 hover:bg-[var(--accent-primary-soft)] hover:w-16 transition-all duration-200 shadow-sm" />
+        </div>
+      )}
+
+      <header
+        onMouseEnter={handleHeaderMouseEnter}
+        onMouseLeave={handleHeaderMouseLeave}
+        className={`z-40 px-5 lg:px-8 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isTerminalHidden
+            ? "hidden"
+            : isTerminalHover
+            ? `fixed top-0 left-0 right-0 backdrop-blur-xl bg-[var(--surface-base)]/95 border-b border-white/5 shadow-2xl shadow-black/40 ${
+                isRevealed
+                  ? "translate-y-0 opacity-100 pointer-events-auto"
+                  : "-translate-y-full opacity-0 pointer-events-none"
+              }`
+            : "sticky top-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)]"
+        }`}
+        style={{ backgroundColor: !isTerminalHover ? "var(--surface-base)" : undefined }}
+      >
+        <div className={`${!isTerminal ? "max-w-[1400px]" : "w-full"} mx-auto h-14 flex items-center justify-between`}>
         {/* Left: Logo */}
         <Link
           to="/"
@@ -338,12 +431,13 @@ export default function Navbar({
           </a>
         </div>
       </div>
-
-      {/* Sound Settings Modal */}
-      <SoundSettingsModal
-        isOpen={isSoundModalOpen}
-        onClose={() => setIsSoundModalOpen(false)}
-      />
     </header>
-  );
+
+    {/* Sound Settings Modal */}
+    <SoundSettingsModal
+      isOpen={isSoundModalOpen}
+      onClose={() => setIsSoundModalOpen(false)}
+    />
+  </>
+);
 }

@@ -3,6 +3,7 @@ import Terminal, { type TerminalHandle } from "../components/Terminal";
 import { ShellContext } from "../lib/vfs/commands";
 import SimulatedFileManager from "../components/terminal/SimulatedFileManager";
 import TerminalSettingsModal from "../components/terminal/TerminalSettingsModal";
+import { useNavbarMode } from "../lib/useNavbarMode";
 
 const TERMINAL_FONT_SIZE_KEY = "linuxdrill-terminal-font-size";
 const FILE_TREE_FONT_SIZE_KEY = "linuxdrill-filetree-font-size";
@@ -12,6 +13,8 @@ export default function TerminalPlayground() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const terminalRef = useRef<TerminalHandle>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { navbarMode, setNavbarMode } = useNavbarMode();
+  const isNavbarPinned = navbarMode === "always";
 
   // Terminal font size state persisted in localStorage (defaults to 13px)
   const [terminalFontSize, setTerminalFontSize] = useState<number>(() => {
@@ -60,7 +63,9 @@ export default function TerminalPlayground() {
   };
 
   return (
-    <div className="w-full h-[calc(100vh-3.5rem)] select-none flex flex-col p-0 m-0 overflow-hidden bg-[var(--surface-base)]">
+    <div
+      className={`w-full ${isNavbarPinned ? "h-[calc(100vh-3.5rem)]" : "h-screen"} select-none flex flex-col p-0 m-0 overflow-hidden bg-[var(--surface-base)] transition-[height] duration-200`}
+    >
       {/* 100% Full-Bleed Workspace Layout without outer padding or rounded borders */}
       <div className="w-full h-full flex flex-col md:flex-row overflow-hidden bg-[var(--surface-base)]">
         {/* Left Side: Simulated File Manager (read-only tree, updates via terminal) */}
@@ -90,7 +95,7 @@ export default function TerminalPlayground() {
         </div>
       </div>
 
-      {/* Sandbox Settings Modal (Dual Range Sliders for Terminal & File Directory text size) */}
+      {/* Sandbox Settings Modal (Dual Range Sliders for Terminal & File Directory text size + Navigation Bar Mode) */}
       <TerminalSettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
@@ -98,6 +103,8 @@ export default function TerminalPlayground() {
         onTerminalFontSizeChange={handleTerminalFontSizeChange}
         fileTreeFontSize={fileTreeFontSize}
         onFileTreeFontSizeChange={handleFileTreeFontSizeChange}
+        navbarMode={navbarMode}
+        onNavbarModeChange={setNavbarMode}
       />
     </div>
   );

@@ -49,8 +49,17 @@ export function SoundSettingsModal({ isOpen, onClose }: SoundSettingsModalProps)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dropdownCategory, setDropdownCategory] = useState<SoundpackCategory>("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [hoveredPackId, setHoveredPackId] = useState<string | null>(() => settings.activePack);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  const [prevDropdownOpen, setPrevDropdownOpen] = useState(isDropdownOpen);
+  if (isDropdownOpen && !prevDropdownOpen) {
+    setPrevDropdownOpen(true);
+    setHoveredPackId(settings.activePack);
+  } else if (!isDropdownOpen && prevDropdownOpen) {
+    setPrevDropdownOpen(false);
+  }
 
   // Active soundpack metadata
   const activeMeta = useMemo(() => {
@@ -460,7 +469,7 @@ export function SoundSettingsModal({ isOpen, onClose }: SoundSettingsModalProps)
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           placeholder="Search switches…"
-                          className="w-full h-9 pl-9 pr-8 rounded-xl bg-[var(--surface-subtle)] text-xs text-[var(--text-main)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-primary)] transition-all font-mono border-0"
+                          className="w-full h-9 pl-9 pr-8 rounded-xl bg-[var(--surface-subtle)] text-xs text-[var(--text-main)] placeholder:text-[var(--text-tertiary)] focus:outline-none transition-all font-mono border-0"
                           autoFocus
                         />
                         {searchQuery && (
@@ -511,6 +520,7 @@ export function SoundSettingsModal({ isOpen, onClose }: SoundSettingsModalProps)
                       className="max-h-[240px] overflow-y-auto p-2 space-y-1 scrollbar-subtle"
                       role="listbox"
                       aria-label="Sound profiles"
+                      onMouseLeave={() => setHoveredPackId(settings.activePack)}
                     >
                       {filteredMetas.length === 0 ? (
                         <div className="py-6 text-center text-xs font-mono text-[var(--text-tertiary)]">
@@ -518,24 +528,31 @@ export function SoundSettingsModal({ isOpen, onClose }: SoundSettingsModalProps)
                         </div>
                       ) : (
                         filteredMetas.map((meta) => {
-                          const active = settings.activePack === meta.id;
+                          const isSelected = settings.activePack === meta.id;
+                          const isPillTarget = (hoveredPackId ?? settings.activePack) === meta.id;
                           return (
                             <div
                               key={meta.id}
                               role="option"
-                              aria-selected={active}
+                              aria-selected={isSelected}
+                              onMouseEnter={() => setHoveredPackId(meta.id)}
                               onClick={() => {
                                 setActivePack(meta.id);
                                 setIsDropdownOpen(false);
                               }}
-                              className={`group flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl cursor-pointer transition-all border-0 mimo-press ${
-                                active
-                                  ? "bg-[var(--surface-active)] text-[var(--text-main)]"
-                                  : "hover:bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
-                              }`}
+                              className="relative group flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl cursor-pointer border-0 mimo-press select-none"
                             >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                {active ? (
+                              {/* Gliding Hover Pill matching GlideSelect */}
+                              {isPillTarget && (
+                                <motion.div
+                                  layoutId="soundpack-gliding-pill"
+                                  className="absolute inset-0 rounded-xl bg-[var(--surface-active)] pointer-events-none"
+                                  transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                                />
+                              )}
+
+                              <div className="relative z-10 flex items-center gap-2.5 min-w-0">
+                                {isSelected ? (
                                   <Check className="w-3.5 h-3.5 text-[var(--accent-primary-soft)] shrink-0" />
                                 ) : (
                                   <div className="w-3.5 h-3.5 shrink-0" />
@@ -559,11 +576,11 @@ export function SoundSettingsModal({ isOpen, onClose }: SoundSettingsModalProps)
                                   e.stopPropagation();
                                   playPreview(meta.id, "enter");
                                 }}
-                                className={`p-1.5 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-main)] hover:bg-[var(--surface-subtle)] transition-all cursor-pointer ${
-                                  active
-                                    ? "opacity-100 text-[var(--accent-primary-soft)]"
-                                    : "opacity-0 group-hover:opacity-100"
-                                }`}
+                                className={`relative z-10 p-1.5 rounded-lg ${
+                                  isSelected
+                                    ? "text-[var(--accent-primary-soft)]"
+                                    : "text-[var(--text-tertiary)]"
+                                } hover:text-[var(--text-main)] hover:bg-[var(--surface-subtle)] transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus-visible:opacity-100`}
                                 title={`Sample ${meta.name}`}
                                 aria-label={`Sample ${meta.name}`}
                               >

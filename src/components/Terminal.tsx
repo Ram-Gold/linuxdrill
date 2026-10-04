@@ -14,9 +14,13 @@ import {
   Minimize2,
   Play,
   RotateCcw,
+  BookOpen,
+  Settings,
 } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 import { ShellContext } from "../lib/vfs/commands";
 import type { HistoryItem } from "../lib/vfs/types";
+import TerminalGuideDrawer from "./terminal/TerminalGuideDrawer";
 
 export interface TerminalHandle {
   getShell: () => ShellContext;
@@ -26,6 +30,7 @@ export interface TerminalHandle {
   resetVm: () => void;
   runSetup: () => void;
   copyOutput: () => void;
+  toggleGuide: () => void;
 }
 
 interface TerminalProps {
@@ -37,6 +42,11 @@ interface TerminalProps {
   onVerify?: (shell: ShellContext) => void;
   isSolved?: boolean;
   embedded?: boolean;
+  showGuideButton?: boolean;
+  onOpenSettings?: () => void;
+  shellContext?: ShellContext;
+  fontSize?: number;
+  hideHeaderActions?: boolean;
 }
 
 interface PagerState {
@@ -60,10 +70,17 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
     onVerify,
     isSolved = false,
     embedded = false,
+    showGuideButton = true,
+    onOpenSettings,
+    shellContext,
+    fontSize = 13,
+    hideHeaderActions = false,
   },
   ref
 ) {
-  const [shell] = useState(() => new ShellContext());
+  const [internalShell] = useState(() => shellContext || new ShellContext());
+  const shell = shellContext || internalShell;
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>(() => [
     {
@@ -529,6 +546,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
     resetVm: () => handleReset(),
     runSetup: () => handleRunSetup(),
     copyOutput: () => handleCopy(),
+    toggleGuide: () => setIsGuideOpen((prev) => !prev),
   }));
 
   const isRoot = shell.session.username === "root";
@@ -537,9 +555,9 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
 
   return (
     <div
-      className={`flex flex-col font-mono transition-all select-none ${embedded
+      className={`relative flex flex-col font-mono transition-all select-none ${embedded
           ? "h-full w-full bg-[var(--terminal-body-bg)] border-0 rounded-none shadow-none overflow-hidden"
-          : "rounded-2xl bg-[var(--surface-base)] shadow-[var(--card-shadow)] overflow-hidden"
+          : "rounded-2xl bg-[var(--surface-base)] shadow-[var(--card-shadow)] border border-white/10 overflow-hidden"
         } ${isMaximized
           ? "!fixed !inset-3 !z-50 !h-[calc(100vh-1.5rem)] !w-[calc(100vw-1.5rem)] !rounded-2xl !shadow-2xl !bg-[var(--terminal-body-bg)]"
           : ""
@@ -555,15 +573,18 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
     >
       {/* Terminal Header Toolbar */}
       <div
-        className={`flex items-center justify-between select-none gap-2 shrink-0 ${embedded
+        className={`flex items-center justify-between select-none gap-2 shrink-0 ${
+          hideHeaderActions
+            ? "absolute top-3 right-4 z-20 bg-transparent pointer-events-none"
+            : embedded
             ? "h-10 px-4 shadow-xs"
             : "h-11 px-3.5 bg-[var(--surface-subtle)]"
-          }`}
-        style={embedded ? { backgroundColor: "var(--surface-base)" } : undefined}
+        }`}
+        style={embedded && !hideHeaderActions ? { backgroundColor: "var(--surface-base)" } : undefined}
       >
         {embedded ? (
           <span className="text-xs text-[var(--text-muted)] font-medium">Terminal</span>
-        ) : (
+        ) : hideHeaderActions ? null : (
           <div className="flex items-center space-x-2 text-xs">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-[var(--text-main)]">{title}</span>
@@ -595,94 +616,130 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
         )}
 
         {!embedded && (
-          <div className="flex items-center space-x-1.5 text-xs">
-            {onVerify && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onVerify(shell);
-                }}
-                className="btn-mimo-primary h-7 px-2.5 text-xs"
-                title="Verify if solution meets problem requirements"
-              >
-                <CheckSquare className="w-3.5 h-3.5" />
-                <span>Check Answer</span>
-              </button>
-            )}
-
-            {initialSetup && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRunSetup();
-                }}
-                className={`flex items-center space-x-1.5 rounded-xl px-2.5 py-1 text-[11px] font-mono transition-colors cursor-pointer mimo-press ${setupRun
-                    ? "bg-[var(--accent-green-bg)] text-[var(--accent-green)] font-medium"
-                    : "bg-[var(--surface-base)] hover:bg-[var(--surface-active)] text-[var(--accent-amber)]"
-                  }`}
-                title="Execute challenge setup script"
-              >
-                {setupRun ? (
-                  <>
-                    <Check className="w-3 h-3" />
-                    <span>Setup Done</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-3 h-3" />
-                    <span>Run Setup</span>
-                  </>
+          <div className="flex items-center space-x-1.5 text-xs pointer-events-auto">
+            {!hideHeaderActions && (
+              <>
+                {onVerify && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onVerify(shell);
+                    }}
+                    className="btn-mimo-primary h-7 px-2.5 text-xs"
+                    title="Verify if solution meets problem requirements"
+                  >
+                    <CheckSquare className="w-3.5 h-3.5" />
+                    <span>Check Answer</span>
+                  </button>
                 )}
+
+                {initialSetup && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRunSetup();
+                    }}
+                    className={`flex items-center space-x-1.5 rounded-xl px-2.5 py-1 text-[11px] font-mono transition-colors cursor-pointer mimo-press ${setupRun
+                        ? "bg-[var(--accent-green-bg)] text-[var(--accent-green)] font-medium"
+                        : "bg-[var(--surface-base)] hover:bg-[var(--surface-active)] text-[var(--accent-amber)]"
+                      }`}
+                    title="Execute challenge setup script"
+                  >
+                    {setupRun ? (
+                      <>
+                        <Check className="w-3 h-3" />
+                        <span>Setup Done</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3 h-3" />
+                        <span>Run Setup</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReset();
+                  }}
+                  className="flex items-center space-x-1.5 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
+                  title="Reset VM State"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span className="hidden sm:inline">Reset VM</span>
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopy();
+                  }}
+                  className="flex items-center space-x-1.5 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
+                  title="Copy Terminal Output"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3 h-3 text-[var(--accent-green)]" />
+                      <span className="hidden sm:inline">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span className="hidden sm:inline">Copy</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMaximized(!isMaximized);
+                  }}
+                  className="flex items-center space-x-1 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] mimo-press"
+                  title={isMaximized ? "Restore Split View" : "Maximize Terminal"}
+                >
+                  {isMaximized ? (
+                    <Minimize2 className="w-3.5 h-3.5" />
+                  ) : (
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </>
+            )}
+
+            {showGuideButton && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsGuideOpen(!isGuideOpen);
+                }}
+                className={`flex items-center space-x-1.5 rounded-lg px-3 py-1 text-xs font-mono font-medium transition-all cursor-pointer border ${
+                  isGuideOpen
+                    ? "bg-purple-600/30 text-purple-200 border-purple-400 shadow-sm"
+                    : "bg-purple-950/30 hover:bg-purple-900/40 text-purple-300 border-purple-500/50 hover:border-purple-400"
+                }`}
+                title="Toggle Terminal Guide"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Guide</span>
               </button>
             )}
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleReset();
-              }}
-              className="flex items-center space-x-1.5 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
-              title="Reset VM State"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span className="hidden sm:inline">Reset VM</span>
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCopy();
-              }}
-              className="flex items-center space-x-1.5 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
-              title="Copy Terminal Output"
-            >
-              {copied ? (
-                <>
-                  <Check className="w-3 h-3 text-[var(--accent-green)]" />
-                  <span className="hidden sm:inline">Copied</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3 h-3" />
-                  <span className="hidden sm:inline">Copy</span>
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsMaximized(!isMaximized);
-              }}
-              className="flex items-center space-x-1 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] mimo-press"
-              title={isMaximized ? "Restore Split View" : "Maximize Terminal"}
-            >
-              {isMaximized ? (
-                <Minimize2 className="w-3.5 h-3.5" />
-              ) : (
-                <Maximize2 className="w-3.5 h-3.5" />
-              )}
-            </button>
+            {onOpenSettings && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenSettings();
+                }}
+                className="flex items-center space-x-1.5 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
+                title="Sandbox Settings"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Settings</span>
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -701,7 +758,8 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
           <div
             ref={pagerScrollRef}
             onScroll={handlePagerScroll}
-            className="flex-1 overflow-y-auto p-4 text-[13px] leading-relaxed text-slate-200 scrollbar-thin scrollbar-thumb-slate-800"
+            style={{ fontSize: `${fontSize}px` }}
+            className="flex-1 overflow-y-auto p-4 leading-relaxed text-slate-200 scrollbar-thin scrollbar-thumb-slate-800 bg-[var(--terminal-body-bg)]"
           >
             {pager.lines.map((line, idx) => {
               const isMatch = pager.searchMatches.includes(idx);
@@ -796,29 +854,31 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
         /* ============================================================ */
         <div
           ref={containerRef}
-          className="flex-1 overflow-y-auto p-4 text-[13px] leading-relaxed text-slate-200 cursor-text select-text scrollbar-thin scrollbar-thumb-slate-800 bg-[#090d16]"
+          style={{ fontSize: `${fontSize}px` }}
+          className="flex-1 overflow-y-auto p-4 leading-relaxed text-slate-200 cursor-text select-text scrollbar-thin scrollbar-thumb-slate-800 bg-[var(--terminal-body-bg)]"
         >
           {historyItems.map((item) => (
             <div key={item.id} className="mb-2">
               {item.command && (
                 <div className="flex items-start space-x-2 text-slate-300">
-                  <span
-                    className={
-                      item.user === "root"
-                        ? "text-rose-400 font-bold shrink-0"
-                        : "text-emerald-400 font-bold shrink-0"
-                    }
-                  >
-                    [{item.user}@{shell.session.hostname}{" "}
-                    {item.cwd === shell.session.homeDir ? "~" : item.cwd}]
-                    {item.user === "root" ? "#" : "$"}
+                  <span className="font-mono shrink-0 select-none" style={{ fontSize: `${fontSize}px` }}>
+                    <span className={item.user === "root" ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
+                      {item.user}@{shell.session.hostname}
+                    </span>
+                    <span className="text-slate-400">:</span>
+                    <span className="text-cyan-400 font-semibold">
+                      {item.cwd === shell.session.homeDir ? "~" : item.cwd}
+                    </span>
+                    <span className={item.user === "root" ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
+                      {item.user === "root" ? "# " : "$ "}
+                    </span>
                   </span>
-                  <span className="font-semibold text-white break-all">{item.command}</span>
+                  <span className="font-semibold text-white break-all" style={{ fontSize: `${fontSize}px` }}>{item.command}</span>
                 </div>
               )}
 
               {item.output && (
-                <div className="mt-1 whitespace-pre-wrap font-mono text-[12px]">
+                <div className="mt-1 whitespace-pre-wrap font-mono" style={{ fontSize: `${Math.max(10, fontSize - 1)}px` }}>
                   {item.output.stdout && (
                     <span className="text-slate-300">{item.output.stdout}</span>
                   )}
@@ -831,16 +891,18 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
           ))}
 
           {/* Current Active Input Prompt */}
-          <div className="flex items-center space-x-2 pt-1">
-            <span
-              className={
-                isRoot
-                  ? "text-rose-400 font-bold shrink-0"
-                  : "text-emerald-400 font-bold shrink-0"
-              }
-            >
-              [{shell.session.username}@{shell.session.hostname} {displayCwd}]
-              {promptSymbol}
+          <div className="flex items-center space-x-1.5 pt-1">
+            <span className="font-mono shrink-0 select-none" style={{ fontSize: `${fontSize}px` }}>
+              <span className={isRoot ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
+                {shell.session.username}@{shell.session.hostname}
+              </span>
+              <span className="text-slate-400">:</span>
+              <span className="text-cyan-400 font-semibold">
+                {displayCwd}
+              </span>
+              <span className={isRoot ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
+                {promptSymbol}&nbsp;
+              </span>
             </span>
             <div className="relative flex-1">
               <input
@@ -858,7 +920,8 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                     executeCommand(clean);
                   }
                 }}
-                className="w-full bg-transparent text-white outline-none border-none p-0 focus:ring-0 font-mono text-[13px]"
+                style={{ fontSize: `${fontSize}px` }}
+                className="w-full bg-transparent text-white outline-none border-none p-0 focus:ring-0 font-mono"
                 autoFocus
                 spellCheck={false}
                 autoComplete="off"
@@ -870,7 +933,21 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
         </div>
       )}
 
-
+      {/* Ease-out Right-to-Left Guide Drawer */}
+      <AnimatePresence>
+        {isGuideOpen && (
+          <TerminalGuideDrawer
+            isOpen={isGuideOpen}
+            onClose={() => setIsGuideOpen(false)}
+            onRunCommand={(cmd) => {
+              executeCommand(cmd);
+              focusInput();
+            }}
+            onResetVm={() => handleReset()}
+            onCopyOutput={() => handleCopy()}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 });

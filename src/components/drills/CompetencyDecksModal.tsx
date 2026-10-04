@@ -2,17 +2,13 @@ import { useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Check, Award, RotateCcw, Layers } from 'lucide-react';
 import { DRILL_DECKS, type DomainCode } from '../../data/drillDecks';
-import { type DrillStage, useDrillProgress } from '../../lib/useDrillProgress';
+import { useDrillProgress } from '../../lib/useDrillProgress';
 
 interface CompetencyDecksModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDomain: DomainCode;
   onSelectDomain: (domain: DomainCode) => void;
-  currentStage: DrillStage;
-  pendingStage: DrillStage;
-  onApplyPendingStage: () => void;
-  hasStageChanged: boolean;
 }
 
 export default function CompetencyDecksModal({
@@ -20,10 +16,6 @@ export default function CompetencyDecksModal({
   onClose,
   selectedDomain,
   onSelectDomain,
-  currentStage,
-  pendingStage,
-  onApplyPendingStage,
-  hasStageChanged,
 }: CompetencyDecksModalProps) {
   const { getDomainStats, resetDomainProgress } = useDrillProgress();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -130,9 +122,6 @@ export default function CompetencyDecksModal({
                     <button
                       key={deck.id}
                       onClick={() => {
-                        if (hasStageChanged) {
-                          onApplyPendingStage();
-                        }
                         onSelectDomain(deck.id);
                         onClose();
                       }}

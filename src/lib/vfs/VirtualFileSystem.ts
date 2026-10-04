@@ -166,6 +166,36 @@ export class VirtualFileSystem {
       "student",
       "student"
     );
+    addFile(
+      ["home", "student"],
+      ".zshrc",
+      `# .zshrc\nexport PATH=$PATH:/usr/local/bin\n`,
+      "student",
+      "student"
+    );
+    addFile(
+      ["home", "student"],
+      ".gitconfig",
+      `[user]\n\tname = student\n\temail = student@centos-trainer.local\n`,
+      "student",
+      "student"
+    );
+    ensureDir(["home", "student", "documents"], "student", "student", "rwxr-xr-x");
+    addFile(
+      ["home", "student", "documents"],
+      "readme.txt",
+      `Welcome to LinuxDrill WebTerm!\nUse the terminal commands to practice system administration.\n`,
+      "student",
+      "student"
+    );
+    addFile(
+      ["home", "student", "documents"],
+      "sample.txt",
+      `Sample data file for text processing practice.\n`,
+      "student",
+      "student"
+    );
+    ensureDir(["home", "student", "projects"], "student", "student", "rwxr-xr-x");
 
     // Files in /var/log
     addFile(

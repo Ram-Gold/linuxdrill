@@ -21,7 +21,6 @@ interface MinimalTyperCardProps {
   accuracy: number;
   isBlitzMode?: boolean;
   shellFeedback?: { message: string; isError: boolean } | null;
-  onReset: () => void;
   onToggleMode?: () => void;
   onOpenSettings: () => void;
   onOpenDecks: () => void;
@@ -43,7 +42,6 @@ export default function MinimalTyperCard({
   accuracy,
   isBlitzMode = false,
   shellFeedback,
-  onReset,
   onToggleMode,
   onOpenSettings,
   onOpenDecks,

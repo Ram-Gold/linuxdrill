@@ -1,110 +1,104 @@
-import { useState } from "react";
-import { Terminal as TerminalIcon, Cpu, Check, Copy } from "lucide-react";
-import Terminal from "../components/Terminal";
+import { useState, useRef } from "react";
+import Terminal, { type TerminalHandle } from "../components/Terminal";
+import { ShellContext } from "../lib/vfs/commands";
+import SimulatedFileManager from "../components/terminal/SimulatedFileManager";
+import TerminalSettingsModal from "../components/terminal/TerminalSettingsModal";
+
+const TERMINAL_FONT_SIZE_KEY = "linuxdrill-terminal-font-size";
+const FILE_TREE_FONT_SIZE_KEY = "linuxdrill-filetree-font-size";
 
 export default function TerminalPlayground() {
-  const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
+  const [shell] = useState(() => new ShellContext());
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const terminalRef = useRef<TerminalHandle>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const quickCommands = [
-    { label: "Root shell", cmd: "su -" },
-    { label: "View users", cmd: "cat /etc/passwd" },
-    { label: "Nested directory", cmd: "mkdir -p /app/data" },
-    { label: "Service state", cmd: "systemctl status sshd" },
-    { label: "Firewall rules", cmd: "firewall-cmd --list-all" },
-    { label: "Network interfaces", cmd: "ip a" },
-    { label: "Disk & LVM layout", cmd: "lsblk" },
-    { label: "Check answer syntax", cmd: "check" },
-  ];
+  // Terminal font size state persisted in localStorage (defaults to 13px)
+  const [terminalFontSize, setTerminalFontSize] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(TERMINAL_FONT_SIZE_KEY);
+      if (saved) {
+        const parsed = Number(saved);
+        if (parsed >= 11 && parsed <= 20) return parsed;
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return 13;
+  });
 
-  const handleCopy = (cmd: string) => {
-    navigator.clipboard.writeText(cmd);
-    setCopiedCmd(cmd);
-    setTimeout(() => setCopiedCmd(null), 1500);
+  // File directory font size state persisted in localStorage (defaults to 12px)
+  const [fileTreeFontSize, setFileTreeFontSize] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(FILE_TREE_FONT_SIZE_KEY);
+      if (saved) {
+        const parsed = Number(saved);
+        if (parsed >= 10 && parsed <= 18) return parsed;
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return 12;
+  });
+
+  const handleTerminalFontSizeChange = (size: number) => {
+    setTerminalFontSize(size);
+    try {
+      localStorage.setItem(TERMINAL_FONT_SIZE_KEY, String(size));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const handleFileTreeFontSizeChange = (size: number) => {
+    setFileTreeFontSize(size);
+    try {
+      localStorage.setItem(FILE_TREE_FONT_SIZE_KEY, String(size));
+    } catch {
+      // ignore storage errors
+    }
   };
 
   return (
-    <div className="space-y-6 w-full select-none">
-      {/* Header Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text-main)] flex items-center gap-3 tracking-tight">
-            <span>Terminal Sandbox</span>
-            <span className="text-xs font-mono px-3 py-1 rounded-full bg-[var(--surface-elevated)] text-[var(--accent-primary-soft)] font-medium">
-              CentOS 9 POSIX
-            </span>
-          </h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1.5 leading-relaxed">
-            In-browser CentOS Linux shell environment powered by an in-memory Virtual File System. Freeform practice, experimentation, and command testing.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Terminal Container */}
-        <div className="lg:col-span-8">
-          <Terminal
-            title="CentOS Stream 9 (Trainer Playground)"
-            defaultHeight="640px"
+    <div className="w-full h-[calc(100vh-3.5rem)] select-none flex flex-col p-0 m-0 overflow-hidden bg-[var(--surface-base)]">
+      {/* 100% Full-Bleed Workspace Layout without outer padding or rounded borders */}
+      <div className="w-full h-full flex flex-col md:flex-row overflow-hidden bg-[var(--surface-base)]">
+        {/* Left Side: Simulated File Manager (read-only tree, updates via terminal) */}
+        <div className="w-full md:w-64 lg:w-72 shrink-0 h-full border-b md:border-b-0 md:border-r border-white/5">
+          <SimulatedFileManager
+            shell={shell}
+            refreshTrigger={refreshTrigger}
+            fontSize={fileTreeFontSize}
+            className="h-full border-none rounded-none shadow-none"
           />
         </div>
 
-        {/* Sidebar Cards */}
-        <div className="lg:col-span-4 space-y-4 text-xs text-[var(--text-muted)]">
-          {/* Quick Commands Card */}
-          <div className="rounded-2xl bg-[var(--surface-base)] shadow-[var(--card-shadow)] p-5 space-y-3">
-            <h3 className="font-semibold text-[var(--text-main)] text-xs flex items-center gap-2">
-              <TerminalIcon className="w-3.5 h-3.5 text-[var(--accent-primary-soft)]" />
-              <span>Quick Commands</span>
-            </h3>
-            <ul className="space-y-1.5 font-mono">
-              {quickCommands.map(({ label, cmd }) => (
-                <li
-                  key={cmd}
-                  onClick={() => handleCopy(cmd)}
-                  className="flex items-center justify-between bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] p-2.5 rounded-xl cursor-pointer transition-colors mimo-press group"
-                  title="Click to copy command"
-                >
-                  <span className="text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors">{label}:</span>
-                  <div className="flex items-center gap-1.5">
-                    <code className="text-[var(--accent-primary-soft)] font-semibold">{cmd}</code>
-                    {copiedCmd === cmd ? (
-                      <Check className="w-3.5 h-3.5 text-[var(--accent-green)] shrink-0" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5 text-[var(--text-tertiary)] group-hover:text-[var(--text-main)] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Simulator Architecture Card */}
-          <div className="rounded-2xl bg-[var(--surface-base)] shadow-[var(--card-shadow)] p-5 space-y-3">
-            <h3 className="font-semibold text-[var(--text-main)] text-xs flex items-center gap-2">
-              <Cpu className="w-3.5 h-3.5 text-[var(--accent-green)]" />
-              <span>Simulator Architecture</span>
-            </h3>
-            <ul className="space-y-2 text-xs text-[var(--text-muted)] leading-relaxed">
-              <li className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[var(--accent-green)] shrink-0" />
-                <span>Full POSIX directory tree with system users, permissions, and SGID</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[var(--accent-green)] shrink-0" />
-                <span>Pipeline support (<code className="font-mono text-[var(--accent-primary-soft)]">| grep</code>) & redirections (<code className="font-mono text-[var(--accent-primary-soft)]">&gt;</code>, <code className="font-mono text-[var(--accent-primary-soft)]">&gt;&gt;</code>)</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[var(--accent-green)] shrink-0" />
-                <span>Tab auto-completion & shell history (<kbd className="font-mono text-[var(--text-main)] bg-[var(--surface-subtle)] px-1.5 py-0.5 rounded-md">↑/↓</kbd>)</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[var(--accent-green)] shrink-0" />
-                <span>100% Client-side sandbox with zero external network latency</span>
-              </li>
-            </ul>
-          </div>
+        {/* Right Side: Interactive CentOS Terminal */}
+        <div className="flex-1 h-full min-w-0">
+          <Terminal
+            ref={terminalRef}
+            shellContext={shell}
+            title="CentOS Stream 9 (Sandbox)"
+            defaultHeight="100%"
+            className="h-full !rounded-none !border-0 !shadow-none"
+            showGuideButton={true}
+            hideHeaderActions={true}
+            fontSize={terminalFontSize}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onCommandRun={() => setRefreshTrigger((prev) => prev + 1)}
+          />
         </div>
       </div>
+
+      {/* Sandbox Settings Modal (Dual Range Sliders for Terminal & File Directory text size) */}
+      <TerminalSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        terminalFontSize={terminalFontSize}
+        onTerminalFontSizeChange={handleTerminalFontSizeChange}
+        fileTreeFontSize={fileTreeFontSize}
+        onFileTreeFontSizeChange={handleFileTreeFontSizeChange}
+      />
     </div>
   );
 }

@@ -248,7 +248,6 @@ export default function DrillsPage() {
         accuracy={accuracy}
         isBlitzMode={isBlitzMode}
         shellFeedback={shellFeedback}
-        onReset={resetDrill}
         onToggleMode={handleToggleMode}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenDecks={() => setIsDecksOpen(true)}
@@ -305,10 +304,6 @@ export default function DrillsPage() {
         onClose={() => setIsDecksOpen(false)}
         selectedDomain={selectedDomain}
         onSelectDomain={handleSelectDomain}
-        currentStage={effectiveStage}
-        pendingStage={effectiveStage}
-        onApplyPendingStage={() => {}}
-        hasStageChanged={false}
       />
     </div>
   );

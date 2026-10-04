@@ -1,9 +1,11 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { problems } from "./lib/problems";
 import { useProgress } from "./lib/useProgress";
 
 export default function App() {
+  const location = useLocation();
+  const isTerminal = location.pathname.startsWith("/terminal");
   const { solved } = useProgress();
   const solvedCount = solved.length;
   const totalCount = problems.length;
@@ -19,7 +21,7 @@ export default function App() {
         totalPoints={totalPoints}
       />
 
-      <main className="w-full flex-1 px-5 lg:px-8 py-6">
+      <main className={`w-full flex-1 ${isTerminal ? "p-0 overflow-hidden" : "px-5 lg:px-8 py-6"}`}>
         <Outlet />
       </main>
     </div>

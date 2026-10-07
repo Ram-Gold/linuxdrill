@@ -135,11 +135,11 @@ export default function HomeHero({
             <AnimatePresence>
               {isReviewOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.94, filter: "blur(14px)" }}
+                  initial={{ opacity: 0, y: 6, scale: 0.96, filter: "blur(6px)" }}
                   animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, y: 6, scale: 0.96, filter: "blur(10px)" }}
+                  exit={{ opacity: 0, y: 4, scale: 0.97, filter: "blur(4px)" }}
                   transition={{
-                    duration: 0.5,
+                    duration: 0.24,
                     ease: [0.16, 1, 0.3, 1],
                   }}
                   style={{ willChange: "transform, opacity, filter" }}

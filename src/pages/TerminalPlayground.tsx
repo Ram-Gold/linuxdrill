@@ -5,21 +5,30 @@ import SimulatedFileManager from "../components/terminal/SimulatedFileManager";
 import TerminalSettingsModal from "../components/terminal/TerminalSettingsModal";
 import { useNavbarMode } from "../lib/useNavbarMode";
 
-const TERMINAL_FONT_SIZE_KEY = "linuxdrill-terminal-font-size";
-const FILE_TREE_FONT_SIZE_KEY = "linuxdrill-filetree-font-size";
+const TERMINAL_FONT_SIZE_KEY = "bashist-terminal-font-size";
+const LEGACY_TERMINAL_FONT_SIZE_KEY = "linuxdrill-terminal-font-size";
+const FILE_TREE_FONT_SIZE_KEY = "bashist-filetree-font-size";
+const LEGACY_FILE_TREE_FONT_SIZE_KEY = "linuxdrill-filetree-font-size";
 
 export default function TerminalPlayground() {
   const [shell] = useState(() => new ShellContext());
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const terminalRef = useRef<TerminalHandle>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return new URLSearchParams(window.location.search).get("settings") === "open";
+    } catch {
+      return false;
+    }
+  });
   const { navbarMode, setNavbarMode } = useNavbarMode();
   const isNavbarPinned = navbarMode === "always";
 
   // Terminal font size state persisted in localStorage (defaults to 13px)
   const [terminalFontSize, setTerminalFontSize] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem(TERMINAL_FONT_SIZE_KEY);
+      const saved = localStorage.getItem(TERMINAL_FONT_SIZE_KEY) || localStorage.getItem(LEGACY_TERMINAL_FONT_SIZE_KEY);
       if (saved) {
         const parsed = Number(saved);
         if (parsed >= 11 && parsed <= 20) return parsed;
@@ -33,7 +42,7 @@ export default function TerminalPlayground() {
   // File directory font size state persisted in localStorage (defaults to 12px)
   const [fileTreeFontSize, setFileTreeFontSize] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem(FILE_TREE_FONT_SIZE_KEY);
+      const saved = localStorage.getItem(FILE_TREE_FONT_SIZE_KEY) || localStorage.getItem(LEGACY_FILE_TREE_FONT_SIZE_KEY);
       if (saved) {
         const parsed = Number(saved);
         if (parsed >= 10 && parsed <= 18) return parsed;
@@ -69,7 +78,7 @@ export default function TerminalPlayground() {
       {/* 100% Full-Bleed Workspace Layout without outer padding or rounded borders */}
       <div className="w-full h-full flex flex-col md:flex-row overflow-hidden bg-[var(--surface-base)]">
         {/* Left Side: Simulated File Manager (read-only tree, updates via terminal) */}
-        <div className="w-full md:w-64 lg:w-72 shrink-0 h-full border-b md:border-b-0 md:border-r border-white/5">
+        <div className="w-full md:w-64 lg:w-72 shrink-0 h-full border-b md:border-b-0 md:border-r border-[var(--border-subtle)]">
           <SimulatedFileManager
             shell={shell}
             refreshTrigger={refreshTrigger}
@@ -79,7 +88,7 @@ export default function TerminalPlayground() {
         </div>
 
         {/* Right Side: Interactive CentOS Terminal */}
-        <div className="flex-1 h-full min-w-0">
+        <div className="flex-1 h-full min-w-0 bg-[var(--terminal-body-bg)]">
           <Terminal
             ref={terminalRef}
             shellContext={shell}

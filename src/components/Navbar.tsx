@@ -7,11 +7,12 @@ import { useSoundpack } from "../lib/useSoundpack";
 import { useThemePreset } from "../lib/useThemePreset";
 import { SoundSettingsModal } from "./SoundSettingsModal";
 import { useNavbarMode } from "../lib/useNavbarMode";
+import BashistLogo from "./BashistLogo";
 
-const GITHUB_REPO_URL = "https://github.com/Ram-Gold/linuxdrill";
-const GITHUB_API_URL = "https://api.github.com/repos/Ram-Gold/linuxdrill";
-const GITHUB_STARS_CACHE_KEY = "linuxdrill:github_stars";
-const GITHUB_STARS_CACHE_TIME = "linuxdrill:github_stars_time";
+const GITHUB_REPO_URL = "https://github.com/Ram-Gold/bashist";
+const GITHUB_API_URL = "https://api.github.com/repos/Ram-Gold/bashist";
+const GITHUB_STARS_CACHE_KEY = "bashist:github_stars";
+const GITHUB_STARS_CACHE_TIME = "bashist:github_stars_time";
 
 function GithubIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -55,7 +56,7 @@ export default function Navbar({
 
   const [stars, setStars] = useState<number | null>(() => {
     try {
-      const cached = localStorage.getItem(GITHUB_STARS_CACHE_KEY);
+      const cached = localStorage.getItem(GITHUB_STARS_CACHE_KEY) || localStorage.getItem("linuxdrill:github_stars");
       return cached !== null ? Number(cached) : null;
     } catch {
       return null;
@@ -214,10 +215,11 @@ export default function Navbar({
         {/* Left: Logo */}
         <Link
           to="/"
-          className="flex items-center gap-2 mimo-press"
+          className="flex items-center gap-2.5 mimo-press group"
         >
+          <BashistLogo className="w-7 h-7 group-hover:scale-105 transition-transform" />
           <span className="text-base font-semibold tracking-tight text-[var(--text-main)]">
-            Linux<span className="text-[var(--accent-primary)]">Drill</span>
+            Bash<span className="text-[var(--accent-primary)]">ist</span>
           </span>
         </Link>
 
@@ -326,12 +328,12 @@ export default function Navbar({
             <AnimatePresence>
               {isThemeDropdownOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.94, filter: "blur(14px)" }}
+                  initial={{ opacity: 0, y: 6, scale: 0.96, filter: "blur(6px)" }}
                   animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, y: 6, scale: 0.96, filter: "blur(10px)" }}
+                  exit={{ opacity: 0, y: 4, scale: 0.97, filter: "blur(4px)" }}
                   transition={{
-                    duration: 0.5,
-                    ease: [0.16, 1, 0.3, 1], // Apple fluid motion curve
+                    duration: 0.22,
+                    ease: [0.16, 1, 0.3, 1],
                   }}
                   style={{ willChange: "transform, opacity, filter" }}
                   className="absolute right-0 top-full mt-2 w-56 bg-[var(--surface-base)]/95 rounded-2xl shadow-2xl z-50 p-2 overflow-hidden backdrop-blur-xl border border-[var(--surface-active)]/40 origin-top-right transform-gpu"
@@ -420,7 +422,7 @@ export default function Navbar({
             target="_blank"
             rel="noopener noreferrer"
             className="h-9 px-2.5 rounded-xl bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] flex items-center gap-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer mimo-press text-xs font-mono group ml-0.5"
-            title="Star Ram-Gold/linuxdrill on GitHub"
+            title="Star Ram-Gold/bashist on GitHub"
             aria-label="GitHub Repository"
           >
             <GithubIcon className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" />

@@ -191,13 +191,17 @@ export default function CuratedRoadmap({
             return (
               <div
                 key={track.topic}
-                className="rounded-2xl transition-all duration-200 overflow-hidden bg-[var(--surface-base)]"
+                className="rounded-2xl transition-colors duration-150 bg-[var(--surface-base)] p-1.5 sm:p-2"
               >
                 {/* Track Section Header Button */}
                 <button
                   type="button"
                   onClick={() => toggleTrack(track.topic)}
-                  className="w-full p-4 sm:p-5 flex items-center justify-between gap-3 text-left cursor-pointer mimo-press transition-colors hover:bg-[var(--surface-subtle)]/40"
+                  className={`w-full p-3.5 sm:p-4 rounded-xl flex items-center justify-between gap-3 text-left cursor-pointer mimo-press transition-all duration-150 ${
+                    isExpanded
+                      ? "bg-white/[0.02] hover:bg-white/[0.06]"
+                      : "hover:bg-white/[0.05]"
+                  }`}
                   aria-expanded={isExpanded}
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
@@ -245,7 +249,7 @@ export default function CuratedRoadmap({
 
                     <div className="w-16 sm:w-24 h-2 rounded-full bg-[var(--surface-subtle)] overflow-hidden hidden xs:block">
                       <div
-                        className={`h-full transition-all duration-300 ${
+                        className={`h-full transition-[width] duration-300 ease-out ${
                           isCompleted ? "bg-[var(--accent-green)]" : "bg-[var(--accent-primary)]"
                         }`}
                         style={{ width: `${percent}%` }}
@@ -293,14 +297,14 @@ export default function CuratedRoadmap({
                           },
                           opacity: {
                             duration: 0.18,
-                            ease: "easeIn",
+                            ease: "easeOut",
                           },
                         },
                       }}
                       className="overflow-hidden"
                     >
                       {viewMode === "cards" ? (
-                        <div className="p-4 sm:p-5 pt-2">
+                        <div className="p-2 sm:p-2.5 pt-2">
                           {/* Separate Cards Grid */}
                           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-3.5">
                             {track.drills.map((drill, idx) => (
@@ -316,7 +320,7 @@ export default function CuratedRoadmap({
                         </div>
                       ) : (
                         /* Compact List View */
-                        <div className="p-3 sm:p-4 pt-2 space-y-1.5">
+                        <div className="p-1.5 sm:p-2 pt-2 space-y-1.5">
                           {track.drills.map((drill, idx) => {
                             const isSolved = solved.includes(drill.id);
                             const diff = getDiffBadge(drill.difficulty);

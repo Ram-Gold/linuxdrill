@@ -12,7 +12,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     id: "default",
     name: "Default",
     swatches: ["#1a1d3a", "#7e4bde", "#7ed957"],
-    description: "Default LinuxDrill theme",
+    description: "Default Bashist theme",
   },
   {
     id: "catppuccin-mocha",
@@ -40,7 +40,8 @@ export const THEME_PRESETS: ThemePreset[] = [
   },
 ];
 
-const STORAGE_KEY = "linuxdrill-theme-preset";
+const STORAGE_KEY = "bashist-theme-preset";
+const LEGACY_STORAGE_KEY = "linuxdrill-theme-preset";
 
 function applyPresetToDom(presetId: string) {
   if (typeof document === "undefined") return;
@@ -61,7 +62,7 @@ export function useThemePreset() {
   const [activePresetId, setActivePresetId] = useState<string>(() => {
     if (typeof window === "undefined") return "default";
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       const valid = THEME_PRESETS.find((p) => p.id === saved);
       if (valid) return valid.id;
       // Default to 'default' and persist

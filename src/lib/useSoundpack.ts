@@ -23,8 +23,10 @@ export function useSoundpack() {
       }
     };
 
+    window.addEventListener('bashist_sfx_update' as any, handleUpdate as any);
     window.addEventListener('linuxdrill_sfx_update' as any, handleUpdate as any);
     return () => {
+      window.removeEventListener('bashist_sfx_update' as any, handleUpdate as any);
       window.removeEventListener('linuxdrill_sfx_update' as any, handleUpdate as any);
     };
   }, []);

@@ -53,13 +53,19 @@ function applyThemeToDom(theme: Theme) {
   root.classList.remove("light", "dark", "theme-light", "theme-dark");
   root.classList.add(theme, `theme-${theme}`);
   root.dataset.theme = theme;
-  localStorage.setItem("linuxdrill-theme", theme);
+  localStorage.setItem("bashist-theme", theme);
 }
 
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window === "undefined") return "light";
-    const saved = localStorage.getItem("linuxdrill-theme") as Theme | null;
+    try {
+      const urlTheme = new URLSearchParams(window.location.search).get("theme") as Theme | null;
+      if (urlTheme === "light" || urlTheme === "dark") return urlTheme;
+    } catch {
+      // ignore
+    }
+    const saved = (localStorage.getItem("bashist-theme") || localStorage.getItem("linuxdrill-theme")) as Theme | null;
     if (saved === "light" || saved === "dark") return saved;
     // Default to system preference, fallback to dark
     if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
@@ -111,7 +117,7 @@ export function useTheme() {
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem("linuxdrill-theme")) {
+      if (!localStorage.getItem("bashist-theme") && !localStorage.getItem("linuxdrill-theme")) {
         setTheme(e.matches ? "dark" : "light");
       }
     };

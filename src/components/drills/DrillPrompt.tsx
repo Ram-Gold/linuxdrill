@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { type DrillStage } from '../../lib/useDrillProgress';
 import { AlertCircle, Eye, EyeOff, RotateCcw } from 'lucide-react';
 
@@ -97,7 +98,7 @@ export default function DrillPrompt({
         <div className="flex flex-wrap items-center leading-relaxed tracking-wide select-none break-all">
           {/* Shell Prompt Prefix */}
           <span className="text-[var(--accent-green)] font-semibold shrink-0 mr-2">
-            student@linuxdrill
+            student@bashist
           </span>
           <span className="text-white/40 mr-1">:</span>
           <span className="text-[var(--accent-blue)] font-medium shrink-0 mr-1.5">
@@ -146,18 +147,27 @@ export default function DrillPrompt({
         </div>
 
         {/* Error Lock Status Notification */}
-        {isLocked && (
-          <div className="mt-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--accent-red-bg)] text-[var(--accent-red)] text-xs font-medium animate-fadeIn select-none border border-[var(--accent-red)]/20">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>
-              <strong>Syntax Lock:</strong> Incorrect key struck! Press{' '}
-              <kbd className="px-1.5 py-0.5 rounded bg-[var(--surface-base)] text-white font-mono text-[11px] border border-white/10 shadow-xs">
-                Backspace
-              </kbd>{' '}
-              to clear the mistake and resume.
-            </span>
-          </div>
-        )}
+        <AnimatePresence>
+          {isLocked && (
+            <motion.div
+              key="syntax-lock-banner"
+              initial={{ opacity: 0, y: -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.98 }}
+              transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--accent-red-bg)] text-[var(--accent-red)] text-xs font-medium select-none border border-[var(--accent-red)]/20"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>
+                <strong>Syntax Lock:</strong> Incorrect key struck! Press{' '}
+                <kbd className="px-1.5 py-0.5 rounded bg-[var(--surface-base)] text-white font-mono text-[11px] border border-white/10 shadow-xs">
+                  Backspace
+                </kbd>{' '}
+                to clear the mistake and resume.
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Scaffolding Stage Mode Footer Pill */}

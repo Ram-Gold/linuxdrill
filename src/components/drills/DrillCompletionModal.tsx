@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import {
   Sparkles,
@@ -78,8 +79,21 @@ export default function DrillCompletionModal({
   const isCleanRun = errors === 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-xl rounded-3xl bg-[var(--surface-base)] border border-white/10 shadow-2xl p-6 sm:p-8 flex flex-col gap-6 text-[var(--text-main)] max-h-[90vh] overflow-y-auto">
+    <motion.div
+      key="drill-completion-backdrop"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+        className="w-full max-w-xl rounded-3xl bg-[var(--surface-base)] border border-white/10 shadow-2xl p-6 sm:p-8 flex flex-col gap-6 text-[var(--text-main)] max-h-[90vh] overflow-y-auto"
+      >
         {/* Header Ribbon */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -262,7 +276,7 @@ export default function DrillCompletionModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

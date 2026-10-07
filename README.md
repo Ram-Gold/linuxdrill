@@ -1,4 +1,4 @@
-# 🐧 LinuxDrill — POSIX & Linux Systems Mastery
+# 🐧 Bashist — POSIX & Linux Systems Mastery
 
 > **Enterprise Linux System Administration & POSIX Mastery Platform**  
 > An interactive, browser-based hands-on trainer designed for sysadmins, competition competitors, and certification candidates (RHCSA, LPIC-1, CompTIA Linux+).
@@ -29,11 +29,11 @@
 
 ## 🎯 About The Project
 
-**LinuxDrill** (also known as *Linux-SysAd-Trainer*) is a full-featured, zero-installation web application that simulates a live CentOS / Enterprise Linux workstation right inside your browser.
+**Bashist** is a full-featured, zero-installation web application that simulates a live CentOS / Enterprise Linux workstation right inside your browser.
 
-Originally engineered as an intensive training simulator for the **15th IT Skills Olympics (ITSO 2026) Linux Administration Category** (CentOS on VMware, individual on-site contest), LinuxDrill solves the friction of provisioning virtual machines by delivering an authentic, low-latency POSIX command environment directly through the web.
+Originally engineered as an intensive training simulator for the **15th IT Skills Olympics (ITSO 2026) Linux Administration Category** (CentOS on VMware, individual on-site contest), Bashist solves the friction of provisioning virtual machines by delivering an authentic, low-latency POSIX command environment directly through the web.
 
-Whether preparing for timed competitive sysadmin olympiads, studying for Red Hat Certified System Administrator (RHCSA), LPIC-1, or sharpening command-line reflexes, LinuxDrill offers real-world task verification, multi-stage hints, and instant feedback.
+Whether preparing for timed competitive sysadmin olympiads, studying for Red Hat Certified System Administrator (RHCSA), LPIC-1, or sharpening command-line reflexes, Bashist offers real-world task verification, multi-stage hints, and instant feedback.
 
 ---
 
@@ -81,7 +81,7 @@ Whether preparing for timed competitive sysadmin olympiads, studying for Red Hat
 
 ## 📚 The Curriculum & Domains
 
-LinuxDrill includes **40 rigorous challenges** grouped into 8 official competency domains:
+Bashist includes **40 rigorous challenges** grouped into 8 official competency domains:
 
 | Code | Domain | Description | Count | Point Tier |
 |---|---|---|:---:|:---:|
@@ -141,8 +141,8 @@ Ensure you have the following installed on your machine:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Ram-Gold/linuxdrill.git
-   cd linuxdrill
+   git clone https://github.com/Ram-Gold/bashist.git
+   cd bashist
    ```
 
 2. **Install project dependencies**:
@@ -182,7 +182,7 @@ In the project root, you can execute:
 
 ## 🧪 Running Automated Audits
 
-LinuxDrill comes with comprehensive automated audit suites to ensure simulation authenticity and verification accuracy:
+Bashist comes with comprehensive automated audit suites to ensure simulation authenticity and verification accuracy:
 
 ### 1. Challenge & Verification Accuracy Audit
 Runs all 40 challenge scenarios through three test stages:
@@ -206,7 +206,7 @@ npx tsx scripts/test-man-help.ts
 ## 📁 Project Directory Structure
 
 ```text
-linuxdrill/
+bashist/
 ├── content/
 │   └── content.md               # Master curriculum, challenges, hints, and solutions
 ├── public/                      # Static assets and icons

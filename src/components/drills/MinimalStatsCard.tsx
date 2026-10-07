@@ -62,10 +62,11 @@ export default function MinimalStatsCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 44, scale: 0.96 }}
+      initial={{ opacity: 0, y: 12, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 24, scale: 0.96 }}
-      transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      onClick={(e) => e.stopPropagation()}
       className="relative w-full max-w-[560px] lg:max-w-[420px] bg-[var(--surface-base)] rounded-3xl shadow-2xl shadow-black/40 text-[var(--text-main)] p-7 sm:p-9 select-none border border-white/10 flex flex-col justify-between min-h-[380px]"
     >
       {/* ─── Top Header: Status Ribbon ─── */}

@@ -1,5 +1,5 @@
 /**
- * LinuxDrill Mechanical Switch Keystroke Soundpack Engine
+ * Bashist Mechanical Switch Keystroke Soundpack Engine
  * High-performance Web Audio API engine with zero latency, buffer pre-caching,
  * physical layout modeling, channel-separated voices, interruptible acoustic damping,
  * and matched downstroke + upstroke mechanical releases.
@@ -101,7 +101,8 @@ export const SOUNDPACK_SPRITE_FILES: Record<string, string> = {
   ...Object.fromEntries(KEYECHO_PACK_METAS.map((p) => [p.id, p.audioFile])),
 };
 
-const STORAGE_KEY = 'linuxdrill-sfx-settings';
+const STORAGE_KEY = 'bashist-sfx-settings';
+const LEGACY_STORAGE_KEY = 'linuxdrill-sfx-settings';
 const DEFAULT_SETTINGS: SoundpackSettings = {
   enabled: true,
   activePack: 'keyb-switch',
@@ -132,7 +133,7 @@ export function getAudioContext(): AudioContext | null {
 export function loadSoundpackSettings(): SoundpackSettings {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS;
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
       const activePack = SOUNDPACK_METAS.some((m) => m.id === parsed.activePack)
@@ -153,6 +154,9 @@ export function saveSoundpackSettings(settings: Partial<SoundpackSettings>) {
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(currentSettings));
+      window.dispatchEvent(
+        new CustomEvent('bashist_sfx_update', { detail: currentSettings })
+      );
       window.dispatchEvent(
         new CustomEvent('linuxdrill_sfx_update', { detail: currentSettings })
       );
@@ -181,7 +185,7 @@ async function fetchAndDecode(ctx: AudioContext, url: string): Promise<AudioBuff
       bufferCache.set(url, decoded);
       return decoded;
     } catch (err) {
-      console.warn(`[LinuxDrill SFX] Failed to load audio sample: ${url}`, err);
+      console.warn(`[Bashist SFX] Failed to load audio sample: ${url}`, err);
       return null;
     } finally {
       loadingPromises.delete(url);
@@ -320,7 +324,7 @@ function playBufferSlice(
 
     return voice;
   } catch (e) {
-    console.warn('[LinuxDrill SFX] Sprite playback error', e);
+    console.warn('[Bashist SFX] Sprite playback error', e);
     return null;
   }
 }

@@ -184,7 +184,7 @@ export class VirtualFileSystem {
     addFile(
       ["home", "student", "documents"],
       "readme.txt",
-      `Welcome to LinuxDrill WebTerm!\nUse the terminal commands to practice system administration.\n`,
+      `Welcome to Bashist WebTerm!\nUse the terminal commands to practice system administration.\n`,
       "student",
       "student"
     );

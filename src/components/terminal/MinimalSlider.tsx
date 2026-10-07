@@ -98,7 +98,7 @@ export default function MinimalSlider({
     <div className="flex flex-col gap-2.5 select-none">
       {/* Label and Value Header */}
       <div className="flex items-center justify-between px-0.5">
-        <span className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium flex items-center gap-1.5">
+        <span className="text-[11px] uppercase tracking-wider text-slate-600 dark:text-[var(--text-tertiary)] font-semibold flex items-center gap-1.5">
           {icon}
           <span>{label}</span>
         </span>
@@ -109,7 +109,7 @@ export default function MinimalSlider({
             <button
               type="button"
               onClick={() => onChange(defaultValue)}
-              className="p-1 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-main)] hover:bg-[var(--surface-active)] transition-colors cursor-pointer"
+              className="p-1 rounded-md text-slate-500 hover:text-slate-900 dark:text-[var(--text-tertiary)] dark:hover:text-[var(--text-main)] hover:bg-slate-200/60 dark:hover:bg-[var(--surface-active)] transition-colors cursor-pointer"
               title={`Reset to default (${defaultValue}${unit})`}
               aria-label={`Reset to default (${defaultValue}${unit})`}
             >
@@ -117,7 +117,7 @@ export default function MinimalSlider({
             </button>
           )}
 
-          <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-lg text-[var(--text-main)] bg-[var(--surface-subtle)]">
+          <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-lg text-slate-900 dark:text-[var(--text-main)] bg-slate-100 dark:bg-[var(--surface-subtle)] border border-slate-200/90 dark:border-transparent shadow-2xs dark:shadow-none">
             {value}
             {unit}
           </span>
@@ -141,7 +141,7 @@ export default function MinimalSlider({
         className="relative h-8 flex items-center cursor-pointer select-none touch-none outline-none my-0.5"
       >
         {/* Track Bar Background */}
-        <div className="absolute left-[13px] right-[13px] h-[22px] bg-[var(--surface-active)] rounded-full overflow-hidden">
+        <div className="absolute left-[13px] right-[13px] h-[22px] bg-slate-200 dark:bg-[var(--surface-active)] rounded-full overflow-hidden">
           {/* Active Fill with smooth ease-out left/right transition */}
           <div
             className="h-full rounded-full"
@@ -149,8 +149,8 @@ export default function MinimalSlider({
               width: `${percent}%`,
               backgroundColor: accentColor,
               transition: isDragging
-                ? 'width 150ms cubic-bezier(0.16, 1, 0.3, 1)'
-                : 'width 220ms cubic-bezier(0.16, 1, 0.3, 1)',
+                ? 'none'
+                : 'width 200ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           />
         </div>
@@ -166,7 +166,7 @@ export default function MinimalSlider({
               <span
                 key={i}
                 className={`absolute -translate-x-1/2 w-1 h-1 rounded-full transition-colors duration-200 ease-out ${
-                  isPassed ? 'bg-white/45' : 'bg-white/15'
+                  isPassed ? 'bg-white/70 dark:bg-white/45' : 'bg-slate-400/70 dark:bg-white/15'
                 }`}
                 style={{ left: `${dotLeft}%` }}
               />
@@ -174,24 +174,24 @@ export default function MinimalSlider({
           })}
         </div>
 
-        {/* White Circular Thumb - smooth ease-out snap to nearest circle on drag & hover growth */}
+        {/* Circular Thumb */}
         <div
           onMouseEnter={() => setIsThumbHovered(true)}
           onMouseLeave={() => setIsThumbHovered(false)}
-          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[26px] h-[26px] rounded-full bg-white shadow-md shadow-black/35 cursor-grab active:cursor-grabbing pointer-events-auto select-none hover:scale-125 ${
+          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-[26px] h-[26px] rounded-full bg-white border border-slate-300 dark:border-transparent shadow-md shadow-black/25 cursor-grab active:cursor-grabbing pointer-events-auto select-none hover:scale-125 ${
             isCircleExpanded ? 'scale-125' : 'scale-100'
           }`}
           style={{
             left: `calc(13px + (${percent} * (100% - 26px) / 100))`,
             transition: isDragging
-              ? 'left 150ms cubic-bezier(0.16, 1, 0.3, 1), scale 280ms cubic-bezier(0.16, 1, 0.3, 1), transform 280ms cubic-bezier(0.16, 1, 0.3, 1)'
-              : 'left 220ms cubic-bezier(0.16, 1, 0.3, 1), scale 280ms cubic-bezier(0.16, 1, 0.3, 1), transform 280ms cubic-bezier(0.16, 1, 0.3, 1)',
+              ? 'transform 200ms cubic-bezier(0.16, 1, 0.3, 1)'
+              : 'left 200ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         />
       </div>
 
       {/* Range Min/Max Footnote */}
-      <div className="flex justify-between items-center text-[10px] font-mono text-[var(--text-tertiary)] px-3 -mt-0.5">
+      <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 dark:text-[var(--text-tertiary)] px-3 -mt-0.5">
         <span>
           {min}
           {unit}
@@ -200,7 +200,7 @@ export default function MinimalSlider({
           <button
             type="button"
             onClick={() => onChange(defaultValue)}
-            className="hover:text-[var(--text-main)] transition-colors cursor-pointer"
+            className="hover:text-slate-900 dark:hover:text-[var(--text-main)] transition-colors cursor-pointer font-medium"
             title="Click to reset"
           >
             Default ({defaultValue}

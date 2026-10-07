@@ -1,4 +1,4 @@
-# LinuxDrill: ITSO 2026 Linux Administration Trainer
+# Bashist: ITSO 2026 Linux Administration Trainer
 
 > Practice content for the 15th IT Skills Olympics, Linux Administration (CentOS on VMware, individual, on-site).
 > **Practice only.** AI tools are prohibited during the real contest. Use this material to train, then go in with your own hands and memory.

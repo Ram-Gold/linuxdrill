@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -17,6 +18,10 @@
   --color-txt-main: var(--text-main);
   --color-txt-muted: var(--text-muted);
   --color-txt-tertiary: var(--text-tertiary);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-spring: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -25,6 +30,13 @@
    ══════════════════════════════════════════════════════════════════ */
 :root, :root.dark, :root.theme-dark {
   color-scheme: dark;
+
+  /* Motion Tokens */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-spring: cubic-bezier(0.23, 1, 0.32, 1);
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
 
   /* Surfaces — Mimo navy stack */
   --bg-canvas: #151728;
@@ -101,18 +113,18 @@
   --surface-elevated: #ffffff;
   --surface-active: #e2e4ef;
 
-  /* Borders — completely borderless */
-  --border-subtle: transparent;
-  --border-strong: transparent;
-  --border-dark: transparent;
+  /* Borders — refined subtle separators */
+  --border-subtle: #e2e5f0;
+  --border-strong: #cbd0e2;
+  --border-dark: #b6bcd2;
 
-  --text-main: #1a1d3a;
-  --text-muted: #6b6e8a;
-  --text-tertiary: #9496b0;
+  --text-main: #141731;
+  --text-muted: #585c7a;
+  --text-tertiary: #7e829f;
 
   --accent-primary: #7e4bde;
   --accent-primary-hover: #6b3bc8;
-  --accent-primary-soft: #a98af0;
+  --accent-primary-soft: #6332c9;
   --accent-primary-bg: rgba(126, 75, 222, 0.08);
 
   --accent-green: #3da828;
@@ -143,7 +155,7 @@
 
   --terminal-outer-bg: #ffffff;
   --terminal-header-bg: #eeeff6;
-  --terminal-body-bg: #111329;
+  --terminal-body-bg: #f8f9fc;
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -458,7 +470,7 @@ body {
   margin: 0;
   padding: 0;
   letter-spacing: -0.011em;
-  transition: background-color 150ms ease-in, color 150ms ease-in;
+  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -610,7 +622,6 @@ code, kbd, pre, .font-mono {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 
@@ -753,7 +764,7 @@ code, kbd, pre, .font-mono {
   line-height: 16px;
   cursor: pointer;
   user-select: none;
-  transition: all 100ms ease;
+  transition: background-color 100ms ease, color 100ms ease, box-shadow 100ms ease;
 }
 .chip-mimo:hover {
   color: var(--text-main);

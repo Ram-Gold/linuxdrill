@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" fill="none">
+  <rect x="56" y="56" width="888" height="888" rx="64" ry="64" fill="var(--accent-primary, #7e4bde)" />
+  <path d="M 132 327 L 360 421 L 360 475 L 132 569 L 132 513 L 291 448 L 132 383 Z" fill="var(--color-logo-face, #ffffff)" />
+  <path d="M 868 327 L 640 421 L 640 475 L 868 569 L 868 513 L 709 448 L 868 383 Z" fill="var(--color-logo-face, #ffffff)" />
+  <rect x="382" y="653" width="236" height="56" rx="4" fill="var(--color-logo-face, #ffffff)" />
+</svg>

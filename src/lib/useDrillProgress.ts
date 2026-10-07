@@ -1,10 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { type DomainCode, DRILL_DECKS, getAllDrills } from '../data/drillDecks';
 
-const STORAGE_KEY = 'linuxdrill:drill_progress_v1';
-const STREAK_KEY = 'linuxdrill:drill_streak_v1';
-const PRACTICE_STAGE_KEY = 'linuxdrill:practice_stage_v1';
-const DRILL_MODE_KEY = 'linuxdrill:drill_mode_v1';
+const STORAGE_KEY = 'bashist:drill_progress_v1';
+const LEGACY_STORAGE_KEY = 'linuxdrill:drill_progress_v1';
+const STREAK_KEY = 'bashist:drill_streak_v1';
+const LEGACY_STREAK_KEY = 'linuxdrill:drill_streak_v1';
+const PRACTICE_STAGE_KEY = 'bashist:practice_stage_v1';
+const LEGACY_PRACTICE_STAGE_KEY = 'linuxdrill:practice_stage_v1';
+const DRILL_MODE_KEY = 'bashist:drill_mode_v1';
+const LEGACY_DRILL_MODE_KEY = 'linuxdrill:drill_mode_v1';
 
 export type DrillStage = 1 | 2 | 3;
 export type DrillMode = 'typer' | 'shell';
@@ -29,7 +33,7 @@ interface StreakState {
 
 function loadProgress(): DrillProgress {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
@@ -38,7 +42,7 @@ function loadProgress(): DrillProgress {
 
 function loadStreak(): StreakState {
   try {
-    const raw = localStorage.getItem(STREAK_KEY);
+    const raw = localStorage.getItem(STREAK_KEY) || localStorage.getItem(LEGACY_STREAK_KEY);
     return raw ? JSON.parse(raw) : { currentStreak: 0, bestStreak: 0 };
   } catch {
     return { currentStreak: 0, bestStreak: 0 };
@@ -47,7 +51,7 @@ function loadStreak(): StreakState {
 
 function loadPracticeStage(): DrillStage {
   try {
-    const raw = localStorage.getItem(PRACTICE_STAGE_KEY);
+    const raw = localStorage.getItem(PRACTICE_STAGE_KEY) || localStorage.getItem(LEGACY_PRACTICE_STAGE_KEY);
     if (raw === '1' || raw === '2' || raw === '3') {
       return Number(raw) as DrillStage;
     }
@@ -59,7 +63,7 @@ function loadPracticeStage(): DrillStage {
 
 function loadDrillMode(): DrillMode {
   try {
-    const raw = localStorage.getItem(DRILL_MODE_KEY);
+    const raw = localStorage.getItem(DRILL_MODE_KEY) || localStorage.getItem(LEGACY_DRILL_MODE_KEY);
     if (raw === 'typer' || raw === 'shell') {
       return raw;
     }

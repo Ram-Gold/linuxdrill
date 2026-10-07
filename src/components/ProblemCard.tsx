@@ -40,7 +40,7 @@ export default function ProblemCard({
   return (
     <Link
       to={`/p/${problem.id}`}
-      className={`group relative rounded-2xl p-4 sm:p-5 flex flex-col justify-between cursor-pointer mimo-press transition-all duration-200 bg-[var(--surface-card)] hover:bg-[var(--surface-card-hover)] hover:-translate-y-0.5`}
+      className={`group relative rounded-2xl p-4 sm:p-5 flex flex-col justify-between cursor-pointer mimo-press transition-[transform,background-color,box-shadow] duration-180 ease-out bg-[var(--surface-card)] hover:bg-[var(--surface-card-hover)] hover:-translate-y-0.5`}
     >
       <div>
         {/* Top metadata bar: Step / Next / Solved on left, Difficulty on right */}

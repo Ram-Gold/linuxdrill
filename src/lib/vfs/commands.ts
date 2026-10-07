@@ -8,6 +8,7 @@ import {
   getUnknownManError,
   MAN_PAGES,
 } from "./manpages";
+import { generateFastfetch } from "./fastfetch";
 
 export class ShellContext {
   public vfs: VirtualFileSystem;
@@ -710,6 +711,12 @@ export class ShellContext {
           return this.handleSu("student");
         }
         return { stdout: "exit: cannot exit root shell\n", stderr: "", exitCode: 0 };
+
+      // Easter egg: fastfetch / neofetch / screenfetch
+      case "fastfetch":
+      case "neofetch":
+      case "screenfetch":
+        return { stdout: generateFastfetch(this.session), stderr: "", exitCode: 0 };
 
       default:
         return {

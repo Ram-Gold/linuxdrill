@@ -1,5 +1,5 @@
 /**
- * LinuxDrill Authentic Man Pages & GNU --help Registry
+ * Bashist Authentic Man Pages & GNU --help Registry
  * Modeled after CentOS Stream 9 (x86_64) / GNU coreutils 9.x
  */
 

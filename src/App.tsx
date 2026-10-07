@@ -1,11 +1,14 @@
 import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import { problems } from "./lib/problems";
 import { useProgress } from "./lib/useProgress";
 
 export default function App() {
   const location = useLocation();
   const isTerminal = location.pathname.startsWith("/terminal");
+  const isProblem = location.pathname.startsWith("/p/");
+  const isFullscreen = isTerminal || isProblem;
   const { solved } = useProgress();
   const solvedCount = solved.length;
   const totalCount = problems.length;
@@ -24,6 +27,8 @@ export default function App() {
       <main className={`w-full flex-1 ${isTerminal ? "p-0 overflow-hidden" : "px-5 lg:px-8 py-6"}`}>
         <Outlet />
       </main>
+
+      {!isFullscreen && <Footer />}
     </div>
   );
 }

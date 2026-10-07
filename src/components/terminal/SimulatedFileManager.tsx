@@ -117,10 +117,10 @@ export default function SimulatedFileManager({
       return (
         <div key={item.fullPath} className="flex flex-col select-none">
           <div
-            className={`flex items-center gap-1.5 py-0.5 px-2 rounded-lg font-mono transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 py-1 px-2 rounded-lg font-mono transition-colors cursor-pointer ${
               isCurrentCwd
-                ? 'bg-blue-600/25 text-blue-300 font-medium border border-blue-500/30'
-                : 'hover:bg-white/5 text-slate-300 hover:text-white'
+                ? 'bg-[var(--accent-primary-bg)] text-[var(--accent-primary-soft)] font-medium border border-[var(--accent-primary)]/25 shadow-xs'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-subtle)]'
             }`}
             style={{
               paddingLeft: `${Math.max(8, depth * 14)}px`,
@@ -129,7 +129,7 @@ export default function SimulatedFileManager({
             onClick={() => toggleExpand(item.fullPath)}
           >
             {/* Chevron toggle */}
-            <span className="w-3.5 h-3.5 flex items-center justify-center text-slate-400 shrink-0">
+            <span className="w-3.5 h-3.5 flex items-center justify-center text-[var(--text-tertiary)] shrink-0">
               {isExpanded ? (
                 <ChevronDown className="w-3.5 h-3.5" />
               ) : (
@@ -137,15 +137,15 @@ export default function SimulatedFileManager({
               )}
             </span>
 
-            {/* Cyan/Blue Folder icon */}
+            {/* Folder icon */}
             {isExpanded ? (
-              <FolderOpen className="w-3.5 h-3.5 text-[#38bdf8] shrink-0" />
+              <FolderOpen className="w-3.5 h-3.5 text-[var(--accent-primary-soft)] shrink-0" />
             ) : (
-              <Folder className="w-3.5 h-3.5 text-[#38bdf8] shrink-0" />
+              <Folder className="w-3.5 h-3.5 text-[var(--accent-primary-soft)] shrink-0" />
             )}
 
             {/* Folder name */}
-            <span className="truncate">{item.name}</span>
+            <span className="truncate font-medium text-[var(--text-main)]">{item.name}</span>
           </div>
 
           {/* Children */}
@@ -162,31 +162,31 @@ export default function SimulatedFileManager({
     return (
       <div
         key={item.fullPath}
-        className="flex items-center gap-1.5 py-0.5 px-2 font-mono text-slate-400 select-none pointer-events-none"
+        className="flex items-center gap-1.5 py-0.5 px-2 font-mono select-none pointer-events-none"
         style={{
           paddingLeft: `${Math.max(8, depth * 14 + 14)}px`,
           fontSize: `${fontSize}px`,
         }}
       >
-        <FileText className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-        <span className="truncate text-slate-300">{item.name}</span>
+        <FileText className="w-3.5 h-3.5 text-[var(--text-tertiary)] shrink-0" />
+        <span className="truncate text-[var(--text-muted)] font-normal">{item.name}</span>
       </div>
     );
   };
 
   return (
     <div
-      className={`w-full h-full flex flex-col bg-[var(--surface-base)] border-r border-white/5 select-none font-mono ${className}`}
+      className={`w-full h-full flex flex-col bg-[var(--surface-base)] border-r border-[var(--border-subtle)] select-none font-mono ${className}`}
     >
       {/* Scrollable File Tree */}
       <div
-        className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5 scrollbar-thin scrollbar-thumb-white/10"
+        className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5 scrollbar-thin scrollbar-thumb-[var(--scrollbar-thumb)]"
         style={{ fontSize: `${fontSize}px` }}
       >
         {treeData ? (
           renderNode(treeData)
         ) : (
-          <div className="p-4 text-center text-xs text-slate-500">
+          <div className="p-4 text-center text-xs text-[var(--text-tertiary)]">
             Loading Virtual File System...
           </div>
         )}

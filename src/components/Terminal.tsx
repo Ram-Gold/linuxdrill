@@ -20,6 +20,7 @@ import {
 import { AnimatePresence } from "motion/react";
 import { ShellContext } from "../lib/vfs/commands";
 import type { HistoryItem } from "../lib/vfs/types";
+import { parseAnsi, hasAnsiCodes } from "../lib/vfs/ansiColors";
 import TerminalGuideDrawer from "./terminal/TerminalGuideDrawer";
 
 export interface TerminalHandle {
@@ -80,7 +81,14 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
 ) {
   const [internalShell] = useState(() => shellContext || new ShellContext());
   const shell = shellContext || internalShell;
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return new URLSearchParams(window.location.search).get("guide") === "open";
+    } catch {
+      return false;
+    }
+  });
 
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>(() => [
     {
@@ -555,9 +563,9 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
 
   return (
     <div
-      className={`relative flex flex-col font-mono transition-all select-none ${embedded
+      className={`relative flex flex-col font-mono transition-colors select-none ${embedded
           ? "h-full w-full bg-[var(--terminal-body-bg)] border-0 rounded-none shadow-none overflow-hidden"
-          : "rounded-2xl bg-[var(--surface-base)] shadow-[var(--card-shadow)] border border-white/10 overflow-hidden"
+          : "rounded-2xl bg-[var(--terminal-body-bg)] shadow-[var(--card-shadow)] border border-white/10 overflow-hidden"
         } ${isMaximized
           ? "!fixed !inset-3 !z-50 !h-[calc(100vh-1.5rem)] !w-[calc(100vw-1.5rem)] !rounded-2xl !shadow-2xl !bg-[var(--terminal-body-bg)]"
           : ""
@@ -577,10 +585,10 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
           hideHeaderActions
             ? "absolute top-3 right-4 z-20 bg-transparent pointer-events-none"
             : embedded
-            ? "h-10 px-4 shadow-xs"
-            : "h-11 px-3.5 bg-[var(--surface-subtle)]"
+            ? "h-10 px-4 shadow-xs border-b border-white/5 bg-[var(--terminal-header-bg)]"
+            : "h-11 px-3.5 bg-[var(--terminal-header-bg)] border-b border-white/5"
         }`}
-        style={embedded && !hideHeaderActions ? { backgroundColor: "var(--surface-base)" } : undefined}
+        style={embedded && !hideHeaderActions ? { backgroundColor: "var(--terminal-header-bg)" } : undefined}
       >
         {embedded ? (
           <span className="text-xs text-[var(--text-muted)] font-medium">Terminal</span>
@@ -591,7 +599,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
 
               <span
                 className={`rounded-lg px-2.5 py-1 text-[11px] font-mono font-medium ${isRoot
-                    ? "bg-rose-500/10 text-rose-500"
+                    ? "bg-[var(--accent-red)]/15 text-[var(--accent-red)]"
                     : "bg-[var(--surface-base)] text-[var(--accent-primary-soft)]"
                   }`}
               >
@@ -599,7 +607,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
               </span>
 
               <div className="hidden sm:flex items-center gap-1.5 ml-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-green)] animate-pulse" />
                 <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-mono">
                   Live
                 </span>
@@ -715,10 +723,10 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                   e.stopPropagation();
                   setIsGuideOpen(!isGuideOpen);
                 }}
-                className={`flex items-center space-x-1.5 rounded-lg px-3 py-1 text-xs font-mono font-medium transition-all cursor-pointer border ${
+                className={`flex items-center space-x-1.5 rounded-xl px-2.5 py-1 text-xs font-mono font-medium transition-all cursor-pointer border mimo-press pointer-events-auto backdrop-blur-md shadow-sm ${
                   isGuideOpen
-                    ? "bg-purple-600/30 text-purple-200 border-purple-400 shadow-sm"
-                    : "bg-purple-950/30 hover:bg-purple-900/40 text-purple-300 border-purple-500/50 hover:border-purple-400"
+                    ? "bg-purple-600 text-white border-purple-400 shadow-md"
+                    : "bg-slate-900/90 hover:bg-slate-800 text-purple-300 hover:text-purple-100 border-purple-500/40 hover:border-purple-400"
                 }`}
                 title="Toggle Terminal Guide"
               >
@@ -733,7 +741,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                   e.stopPropagation();
                   onOpenSettings();
                 }}
-                className="flex items-center space-x-1.5 rounded-xl bg-[var(--surface-base)] hover:bg-[var(--surface-active)] px-2.5 py-1 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors cursor-pointer text-[11px] font-mono mimo-press"
+                className="flex items-center space-x-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-500 px-2.5 py-1 text-slate-200 hover:text-white transition-all cursor-pointer text-xs font-mono mimo-press backdrop-blur-md pointer-events-auto shadow-sm"
                 title="Sandbox Settings"
               >
                 <Settings className="w-3.5 h-3.5" />
@@ -752,14 +760,14 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
           ref={pagerContainerRef}
           tabIndex={0}
           onKeyDown={handlePagerKeyDown}
-          className="flex-1 flex flex-col bg-[#090d16] outline-none focus:outline-none overflow-hidden select-text"
+          className="flex-1 flex flex-col bg-[var(--terminal-body-bg)] outline-none focus:outline-none overflow-hidden select-text"
         >
           {/* Scrollable Text Viewport */}
           <div
             ref={pagerScrollRef}
             onScroll={handlePagerScroll}
             style={{ fontSize: `${fontSize}px` }}
-            className="flex-1 overflow-y-auto p-4 leading-relaxed text-slate-200 scrollbar-thin scrollbar-thumb-slate-800 bg-[var(--terminal-body-bg)]"
+            className="flex-1 overflow-y-auto p-4 leading-relaxed text-[var(--text-main)] scrollbar-thin scrollbar-thumb-[var(--scrollbar-thumb)] bg-[var(--terminal-body-bg)]"
           >
             {pager.lines.map((line, idx) => {
               const isMatch = pager.searchMatches.includes(idx);
@@ -771,12 +779,12 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                   key={idx}
                   id={`pager-line-${idx}`}
                   className={`whitespace-pre-wrap font-mono ${isCurrentMatch
-                      ? "bg-cyan-900/80 text-white font-bold px-1 rounded shadow-sm"
+                      ? "bg-[var(--accent-primary)]/40 text-[var(--text-main)] font-bold px-1 rounded shadow-xs"
                       : isMatch
-                        ? "bg-amber-950/70 text-amber-200 px-1 rounded"
+                        ? "bg-[var(--accent-amber)]/25 text-[var(--accent-amber)] px-1 rounded"
                         : isHeader
-                          ? "text-cyan-400 font-bold tracking-wider pt-2"
-                          : "text-slate-300"
+                          ? "text-[var(--accent-primary-soft)] font-bold tracking-wider pt-2"
+                          : "text-[var(--text-main)]/90"
                     }`}
                 >
                   {line || "\u00A0"}
@@ -787,8 +795,8 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
 
           {/* Authentic Less Pager Status / Search Bar */}
           {pager.isSearching ? (
-            <div className="flex items-center text-xs font-mono bg-slate-900 px-3 py-1.5 text-cyan-300 shrink-0">
-              <span className="font-bold mr-1.5 text-slate-400">/</span>
+            <div className="flex items-center text-xs font-mono bg-[var(--terminal-header-bg)] border-t border-white/5 px-3 py-1.5 text-[var(--accent-primary-soft)] shrink-0">
+              <span className="font-bold mr-1.5 text-[var(--text-muted)]">/</span>
               <input
                 ref={searchInputRef}
                 type="text"
@@ -807,42 +815,42 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                     pagerContainerRef.current?.focus();
                   }
                 }}
-                className="bg-transparent border-none outline-none text-white w-full text-xs font-mono p-0 focus:ring-0"
+                className="bg-transparent border-none outline-none text-[var(--text-main)] w-full text-xs font-mono p-0 focus:ring-0 placeholder-[var(--text-tertiary)]"
                 placeholder="search keyword (Enter to find, Esc to cancel)..."
               />
             </div>
           ) : (
-            <div className="flex items-center justify-between text-[11px] font-mono bg-slate-900 px-3 py-1.5 text-slate-300 select-none shrink-0">
+            <div className="flex items-center justify-between text-[11px] font-mono bg-[var(--terminal-header-bg)] border-t border-white/5 px-3 py-1.5 text-[var(--text-muted)] select-none shrink-0">
               <div className="flex items-center gap-2">
-                <span className="bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded-md font-bold text-[10px]">
+                <span className="bg-[var(--accent-primary-bg)] text-[var(--accent-primary-soft)] border border-[var(--accent-primary)]/20 px-2 py-0.5 rounded-md font-bold text-[10px]">
                   {pager.title}
                 </span>
-                <span className="text-slate-400 text-[10px]">
+                <span className="text-[var(--text-tertiary)] text-[10px]">
                   {scrollPercent}% (lines {pager.lines.length})
                 </span>
                 {pager.searchMatches.length > 0 && (
-                  <span className="text-amber-400 text-[10px] font-bold">
+                  <span className="text-[var(--accent-amber)] text-[10px] font-bold">
                     [Match {pager.currentMatchIdx + 1}/{pager.searchMatches.length} · 'n'/'N' to cycle]
                   </span>
                 )}
                 {pager.searchQuery && pager.searchMatches.length === 0 && (
-                  <span className="text-rose-400 text-[10px]">
+                  <span className="text-[var(--accent-red)] text-[10px]">
                     Pattern not found: {pager.searchQuery}
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2.5 text-slate-400 text-[10px]">
+              <div className="flex items-center gap-2.5 text-[var(--text-tertiary)] text-[10px]">
                 <span>
-                  <kbd className="bg-slate-800 text-slate-200 px-1 py-0.5 rounded">Space</kbd> Next
+                  <kbd className="bg-[var(--surface-subtle)] text-[var(--text-muted)] border border-white/5 px-1 py-0.5 rounded">Space</kbd> Next
                 </span>
                 <span>
-                  <kbd className="bg-slate-800 text-slate-200 px-1 py-0.5 rounded">j/k</kbd> Scroll
+                  <kbd className="bg-[var(--surface-subtle)] text-[var(--text-muted)] border border-white/5 px-1 py-0.5 rounded">j/k</kbd> Scroll
                 </span>
                 <span>
-                  <kbd className="bg-slate-800 text-slate-200 px-1 py-0.5 rounded">/</kbd> Search
+                  <kbd className="bg-[var(--surface-subtle)] text-[var(--text-muted)] border border-white/5 px-1 py-0.5 rounded">/</kbd> Search
                 </span>
                 <span>
-                  <kbd className="bg-cyan-900 text-cyan-200 px-1.5 py-0.5 rounded font-bold">q</kbd> Quit
+                  <kbd className="bg-[var(--accent-primary-bg)] text-[var(--accent-primary-soft)] border border-[var(--accent-primary)]/30 px-1.5 py-0.5 rounded font-bold">q</kbd> Quit
                 </span>
               </div>
             </div>
@@ -855,35 +863,52 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
         <div
           ref={containerRef}
           style={{ fontSize: `${fontSize}px` }}
-          className="flex-1 overflow-y-auto p-4 leading-relaxed text-slate-200 cursor-text select-text scrollbar-thin scrollbar-thumb-slate-800 bg-[var(--terminal-body-bg)]"
+          className="flex-1 overflow-y-auto p-4 leading-relaxed text-[var(--text-main)] cursor-text select-text scrollbar-thin scrollbar-thumb-[var(--scrollbar-thumb)] bg-[var(--terminal-body-bg)]"
         >
           {historyItems.map((item) => (
             <div key={item.id} className="mb-2">
               {item.command && (
-                <div className="flex items-start space-x-2 text-slate-300">
+                <div className="flex items-start space-x-2 text-[var(--text-muted)]">
                   <span className="font-mono shrink-0 select-none" style={{ fontSize: `${fontSize}px` }}>
-                    <span className={item.user === "root" ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
+                    <span className={item.user === "root" ? "text-[var(--accent-red)] font-bold" : "text-[var(--accent-green)] font-bold"}>
                       {item.user}@{shell.session.hostname}
                     </span>
-                    <span className="text-slate-400">:</span>
-                    <span className="text-cyan-400 font-semibold">
+                    <span className="text-[var(--text-tertiary)]">:</span>
+                    <span className="text-[var(--accent-primary-soft)] font-semibold">
                       {item.cwd === shell.session.homeDir ? "~" : item.cwd}
                     </span>
-                    <span className={item.user === "root" ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
+                    <span className={item.user === "root" ? "text-[var(--accent-red)] font-bold" : "text-[var(--accent-green)] font-bold"}>
                       {item.user === "root" ? "# " : "$ "}
                     </span>
                   </span>
-                  <span className="font-semibold text-white break-all" style={{ fontSize: `${fontSize}px` }}>{item.command}</span>
+                  <span className="font-semibold text-[var(--text-main)] break-all" style={{ fontSize: `${fontSize}px` }}>{item.command}</span>
                 </div>
               )}
 
               {item.output && (
                 <div className="mt-1 whitespace-pre-wrap font-mono" style={{ fontSize: `${Math.max(10, fontSize - 1)}px` }}>
                   {item.output.stdout && (
-                    <span className="text-slate-300">{item.output.stdout}</span>
+                    hasAnsiCodes(item.output.stdout) ? (
+                      <span>
+                        {parseAnsi(item.output.stdout).map((seg, si) => (
+                          <span
+                            key={si}
+                            style={{
+                              color: seg.color || undefined,
+                              fontWeight: seg.bold ? 700 : undefined,
+                            }}
+                            className={seg.color ? undefined : "text-[var(--text-main)]"}
+                          >
+                            {seg.text}
+                          </span>
+                        ))}
+                      </span>
+                    ) : (
+                      <span className="text-[var(--text-main)]/90">{item.output.stdout}</span>
+                    )
                   )}
                   {item.output.stderr && (
-                    <span className="text-rose-400 font-medium">{item.output.stderr}</span>
+                    <span className="text-[var(--accent-red)] font-medium">{item.output.stderr}</span>
                   )}
                 </div>
               )}
@@ -893,14 +918,14 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
           {/* Current Active Input Prompt */}
           <div className="flex items-center space-x-1.5 pt-1">
             <span className="font-mono shrink-0 select-none" style={{ fontSize: `${fontSize}px` }}>
-              <span className={isRoot ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
+              <span className={isRoot ? "text-[var(--accent-red)] font-bold" : "text-[var(--accent-green)] font-bold"}>
                 {shell.session.username}@{shell.session.hostname}
               </span>
-              <span className="text-slate-400">:</span>
-              <span className="text-cyan-400 font-semibold">
+              <span className="text-[var(--text-tertiary)]">:</span>
+              <span className="text-[var(--accent-primary-soft)] font-semibold">
                 {displayCwd}
               </span>
-              <span className={isRoot ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
+              <span className={isRoot ? "text-[var(--accent-red)] font-bold" : "text-[var(--accent-green)] font-bold"}>
                 {promptSymbol}&nbsp;
               </span>
             </span>
@@ -921,7 +946,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                   }
                 }}
                 style={{ fontSize: `${fontSize}px` }}
-                className="w-full bg-transparent text-white outline-none border-none p-0 focus:ring-0 font-mono"
+                className="w-full bg-transparent text-[var(--text-main)] outline-none border-none p-0 focus:ring-0 font-mono placeholder-[var(--text-tertiary)]/50"
                 autoFocus
                 spellCheck={false}
                 autoComplete="off"

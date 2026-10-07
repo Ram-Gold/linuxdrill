@@ -14,8 +14,10 @@ import MinimalStatsCard from '../components/drills/MinimalStatsCard';
 import DrillSettingsModal from '../components/drills/DrillSettingsModal';
 import CompetencyDecksModal from '../components/drills/CompetencyDecksModal';
 
-const LAST_DOMAIN_KEY = 'linuxdrill:last_domain';
-const BLITZ_MODE_KEY = 'linuxdrill:blitz_mode_v1';
+const LAST_DOMAIN_KEY = 'bashist:last_domain';
+const LEGACY_LAST_DOMAIN_KEY = 'linuxdrill:last_domain';
+const BLITZ_MODE_KEY = 'bashist:blitz_mode_v1';
+const LEGACY_BLITZ_MODE_KEY = 'linuxdrill:blitz_mode_v1';
 
 export default function DrillsPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -24,7 +26,8 @@ export default function DrillsPage() {
   // Blitz mode toggle state (persistent across drills, decks, reloads, and sessions)
   const [isBlitzMode, setIsBlitzMode] = useState<boolean>(() => {
     try {
-      return localStorage.getItem(BLITZ_MODE_KEY) === 'true';
+      const saved = localStorage.getItem(BLITZ_MODE_KEY) ?? localStorage.getItem(LEGACY_BLITZ_MODE_KEY);
+      return saved === 'true';
     } catch {
       return false;
     }
@@ -42,7 +45,7 @@ export default function DrillsPage() {
   // Deck & drill selection
   const [selectedDomain, setSelectedDomain] = useState<DomainCode>(() => {
     try {
-      const saved = localStorage.getItem(LAST_DOMAIN_KEY);
+      const saved = localStorage.getItem(LAST_DOMAIN_KEY) || localStorage.getItem(LEGACY_LAST_DOMAIN_KEY);
       if (saved && DRILL_DECKS.some((d) => d.id === saved)) {
         return saved as DomainCode;
       }
@@ -256,19 +259,17 @@ export default function DrillsPage() {
       {/* ─── Completion Stats Modal (SoundSettingsModal style) ─── */}
       <AnimatePresence>
         {lastResult && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+          <motion.div
+            key="drill-stats-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            onClick={() => setLastResult(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs"
             role="dialog"
             aria-modal="true"
           >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              onClick={() => setLastResult(null)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
-            />
             <MinimalStatsCard
               drill={currentDrill}
               stage={effectiveStage}
@@ -282,7 +283,7 @@ export default function DrillsPage() {
               onNext={handleNextDrill}
               onRetry={handleRetryDrill}
             />
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 

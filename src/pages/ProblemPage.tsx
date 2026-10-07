@@ -33,6 +33,9 @@ import HintAccordion from "../components/HintAccordion";
 import ExitConfirmationModal from "../components/ExitConfirmationModal";
 
 
+const SPLIT_RATIO_KEY = "bashist_split_ratio";
+const LEGACY_SPLIT_RATIO_KEY = "linuxdrill_split_ratio";
+
 export default function ProblemPage() {
   const { id } = useParams();
   const problem = problems.find((p) => p.id === id);
@@ -71,7 +74,7 @@ export default function ProblemPage() {
   // Resizable split ratio (percentage for left specification pane)
   const [splitRatio, setSplitRatio] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem("linuxdrill_split_ratio");
+      const saved = localStorage.getItem(SPLIT_RATIO_KEY) || localStorage.getItem(LEGACY_SPLIT_RATIO_KEY);
       if (saved) {
         const val = parseFloat(saved);
         if (!isNaN(val) && val >= 0 && val <= 80) return val;
@@ -83,7 +86,7 @@ export default function ProblemPage() {
   });
   const [lastRatio, setLastRatio] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem("linuxdrill_split_ratio");
+      const saved = localStorage.getItem(SPLIT_RATIO_KEY) || localStorage.getItem(LEGACY_SPLIT_RATIO_KEY);
       if (saved) {
         const val = parseFloat(saved);
         if (!isNaN(val) && val >= 20 && val <= 80) return val;
@@ -161,7 +164,7 @@ export default function ProblemPage() {
           if (percentage < SNAP_THRESHOLD) {
             setSplitRatio(0);
             try {
-              localStorage.setItem("linuxdrill_split_ratio", "0");
+              localStorage.setItem(SPLIT_RATIO_KEY, "0");
             } catch {
               // ignore
             }
@@ -170,7 +173,7 @@ export default function ProblemPage() {
             setSplitRatio(clamped);
             setLastRatio(clamped);
             try {
-              localStorage.setItem("linuxdrill_split_ratio", clamped.toFixed(1));
+              localStorage.setItem(SPLIT_RATIO_KEY, clamped.toFixed(1));
             } catch {
               // ignore
             }
@@ -189,7 +192,7 @@ export default function ProblemPage() {
     const target = lastRatio >= 20 ? lastRatio : 42;
     setSplitRatio(target);
     try {
-      localStorage.setItem("linuxdrill_split_ratio", target.toFixed(1));
+      localStorage.setItem(SPLIT_RATIO_KEY, target.toFixed(1));
     } catch {
       // ignore
     }
@@ -202,7 +205,7 @@ export default function ProblemPage() {
       setSplitRatio(42);
       setLastRatio(42);
       try {
-        localStorage.setItem("linuxdrill_split_ratio", "42");
+        localStorage.setItem(SPLIT_RATIO_KEY, "42");
       } catch {
         // ignore
       }
@@ -471,7 +474,7 @@ export default function ProblemPage() {
               mobileTab === "term" ? "hidden lg:flex" : "flex",
               isDragging
                 ? "transition-none select-none pointer-events-none"
-                : "transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
+                : "transition-[width,opacity] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
             )}
             style={{
               backgroundColor: "var(--bg-canvas)",
@@ -706,7 +709,7 @@ export default function ProblemPage() {
               splitRatio === 0 ? "w-3 hover:w-4 bg-[var(--surface-base)]" : "w-2",
               isDragging
                 ? "bg-[var(--accent-primary)]/40 transition-none"
-                : "transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:bg-[var(--accent-primary)]/20"
+                : "transition-colors duration-200 hover:bg-[var(--accent-primary)]/20"
             )}
             title={
               splitRatio === 0
@@ -724,7 +727,7 @@ export default function ProblemPage() {
                 {/* Tactile Grab Handle */}
                 <div
                   className={clsx(
-                    "relative z-10 flex flex-col gap-1 items-center justify-center py-2 px-0.5 rounded-full transition-all duration-150",
+                    "relative z-10 flex flex-col gap-1 items-center justify-center py-2 px-0.5 rounded-full transition-[background-color,transform] duration-150",
                     isDragging
                       ? "bg-[var(--accent-primary)] scale-110 shadow-sm"
                       : "bg-[var(--surface-elevated)] group-hover:bg-[var(--accent-primary)] shadow-xs"
@@ -745,7 +748,7 @@ export default function ProblemPage() {
               mobileTab === "spec" ? "hidden lg:flex" : "flex",
               isDragging
                 ? "transition-none select-none pointer-events-none"
-                : "transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
+                : "transition-[width] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
             )}
             style={{
               width: isDesktop ? `${100 - splitRatio}%` : "100%",
@@ -765,16 +768,18 @@ export default function ProblemPage() {
       </div>
 
       {/* Success Modal */}
-      {showConfirmation && (
-        <SuccessConfirmation
-          problem={problem}
-          nextProblem={nextProblem}
-          checks={lastChecks}
-          earnedPoints={problem.points}
-          totalScore={totalEarned}
-          onClose={() => setShowConfirmation(false)}
-        />
-      )}
+      <AnimatePresence>
+        {showConfirmation && (
+          <SuccessConfirmation
+            problem={problem}
+            nextProblem={nextProblem}
+            checks={lastChecks}
+            earnedPoints={problem.points}
+            totalScore={totalEarned}
+            onClose={() => setShowConfirmation(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Exit Without Finishing Confirmation Modal */}
       <ExitConfirmationModal

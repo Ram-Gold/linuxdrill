@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { problems } from "./problems";
 
-const REVIEW_KEY = "linuxdrill:daily_review";
-const STREAK_KEY = "linuxdrill:streak";
-const REVIEW_EVENT = "linuxdrill:review_updated";
+const REVIEW_KEY = "bashist:daily_review";
+const LEGACY_REVIEW_KEY = "linuxdrill:daily_review";
+const STREAK_KEY = "bashist:streak";
+const LEGACY_STREAK_KEY = "linuxdrill:streak";
+const REVIEW_EVENT = "bashist:review_updated";
+const LEGACY_REVIEW_EVENT = "linuxdrill:review_updated";
 
 interface DailyReviewState {
   date: string; // YYYY-MM-DD
@@ -44,7 +47,7 @@ function pickDailyReviews(solvedIds: string[], count = 3): string[] {
 export function completeDailyReviewDrill(drillId: string) {
   try {
     const today = getTodayString();
-    const raw = localStorage.getItem(REVIEW_KEY);
+    const raw = localStorage.getItem(REVIEW_KEY) || localStorage.getItem(LEGACY_REVIEW_KEY);
     if (!raw) return;
     const parsed: DailyReviewState = JSON.parse(raw);
     if (parsed.date === today && parsed.reviewIds.includes(drillId)) {
@@ -52,6 +55,7 @@ export function completeDailyReviewDrill(drillId: string) {
         parsed.completedIds.push(drillId);
         localStorage.setItem(REVIEW_KEY, JSON.stringify(parsed));
         window.dispatchEvent(new Event(REVIEW_EVENT));
+        window.dispatchEvent(new Event(LEGACY_REVIEW_EVENT));
       }
     }
   } catch {
@@ -66,7 +70,7 @@ export function recordDailyStreakActivity() {
   try {
     const today = getTodayString();
     const yesterday = getYesterdayString();
-    const raw = localStorage.getItem(STREAK_KEY);
+    const raw = localStorage.getItem(STREAK_KEY) || localStorage.getItem(LEGACY_STREAK_KEY);
     const parsed: StreakState = raw ? JSON.parse(raw) : { streak: 0, lastActiveDate: "" };
 
     if (parsed.lastActiveDate === today) {
@@ -79,6 +83,7 @@ export function recordDailyStreakActivity() {
       lastActiveDate: today,
     }));
     window.dispatchEvent(new Event(REVIEW_EVENT));
+    window.dispatchEvent(new Event(LEGACY_REVIEW_EVENT));
   } catch {
     // ignore
   }
@@ -87,7 +92,7 @@ export function recordDailyStreakActivity() {
 function getInitialReviewState(solvedIds: string[]): DailyReviewState {
   const today = getTodayString();
   try {
-    const raw = localStorage.getItem(REVIEW_KEY);
+    const raw = localStorage.getItem(REVIEW_KEY) || localStorage.getItem(LEGACY_REVIEW_KEY);
     if (raw) {
       const parsed: DailyReviewState = JSON.parse(raw);
       if (parsed.date === today) {
@@ -125,7 +130,7 @@ export function useDailyReview(solvedIds: string[]) {
   // Streak state
   const [streak, setStreak] = useState<number>(() => {
     try {
-      const raw = localStorage.getItem(STREAK_KEY);
+      const raw = localStorage.getItem(STREAK_KEY) || localStorage.getItem(LEGACY_STREAK_KEY);
       if (!raw) return 0;
       const parsed: StreakState = JSON.parse(raw);
       if (parsed.lastActiveDate === today || parsed.lastActiveDate === yesterday) {
@@ -146,10 +151,10 @@ export function useDailyReview(solvedIds: string[]) {
   useEffect(() => {
     const handleUpdate = () => {
       try {
-        const rawRev = localStorage.getItem(REVIEW_KEY);
+        const rawRev = localStorage.getItem(REVIEW_KEY) || localStorage.getItem(LEGACY_REVIEW_KEY);
         if (rawRev) setReviewState(JSON.parse(rawRev));
 
-        const rawStreak = localStorage.getItem(STREAK_KEY);
+        const rawStreak = localStorage.getItem(STREAK_KEY) || localStorage.getItem(LEGACY_STREAK_KEY);
         if (rawStreak) {
           const parsed = JSON.parse(rawStreak);
           const currentToday = getTodayString();
@@ -166,9 +171,11 @@ export function useDailyReview(solvedIds: string[]) {
     };
 
     window.addEventListener(REVIEW_EVENT, handleUpdate);
+    window.addEventListener(LEGACY_REVIEW_EVENT, handleUpdate);
     window.addEventListener("storage", handleUpdate);
     return () => {
       window.removeEventListener(REVIEW_EVENT, handleUpdate);
+      window.removeEventListener(LEGACY_REVIEW_EVENT, handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
   }, []);

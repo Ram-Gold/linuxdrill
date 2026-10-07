@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 
-const KEY = "linuxdrill:solved";
+const KEY = "bashist:solved";
+const LEGACY_KEY = "linuxdrill:solved";
 
 export function useProgress() {
   const [solved, setSolved] = useState<string[]>(() => {
     try {
-      return JSON.parse(localStorage.getItem(KEY) ?? "[]");
+      return JSON.parse(localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY) ?? "[]");
     } catch {
       return [];
     }

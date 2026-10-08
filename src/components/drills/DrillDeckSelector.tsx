@@ -148,7 +148,7 @@ export default function DrillDeckSelector({
                 </div>
 
                 {/* Deck Title */}
-                <h3 className="text-base font-semibold tracking-tight text-[var(--text-main)] group-hover:text-[var(--accent-primary-soft)] transition-colors">
+                <h3 className="text-base font-bold tracking-tight text-[var(--text-main)] group-hover:text-[var(--accent-primary-soft)] transition-colors card-title font-heading">
                   {deck.name}
                 </h3>
                 <p className="text-xs text-[var(--text-muted)] line-clamp-2 mt-1 leading-relaxed">

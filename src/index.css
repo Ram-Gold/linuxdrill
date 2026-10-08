@@ -2,9 +2,100 @@
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ══════════════════════════════════════════════════════════════════
+   LOCAL FONTS — Sk-Modernist (Headers & Headings)
+   ══════════════════════════════════════════════════════════════════ */
+@font-face {
+  font-family: "Sk-Modernist";
+  src: url("/fonts/sk-modernist-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sk-Modernist";
+  src: url("/fonts/sk-modernist-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SK Modernist";
+  src: url("/fonts/sk-modernist-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SK Modernist";
+  src: url("/fonts/sk-modernist-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sk-Moderinist";
+  src: url("/fonts/sk-modernist-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sk-Moderinist";
+  src: url("/fonts/sk-modernist-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LOCAL FONTS — JetBrains Mono (Monospace / Code / Terminal)
+   ══════════════════════════════════════════════════════════════════ */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono.woff2") format("woff2");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LOCAL FONTS — Helvetica Neue (Sans / Body)
+   ══════════════════════════════════════════════════════════════════ */
+@font-face {
+  font-family: "Helvetica Neue";
+  src: local("Helvetica Neue"), local("HelveticaNeue"), url("/fonts/helvetica-neue-roman.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Helvetica Neue";
+  src: local("Helvetica Neue Medium"), local("HelveticaNeue-Medium"), url("/fonts/helvetica-neue-medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Helvetica Neue";
+  src: local("Helvetica Neue Bold"), local("HelveticaNeue-Bold"), url("/fonts/helvetica-neue-bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
+  --font-sans: "Helvetica Neue", Helvetica, Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-heading: "Sk-Modernist", "SK Modernist", "Sk-Moderinist", var(--font-sans);
+  --font-header: "Sk-Modernist", "SK Modernist", "Sk-Moderinist", var(--font-sans);
 
   --color-canvas: var(--bg-canvas);
   --color-surface-base: var(--surface-base);
@@ -469,7 +560,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
-  letter-spacing: -0.011em;
+  letter-spacing: -0.005em;
+  line-height: 1.5;
   transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
 }
 
@@ -512,15 +604,28 @@ html {
   }
 }
 
-/* Mimo typography scale */
-h1 { font-size: 30px; font-weight: 500; line-height: 1.07; letter-spacing: -0.02em; }
-h2 { font-size: 22px; font-weight: 500; line-height: 1.18; letter-spacing: -0.01em; }
-h3 { font-size: 16px; font-weight: 500; line-height: 1.25; letter-spacing: 0; }
-h4 { font-size: 14px; font-weight: 500; line-height: 1.43; letter-spacing: 0; }
+/* Mimo typography scale & Headers */
+h1, h2, h3, h4, h5, h6,
+th,
+.font-heading,
+.font-header,
+.track-title,
+.card-title,
+.prose :where(h1, h2, h3, h4, h5, h6):not(:where([class~=not-prose],[class~=not-prose] *)) {
+  font-family: var(--font-heading);
+}
 
-code, kbd, pre, .font-mono {
+h1 { font-size: 30px; font-weight: 700; line-height: 1.1; letter-spacing: -0.015em; }
+h2 { font-size: 22px; font-weight: 700; line-height: 1.2; letter-spacing: -0.015em; }
+h3 { font-size: 16px; font-weight: 700; line-height: 1.3; letter-spacing: 0; }
+h4 { font-size: 14px; font-weight: 600; line-height: 1.4; letter-spacing: 0; }
+h5 { font-size: 13px; font-weight: 600; line-height: 1.4; letter-spacing: 0; }
+h6 { font-size: 12px; font-weight: 600; line-height: 1.4; letter-spacing: 0; }
+
+code, kbd, pre, samp, .font-mono, [data-mono], .font-metric {
   font-family: var(--font-mono);
   font-feature-settings: "zero", "ss01";
+  font-variant-numeric: tabular-nums;
 }
 
 /* Inline code styling (only for inline code, not code blocks inside pre) */

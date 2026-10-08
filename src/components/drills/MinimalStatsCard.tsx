@@ -90,7 +90,7 @@ export default function MinimalStatsCard({
           )}
         </div>
 
-        <span className="px-2.5 py-0.5 rounded-full bg-[var(--surface-subtle)] text-[11px] text-[var(--text-tertiary)]">
+        <span className="px-2.5 py-0.5 rounded-full bg-[var(--surface-subtle)] text-[11px] font-mono text-[var(--text-tertiary)]">
           Stage {stage}/3
         </span>
       </div>

@@ -23,7 +23,7 @@ export default function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <Link to="/" className="inline-flex items-center gap-2.5 mimo-press group">
               <BashistLogo className="w-8 h-8 group-hover:scale-105 transition-transform" />
-              <span className="text-xl font-bold tracking-tight text-[var(--text-main)]">
+              <span className="text-xl font-bold tracking-tight text-[var(--text-main)] font-heading">
                 Bash<span className="text-[var(--accent-primary)]">ist</span>
               </span>
             </Link>
@@ -36,7 +36,7 @@ export default function Footer() {
 
           {/* Column 3: Quick Navigation */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--accent-primary-soft)] flex items-center gap-1.5">
+            <h4 className="text-xs font-heading font-bold uppercase tracking-wider text-[var(--accent-primary-soft)] flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5" />
               <span>Navigation</span>
             </h4>
@@ -82,7 +82,7 @@ export default function Footer() {
 
           {/* Column 4: Quick Practice Tracks */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--accent-primary-soft)] flex items-center gap-1.5">
+            <h4 className="text-xs font-heading font-bold uppercase tracking-wider text-[var(--accent-primary-soft)] flex items-center gap-1.5">
               <Terminal className="w-3.5 h-3.5" />
               <span>Practice Tracks</span>
             </h4>

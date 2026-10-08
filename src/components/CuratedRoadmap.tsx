@@ -227,7 +227,7 @@ export default function CuratedRoadmap({
                           </span>
                         )}
                       </div>
-                      <h4 className="text-sm sm:text-base font-semibold text-[var(--text-main)] truncate">
+                      <h4 className="text-sm sm:text-base font-bold text-[var(--text-main)] truncate track-title font-heading">
                         {track.topicName}
                       </h4>
                       {topicDesc && (
@@ -363,8 +363,7 @@ export default function CuratedRoadmap({
 
                                 {/* Metadata: Level, points, right chevron */}
                                 <div className="flex items-center gap-3 shrink-0">
-                                  <div className="hidden sm:flex items-center gap-1.5 text-xs font-mono">
-                                    <span className={`w-1.5 h-1.5 rounded-full ${diff.dot}`} />
+                                  <div className="hidden sm:flex items-center text-xs font-mono">
                                     <span className={diff.text}>{diff.label}</span>
                                   </div>
 

@@ -121,7 +121,7 @@ export default function HomeHero({
               </span>
               <span className="text-xs font-semibold text-[var(--text-main)]">Review</span>
               <span
-                className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                className={`px-2 py-0.5 rounded-full text-[11px] font-bold font-mono ${
                   pendingReviewCount > 0
                     ? "bg-[var(--accent-orange)] text-white"
                     : "bg-[var(--surface-subtle)] text-[var(--text-muted)]"
@@ -222,7 +222,7 @@ export default function HomeHero({
               <Zap className="w-3.5 h-3.5" />
             </span>
             <span className="text-xs font-semibold text-[var(--text-main)]">Daily Streak</span>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[var(--surface-subtle)] text-[var(--text-muted)]">
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-[var(--surface-subtle)] text-[var(--text-muted)]">
               {streak}
             </span>
           </div>
@@ -236,7 +236,7 @@ export default function HomeHero({
               <Sparkles className="w-3.5 h-3.5" />
             </span>
             <span className="text-xs font-semibold text-[var(--text-main)]">XP</span>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[var(--surface-subtle)] text-[var(--accent-amber)]">
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold font-mono bg-[var(--surface-subtle)] text-[var(--accent-amber)]">
               {totalPoints.toLocaleString()}
             </span>
           </div>
@@ -267,7 +267,7 @@ export default function HomeHero({
             {/* Current Lesson Title Link with Chevron */}
             <Link
               to={nextProblemId ? `/p/${nextProblemId}` : `/p/${currentDrill?.id || ""}`}
-              className="group inline-flex items-center gap-2 text-lg sm:text-xl font-bold text-[var(--text-main)] hover:text-[var(--accent-primary-soft)] transition-colors truncate max-w-full"
+              className="group inline-flex items-center gap-2 text-lg sm:text-xl font-bold font-heading text-[var(--text-main)] hover:text-[var(--accent-primary-soft)] transition-colors truncate max-w-full"
             >
               <span className="truncate">
                 {currentDrill?.title || nextProblemTitle || "Continue Linux Systems Drill"}
@@ -283,7 +283,7 @@ export default function HomeHero({
                   style={{ width: `${Math.max(trackProgressPercent, 4)}%` }}
                 />
               </div>
-              <span className="font-semibold text-[var(--text-main)]">{trackProgressPercent}%</span>
+              <span className="font-semibold font-mono text-[var(--text-main)]">{trackProgressPercent}%</span>
               <span className="inline-flex items-center gap-1.5 text-[var(--text-tertiary)]">
                 <Clock className="w-3.5 h-3.5" />
                 <span>{trackRemainingText}</span>

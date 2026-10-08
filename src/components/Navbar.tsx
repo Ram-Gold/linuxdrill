@@ -218,7 +218,7 @@ export default function Navbar({
           className="flex items-center gap-2.5 mimo-press group"
         >
           <BashistLogo className="w-7 h-7 group-hover:scale-105 transition-transform" />
-          <span className="text-base font-semibold tracking-tight text-[var(--text-main)]">
+          <span className="text-base font-semibold tracking-tight text-[var(--text-main)] font-heading">
             Bash<span className="text-[var(--accent-primary)]">ist</span>
           </span>
         </Link>

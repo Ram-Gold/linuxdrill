@@ -40,7 +40,13 @@ export default function ProblemCard({
   return (
     <Link
       to={`/p/${problem.id}`}
-      className={`group relative rounded-2xl p-4 sm:p-5 flex flex-col justify-between cursor-pointer mimo-press transition-[transform,background-color,box-shadow] duration-180 ease-out bg-[var(--surface-card)] hover:bg-[var(--surface-card-hover)] hover:-translate-y-0.5`}
+      className={`group relative rounded-2xl p-4 sm:p-5 flex flex-col justify-between cursor-pointer mimo-press transition-[transform,background-color,box-shadow,border-color,opacity,filter] duration-180 ease-out hover:-translate-y-0.5 ${
+        isSolved
+          ? "border-[1.5px] border-dashed border-[var(--accent-green)]/50 hover:border-[var(--accent-green)]/80 bg-[var(--surface-card)]/75 hover:bg-[var(--surface-card-hover)] opacity-75 saturate-50 hover:opacity-100 hover:saturate-100"
+          : isUpNext
+          ? "border-[1.5px] border-solid border-transparent bg-[var(--surface-card)] hover:bg-[var(--surface-card-hover)]"
+          : "border-[1.5px] border-solid border-transparent bg-[var(--surface-card)] hover:bg-[var(--surface-card-hover)]"
+      }`}
     >
       <div>
         {/* Top metadata bar: Step / Next / Solved on left, Difficulty on right */}
@@ -69,24 +75,22 @@ export default function ProblemCard({
               </span>
             )}
 
-            {/* Solved Pill */}
+            {/* Solved Badge (Checkmark only) */}
             {isSolved && !isUpNext && (
-              <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-semibold bg-[var(--accent-green-bg)] text-[var(--accent-green)] shrink-0">
-                <Check className="w-2.5 h-2.5 stroke-[2.5]" />
-                <span>Solved</span>
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[var(--accent-green)] bg-[var(--accent-green-bg)] shrink-0">
+                <Check className="w-3 h-3 stroke-[2.5]" />
               </span>
             )}
           </div>
 
           {/* Difficulty Pill */}
-          <div className="inline-flex items-center gap-1.5 h-5 px-2 rounded-full bg-[var(--surface-base)] text-[10px] font-mono shrink-0">
-            <span className={`w-1.5 h-1.5 rounded-full ${diffConfig.dot}`} />
+          <div className="inline-flex items-center h-5 px-2 rounded-full bg-[var(--surface-base)] text-[10px] font-mono shrink-0">
             <span className={diffConfig.color}>{diffConfig.text}</span>
           </div>
         </div>
 
         {/* Title */}
-        <h4 className="text-sm font-semibold text-[var(--text-main)] group-hover:text-[var(--accent-primary-soft)] transition-colors line-clamp-1">
+        <h4 className="text-sm font-semibold text-[var(--text-main)] group-hover:text-[var(--accent-primary-soft)] transition-colors line-clamp-1 card-title font-heading">
           {problem.title}
         </h4>
 
@@ -97,26 +101,26 @@ export default function ProblemCard({
       </div>
 
       {/* Bottom bar: Points & Action CTA */}
-      <div className="pt-2 flex items-center justify-between text-xs">
+      <div className="pt-2 flex items-center justify-between text-xs min-h-[28px]">
         <div className="flex items-center gap-1.5 font-mono text-xs text-[var(--accent-amber)] font-medium">
           <span>+{problem.points}</span>
           <span className="text-[var(--text-tertiary)] font-normal">pts</span>
         </div>
 
-        <div className="flex items-center gap-1 text-xs font-medium transition-colors">
+        <div className="flex items-center gap-1 text-xs font-medium">
           {isSolved ? (
-            <span className="text-[var(--text-tertiary)] group-hover:text-[var(--accent-green)] flex items-center gap-1">
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-[var(--text-tertiary)] group-hover:text-[var(--accent-green)] flex items-center gap-1">
               <span>Review</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </span>
           ) : isUpNext ? (
-            <span className="text-[var(--accent-primary-soft)] group-hover:text-white flex items-center gap-1 font-semibold">
+            <span className="text-[var(--accent-primary-soft)] group-hover:text-white flex items-center gap-1 font-semibold transition-colors">
               <span>Start</span>
               <Play className="w-3 h-3 fill-current group-hover:translate-x-0.5 transition-transform" />
             </span>
           ) : (
-            <span className="text-[var(--text-muted)] group-hover:text-[var(--text-main)] flex items-center gap-1">
-              <span>Start drill</span>
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-[var(--text-muted)] group-hover:text-[var(--text-main)] flex items-center gap-1">
+              <span>Start Drill</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </span>
           )}

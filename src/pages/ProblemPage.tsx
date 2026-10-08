@@ -518,7 +518,7 @@ export default function ProblemPage() {
               <div ref={specScrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 select-text">
                 {/* Title */}
                 <div className="pb-1">
-                  <h2 className="text-base sm:text-[17px] font-semibold text-[var(--text-main)] mb-1">{problem.title}</h2>
+                  <h2 className="text-base sm:text-[17px] font-bold font-heading text-[var(--text-main)] mb-1">{problem.title}</h2>
                   <p className="text-sm text-[var(--text-muted)] leading-relaxed">{problem.description}</p>
                 </div>
 

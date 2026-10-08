@@ -48,9 +48,6 @@ function HintItem({ idx, hint }: { idx: number; hint: string }) {
             Hint {String(idx + 1).padStart(2, "0")}
           </span>
         </span>
-        <span className="text-[var(--text-tertiary)] text-[10px] transition-opacity duration-150">
-          {isOpen ? "click to hide" : "click to reveal"}
-        </span>
       </button>
 
       <AnimatePresence initial={false}>

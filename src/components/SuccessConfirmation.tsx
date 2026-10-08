@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Check, ArrowRight, X } from "lucide-react";
 import { motion } from "motion/react";
 import type { Problem } from "../lib/types";
@@ -21,13 +21,26 @@ export default function SuccessConfirmation({
   earnedPoints,
   totalScore,
 }: SuccessConfirmationProps) {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+        if (nextProblem) {
+          navigate(`/p/${nextProblem.id}`);
+        }
+      }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [onClose, nextProblem, navigate]);
 
   return (
     <motion.div
@@ -119,7 +132,7 @@ export default function SuccessConfirmation({
               <Link
                 to={`/p/${nextProblem.id}`}
                 onClick={onClose}
-                className="btn-mimo-primary w-full flex-1 h-10 text-xs"
+                className="btn-mimo-primary w-full flex-1 h-10 text-xs outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-base)]"
               >
                 <span>Continue to {nextProblem.id}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -127,7 +140,7 @@ export default function SuccessConfirmation({
             ) : (
               <button
                 onClick={onClose}
-                className="btn-mimo-primary w-full flex-1 h-10 text-xs"
+                className="btn-mimo-primary w-full flex-1 h-10 text-xs outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-base)]"
               >
                 Continue Training
               </button>

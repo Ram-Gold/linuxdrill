@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams, useBlocker } from "react-router-dom";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import { clsx } from "clsx";
 import {
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Check,
@@ -13,13 +12,14 @@ import {
   FileCode,
   FileText,
   HelpCircle,
-  Lightbulb,
   PanelLeftOpen,
   Play,
   RotateCcw,
+  Terminal as TerminalIcon,
   X,
 } from "lucide-react";
 import { problems } from "../lib/problems";
+import { getProblemCommands } from "../data/problemCommands";
 import { useProgress } from "../lib/useProgress";
 import { fireGrandCelebration } from "../lib/confetti";
 import { playSuccessChime } from "../lib/sound";
@@ -41,6 +41,7 @@ export default function ProblemPage() {
   const problem = problems.find((p) => p.id === id);
   const { solved, markSolved, unmarkSolved } = useProgress();
   const isSolved = problem ? solved.includes(problem.id) : false;
+  const problemCommands = problem ? getProblemCommands(problem.id) : [];
 
   // Navigation blocker: alert user when navigating away from an unfinished task
   const blocker = useBlocker(
@@ -522,14 +523,33 @@ export default function ProblemPage() {
                 </div>
 
                 {/* Task */}
-                <div className="rounded-2xl p-4 space-y-2 shadow-xs" style={{ backgroundColor: 'var(--surface-base)' }}>
-                  <div className="flex items-center gap-1.5 text-xs text-[var(--accent-primary)] font-medium mb-2">
+                <div className="rounded-2xl p-4 space-y-3 shadow-xs" style={{ backgroundColor: 'var(--surface-base)' }}>
+                  <div className="flex items-center gap-1.5 text-xs text-[var(--accent-primary)] font-medium">
                     <FileText className="w-3.5 h-3.5" />
                     <span>Task</span>
                   </div>
                   <div className="text-sm text-[var(--text-main)] leading-relaxed">
                     <Markdown>{problem.task}</Markdown>
                   </div>
+
+                  {problemCommands.length > 0 && (
+                    <div className="pt-3 mt-1 border-t border-[var(--surface-subtle)] space-y-2">
+                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--text-muted)] tracking-wide">
+                        <TerminalIcon className="w-3.5 h-3.5 text-[var(--accent-primary-soft)]" />
+                        <span>Commands you may need to solve this level</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {problemCommands.map((cmd) => (
+                          <span
+                            key={cmd}
+                            className="inline-flex items-center px-2 py-0.5 rounded-md font-mono text-xs font-medium bg-[var(--surface-subtle)] text-[var(--text-main)] border border-[var(--surface-subtle)]/80 select-all"
+                          >
+                            {cmd}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Setup */}
@@ -554,144 +574,136 @@ export default function ProblemPage() {
                 )}
 
                 {/* Verification result */}
-                <AnimatePresence>
-                  {(isSolved || verificationFeedback) && (
-                    <motion.div
-                      key="verification"
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 4 }}
-                      transition={{ duration: 0.15 }}
-                      className="rounded-2xl p-4 space-y-2 shadow-xs"
-                      style={{ backgroundColor: 'var(--surface-base)' }}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span
-                          className={clsx(
-                            "flex items-center gap-1.5 text-xs font-medium",
-                            verifyPass ? "text-[var(--accent-green)]" : "text-[var(--accent-amber)]"
-                          )}
-                        >
-                          {verifyPass ? <Check className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
-                          <span>{verifyPass ? "Passed" : "Incomplete"}</span>
+                {/* Verification result */}
+                {(isSolved || verificationFeedback) && (
+                  <div
+                    key="verification"
+                    className="rounded-2xl p-4 space-y-2.5 shadow-xs"
+                    style={{ backgroundColor: 'var(--surface-base)' }}
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-1">
+                      <span className="text-xs font-semibold text-[var(--text-main)]">
+                        Objectives Checklist
+                      </span>
+                      {verifyPass && (
+                        <span className="text-xs font-mono font-semibold text-[var(--accent-green)]">
+                          +{problem.points} pts
                         </span>
-                        {verifyPass && (
-                          <span className="text-xs text-[var(--accent-green)]">+{problem.points} pts</span>
-                        )}
-                      </div>
-
-                      <ul className="space-y-1 font-mono">
-                        {lastChecks.length > 0 ? (
-                          lastChecks.map((chk, i) => (
-                            <li key={i} className="flex items-start gap-2 text-xs">
-                              <span className={chk.passed ? "text-[var(--accent-green)]" : "text-[var(--accent-amber)]"}>
-                                {chk.passed ? "✓" : "✗"}
-                              </span>
-                              <span className={chk.passed ? "text-[var(--text-main)]" : "text-[var(--text-muted)]"}>
-                                {chk.name}
-                              </span>
-                            </li>
-                          ))
-                        ) : isSolved ? (
-                          <li className="flex items-start gap-2 text-xs">
-                            <span className="text-[var(--accent-green)]">✓</span>
-                            <span className="text-[var(--text-main)]">All objectives verified.</span>
-                          </li>
-                        ) : null}
-                      </ul>
-
-                      {verificationFeedback?.hint && (
-                        <div className="flex items-start gap-1.5 text-xs text-[var(--accent-amber)] bg-[var(--surface-subtle)] p-2.5 rounded-xl mt-2">
-                          <Lightbulb className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                          <span>{verificationFeedback.hint}</span>
-                        </div>
                       )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    </div>
+
+                    {/* Checklist rows */}
+                    <div className="space-y-1.5">
+                      {lastChecks.length > 0 ? (
+                        lastChecks.map((chk, i) => (
+                          <div
+                            key={i}
+                            className={clsx(
+                              "flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-colors",
+                              chk.passed
+                                ? "bg-[var(--accent-green-bg)]/40 text-[var(--text-main)]"
+                                : "bg-[var(--surface-subtle)]/50 text-[var(--text-muted)]"
+                            )}
+                          >
+                            <div className={clsx(
+                              "w-4 h-4 rounded-md flex items-center justify-center shrink-0 border transition-all",
+                              chk.passed
+                                ? "bg-[var(--accent-green)] border-[var(--accent-green)] text-[var(--bg-canvas)]"
+                                : "border-[var(--text-tertiary)]/40 bg-transparent"
+                            )}>
+                              {chk.passed && <Check className="w-3 h-3 stroke-[3]" />}
+                            </div>
+                            <span className="font-mono text-[11px] leading-tight select-text flex-1">
+                              {chk.name}
+                            </span>
+                          </div>
+                        ))
+                      ) : isSolved ? (
+                        <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs bg-[var(--accent-green-bg)]/40 text-[var(--text-main)]">
+                          <div className="w-4 h-4 rounded-md flex items-center justify-center shrink-0 bg-[var(--accent-green)] text-[var(--bg-canvas)]">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                          <span className="font-mono text-[11px] leading-tight flex-1">
+                            All objectives verified.
+                          </span>
+                        </div>
+                      ) : null}
+                    </div>
+
+                  </div>
+                )}
 
                 {/* Solution */}
-                <AnimatePresence>
-                  {showSolution && (
-                    <motion.div
-                      key="solution"
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 4 }}
-                      transition={{ duration: 0.15 }}
-                      className="rounded-2xl p-4 space-y-2 shadow-xs"
-                      style={{ backgroundColor: 'var(--surface-base)' }}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="flex items-center gap-1.5 text-xs text-[var(--accent-green)] font-medium">
-                          <FileCode className="w-3.5 h-3.5" />
-                          <span>Solution</span>
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => {
-                              const clean = problem.solution.replace(/```[a-z]*\n?/g, "").replace(/```/g, "").trim();
-                              navigator.clipboard.writeText(clean);
-                            }}
-                            className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] px-2.5 py-1 rounded-lg transition-colors cursor-pointer mimo-press font-medium"
-                          >
-                            copy
-                          </button>
-                          <button
-                            onClick={() => setShowSolution(false)}
-                            className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] p-1 rounded-lg transition-colors cursor-pointer mimo-press inline-flex items-center justify-center"
-                            title="Close solution"
-                            aria-label="Close solution"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="text-sm text-[var(--text-main)]">
-                        <Markdown>{problem.solution}</Markdown>
-                      </div>
-                      {problem.watchOut && (
-                        <div className="bg-[var(--surface-subtle)] p-3 rounded-xl text-sm text-[var(--accent-amber)] mt-2">
-                          <span className="text-[11px] uppercase tracking-wider block mb-1 font-medium">Watch out</span>
-                          <Markdown>{problem.watchOut}</Markdown>
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Verify Guide */}
-                <AnimatePresence>
-                  {showVerify && (
-                    <motion.div
-                      key="verify"
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 4 }}
-                      transition={{ duration: 0.15 }}
-                      className="rounded-2xl p-4 space-y-2 shadow-xs"
-                      style={{ backgroundColor: 'var(--surface-base)' }}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-1.5 text-xs text-[var(--accent-primary)] font-medium">
-                          <HelpCircle className="w-3.5 h-3.5" />
-                          <span>How It's Verified</span>
-                        </div>
+                {showSolution && (
+                  <div
+                    key="solution"
+                    className="rounded-2xl p-4 space-y-2 shadow-xs"
+                    style={{ backgroundColor: 'var(--surface-base)' }}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="flex items-center gap-1.5 text-xs text-[var(--accent-green)] font-medium">
+                        <FileCode className="w-3.5 h-3.5" />
+                        <span>Solution</span>
+                      </span>
+                      <div className="flex items-center gap-1.5">
                         <button
-                          onClick={() => setShowVerify(false)}
+                          onClick={() => {
+                            const clean = problem.solution.replace(/```[a-z]*\n?/g, "").replace(/```/g, "").trim();
+                            navigator.clipboard.writeText(clean);
+                          }}
+                          className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] px-2.5 py-1 rounded-lg transition-colors cursor-pointer mimo-press font-medium"
+                        >
+                          copy
+                        </button>
+                        <button
+                          onClick={() => setShowSolution(false)}
                           className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] p-1 rounded-lg transition-colors cursor-pointer mimo-press inline-flex items-center justify-center"
-                          title="Close verify guide"
-                          aria-label="Close verify guide"
+                          title="Close solution"
+                          aria-label="Close solution"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <div className="text-sm text-[var(--text-main)]">
-                        <Markdown>{problem.verify}</Markdown>
+                    </div>
+                    <div className="text-sm text-[var(--text-main)]">
+                      <Markdown className="solution-markdown">{problem.solution}</Markdown>
+                    </div>
+                    {problem.watchOut && (
+                      <div className="bg-[var(--surface-subtle)] p-3 rounded-xl text-sm text-[var(--accent-amber)] mt-2">
+                        <span className="text-[11px] uppercase tracking-wider block mb-1 font-medium">Watch out</span>
+                        <Markdown>{problem.watchOut}</Markdown>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    )}
+                  </div>
+                )}
+
+                {/* Verify Guide */}
+                {showVerify && (
+                  <div
+                    key="verify"
+                    className="rounded-2xl p-4 space-y-2 shadow-xs"
+                    style={{ backgroundColor: 'var(--surface-base)' }}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5 text-xs text-[var(--accent-primary)] font-medium">
+                        <HelpCircle className="w-3.5 h-3.5" />
+                        <span>How It's Verified</span>
+                      </div>
+                      <button
+                        onClick={() => setShowVerify(false)}
+                        className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] p-1 rounded-lg transition-colors cursor-pointer mimo-press inline-flex items-center justify-center"
+                        title="Close verify guide"
+                        aria-label="Close verify guide"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="text-sm text-[var(--text-main)]">
+                      <Markdown className="solution-markdown">{problem.verify}</Markdown>
+                    </div>
+                  </div>
+                )}
 
                 {/* Hints */}
                 <HintAccordion key={problem.id} hints={problem.hints} />

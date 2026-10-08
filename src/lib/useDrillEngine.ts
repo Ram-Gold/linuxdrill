@@ -290,8 +290,20 @@ export function useDrillEngine({
         return;
       }
 
-      // Handle Ctrl+U to clear whole line (POSIX readline / bash shortcut)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+      // ──────────────────────────────────────────────────────────
+      // KEYBOARD-FRIENDLY NAVIGATION & ERASURE SHORTCUTS
+      // ──────────────────────────────────────────────────────────
+
+      // 1. Line-start erasure / clear:
+      // - Ctrl+U (traditional bash / readline kill-line-backward)
+      // - Fn+ArrowLeft / Home (or Cmd+ArrowLeft on Mac) to reset back to beginning
+      // - Ctrl+A followed by delete intention, or direct Home/Cmd+ArrowLeft
+      const isLineReset =
+        ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) ||
+        (e.key === 'Home') ||
+        (e.metaKey && e.key === 'ArrowLeft');
+
+      if (isLineReset) {
         e.preventDefault();
         setMistakes('');
         setTyped('');
@@ -301,15 +313,60 @@ export function useDrillEngine({
         stateRef.current.typed = '';
         stateRef.current.isLocked = false;
         stateRef.current.shellFeedback = null;
+        setActiveTarget(drill.command);
+        stateRef.current.activeTarget = drill.command;
         return;
       }
 
-      // Check if this is a word-delete or normal backspace:
-      const isWordDelete =
+      // 2. Word-delete / Jump-backward erasure:
+      // - Ctrl+Backspace / Alt+Backspace / Meta+Backspace
+      // - Ctrl+W (readline backward-kill-word)
+      // - Ctrl+ArrowLeft / Alt+ArrowLeft (jump/kill word backward when mistakes or typing present)
+      const isWordDeleteOrJumpLeft =
         (e.key === 'Backspace' && (e.ctrlKey || e.altKey || e.metaKey)) ||
-        (e.ctrlKey && (e.key === 'w' || e.key === 'W'));
+        (e.ctrlKey && (e.key === 'w' || e.key === 'W')) ||
+        ((e.ctrlKey || e.altKey) && e.key === 'ArrowLeft');
 
       const isBackspace = e.key === 'Backspace' || (e.ctrlKey && (e.key === 'w' || e.key === 'W'));
+
+      // If user pressed Ctrl+ArrowLeft / Alt+ArrowLeft or Word-Delete:
+      if (isWordDeleteOrJumpLeft) {
+        e.preventDefault();
+
+        if (mode === 'shell') {
+          setShellFeedback(null);
+          setTyped((prev) => {
+            const next = deletePreviousWord(prev);
+            stateRef.current.typed = next;
+            return next;
+          });
+          return;
+        }
+
+        // In Adaptive Typer mode:
+        const { typed: curTyped, mistakes: curMistakes, allVariants: variants } = stateRef.current;
+        if (curMistakes.length > 0) {
+          // If there are mistakes, clear the current mistake group (or word)
+          const nextMistakes = deletePreviousWord(curMistakes);
+          setMistakes(nextMistakes);
+          setIsLocked(nextMistakes.length > 0);
+          stateRef.current.mistakes = nextMistakes;
+          stateRef.current.isLocked = nextMistakes.length > 0;
+        } else if (curTyped.length > 0) {
+          // If no mistakes, delete the previous word in typed text
+          const nextTyped = deletePreviousWord(curTyped);
+          setTyped(nextTyped);
+          stateRef.current.typed = nextTyped;
+
+          // Re-adapt active target based on remaining prefix
+          const matching = variants.filter((v) => v.startsWith(nextTyped));
+          if (matching.length > 0) {
+            setActiveTarget(matching[0]);
+            stateRef.current.activeTarget = matching[0];
+          }
+        }
+        return;
+      }
 
       // Allow functional browser shortcuts through (Ctrl+C, Ctrl+V, F5, F12, etc.)
       if ((e.ctrlKey || e.altKey || e.metaKey) && !isBackspace) {
@@ -385,19 +442,11 @@ export function useDrillEngine({
         if (isBackspace) {
           e.preventDefault();
           setShellFeedback(null);
-          if (isWordDelete) {
-            setTyped((prev) => {
-              const next = deletePreviousWord(prev);
-              stateRef.current.typed = next;
-              return next;
-            });
-          } else {
-            setTyped((prev) => {
-              const next = prev.slice(0, -1);
-              stateRef.current.typed = next;
-              return next;
-            });
-          }
+          setTyped((prev) => {
+            const next = prev.slice(0, -1);
+            stateRef.current.typed = next;
+            return next;
+          });
           return;
         }
 
@@ -452,33 +501,9 @@ export function useDrillEngine({
 
       const { typed: curTyped, mistakes: curMistakes, allVariants: variants } = stateRef.current;
 
-      // Handle Backspace or Word Delete:
+      // Handle Backspace:
       if (isBackspace) {
         e.preventDefault();
-
-        if (isWordDelete) {
-          if (curMistakes.length > 0) {
-            // First clear mistakes in current word
-            const nextMistakes = deletePreviousWord(curMistakes);
-            setMistakes(nextMistakes);
-            setIsLocked(nextMistakes.length > 0);
-            stateRef.current.mistakes = nextMistakes;
-            stateRef.current.isLocked = nextMistakes.length > 0;
-          } else if (curTyped.length > 0) {
-            // If no mistakes, delete previous word from typed text
-            const nextTyped = deletePreviousWord(curTyped);
-            setTyped(nextTyped);
-            stateRef.current.typed = nextTyped;
-
-            // Re-adapt active target based on remaining typed prefix
-            const matching = variants.filter((v) => v.startsWith(nextTyped));
-            if (matching.length > 0) {
-              setActiveTarget(matching[0]);
-              stateRef.current.activeTarget = matching[0];
-            }
-          }
-          return;
-        }
 
         // Single character backspace
         if (curMistakes.length > 0) {

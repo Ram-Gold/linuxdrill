@@ -544,7 +544,12 @@ export function SoundSettingsModal({ isOpen, onClose }: SoundSettingsModalProps)
                                 <motion.div
                                   layoutId="soundpack-gliding-pill"
                                   className="absolute inset-0 rounded-xl bg-[var(--surface-active)] pointer-events-none"
-                                  transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                                  transition={{
+                                    type: "spring",
+                                    stiffness: 1200,
+                                    damping: 65,
+                                    bounce: 0,
+                                  }}
                                 />
                               )}
 
@@ -577,7 +582,7 @@ export function SoundSettingsModal({ isOpen, onClose }: SoundSettingsModalProps)
                                   isSelected
                                     ? "text-[var(--accent-primary-soft)]"
                                     : "text-[var(--text-tertiary)]"
-                                } hover:text-[var(--text-main)] hover:bg-[var(--surface-subtle)] transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus-visible:opacity-100`}
+                                } hover:text-[var(--text-main)] hover:bg-[var(--surface-subtle)] transition-[opacity,colors,background-color] duration-150 group-hover:delay-75 cursor-pointer opacity-0 group-hover:opacity-100 focus-visible:opacity-100`}
                                 title={`Sample ${meta.name}`}
                                 aria-label={`Sample ${meta.name}`}
                               >

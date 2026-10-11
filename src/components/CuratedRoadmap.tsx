@@ -191,7 +191,7 @@ export default function CuratedRoadmap({
             return (
               <div
                 key={track.topic}
-                className="rounded-2xl transition-colors duration-150 bg-[var(--surface-base)] p-1.5 sm:p-2"
+                className="rounded-2xl bg-[var(--surface-base)] p-1.5 sm:p-2 shadow-3d-card border-[3px] border-[var(--surface-3d-shadow)]"
               >
                 {/* Track Section Header Button */}
                 <button

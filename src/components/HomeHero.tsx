@@ -12,6 +12,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { problems } from "../lib/problems";
 import { useDailyReview } from "../lib/useDailyReview";
 import CategoryIcon from "./CategoryIcon";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface HomeHeroProps {
   solvedCount: number;
@@ -90,7 +92,6 @@ export default function HomeHero({
       ? "Track completed!"
       : `${trackRemaining} ${trackRemaining === 1 ? "lesson" : "lessons"} to go`;
 
-  const trackName = currentDrill?.topicName || "Basic Shell";
 
   return (
     <section className="space-y-2.5 select-none">
@@ -244,14 +245,17 @@ export default function HomeHero({
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          2. MAIN CARD: PICK UP WHERE YOU LEFT OFF
+          2. MAIN CARD: PICK UP WHERE YOU LEFT OFF (90° 3D Extrusion Card)
           (Displays current track, lesson title, and lessons left)
           ───────────────────────────────────────────────────────────── */}
-      <div className="rounded-3xl bg-[var(--surface-base)] shadow-[var(--card-shadow)] p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all">
-        {/* Left: Icon, Track Label, Current Lesson Title, Track Progress */}
+      <Card
+        variant="default"
+        className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative shadow-3d-card border-[3px] border-[var(--surface-3d-shadow)]"
+      >
+        {/* Left: Icon, Current Lesson Title, Track Progress */}
         <div className="flex items-start sm:items-center gap-4 sm:gap-6 flex-1 min-w-0">
-          {/* Circular Icon Badge matching the track you're on */}
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[var(--accent-green-bg)] text-[var(--accent-green)] flex items-center justify-center shrink-0">
+          {/* Rounded Icon Container (borderless, no hover effects) */}
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[var(--accent-green-bg)] text-[var(--accent-green)] flex items-center justify-center shrink-0">
             <CategoryIcon
               category={currentDrill?.topic || currentDrill?.category}
               className="w-7 h-7 sm:w-8 sm:h-8"
@@ -259,11 +263,6 @@ export default function HomeHero({
           </div>
 
           <div className="space-y-2 flex-1 min-w-0">
-            {/* Track Name Pill */}
-            <div className="text-[11px] font-bold tracking-wider text-[var(--text-tertiary)] uppercase">
-              LEARN · {trackName.toUpperCase()}
-            </div>
-
             {/* Current Lesson Title Link with Chevron */}
             <Link
               to={nextProblemId ? `/p/${nextProblemId}` : `/p/${currentDrill?.id || ""}`}
@@ -275,15 +274,15 @@ export default function HomeHero({
               <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--text-tertiary)] group-hover:translate-x-1 transition-transform shrink-0" />
             </Link>
 
-            {/* Track Progress Bar & Lessons Left */}
+            {/* Track Progress Bar & Lessons Left (borderless) */}
             <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-[var(--text-muted)]">
               <div className="w-36 sm:w-48 h-2.5 rounded-full bg-[var(--surface-subtle)] overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-[var(--accent-green)] transition-all duration-500"
+                  className="h-full bg-[var(--accent-green)] transition-all duration-500"
                   style={{ width: `${Math.max(trackProgressPercent, 4)}%` }}
                 />
               </div>
-              <span className="font-semibold font-mono text-[var(--text-main)]">{trackProgressPercent}%</span>
+              <span className="font-bold font-mono text-[var(--text-main)]">{trackProgressPercent}%</span>
               <span className="inline-flex items-center gap-1.5 text-[var(--text-tertiary)]">
                 <Clock className="w-3.5 h-3.5" />
                 <span>{trackRemainingText}</span>
@@ -292,16 +291,24 @@ export default function HomeHero({
           </div>
         </div>
 
-        {/* Right: Theme-Adaptive Action Button */}
+        {/* Right: 3D Button (borderless, 90-degree darker shadow, active press) */}
         <div className="shrink-0">
-          <Link
-            to={nextProblemId ? `/p/${nextProblemId}` : `/p/${currentDrill?.id || ""}`}
-            className="inline-flex items-center justify-center w-full md:w-auto px-6 py-3.5 rounded-2xl bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white text-sm sm:text-base font-bold shadow-sm mimo-press transition-all cursor-pointer"
+          <Button
+            asChild
+            variant="default"
+            size="default"
+            className="w-full md:w-auto"
           >
-            <span>Keep Making Progress</span>
-          </Link>
+            <Link
+              to={nextProblemId ? `/p/${nextProblemId}` : `/p/${currentDrill?.id || ""}`}
+              className="inline-flex items-center gap-2"
+            >
+              <span>Keep Making Progress</span>
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </Button>
         </div>
-      </div>
+      </Card>
     </section>
   );
 }

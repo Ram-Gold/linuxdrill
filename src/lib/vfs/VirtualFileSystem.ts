@@ -94,6 +94,7 @@ export class VirtualFileSystem {
     ensureDir(["etc", "sudoers.d"]);
     ensureDir(["etc", "cron.d"]);
     ensureDir(["etc", "yum.repos.d"]);
+    ensureDir(["etc", "skel"]);
 
     // Device nodes in /dev
     addFile(["dev"], "null", "", "root", "root", "crw-rw-rw-");
@@ -382,6 +383,38 @@ export class VirtualFileSystem {
     }
 
     parent.children.delete(name);
+    return { success: true };
+  }
+
+  public createSymlink(target: string, linkPath: string, cwd = "/"): { success: boolean; error?: string } {
+    const resolved = this.resolvePath(linkPath, cwd);
+    const parts = resolved.split("/").filter(Boolean);
+    if (parts.length === 0) return { success: false, error: "Invalid link path" };
+
+    const linkName = parts.pop()!;
+    const parentPath = "/" + parts.join("/");
+    const parent = this.getNode(parentPath);
+
+    if (!parent) {
+      return { success: false, error: `No such file or directory: '${parentPath}'` };
+    }
+    if (parent.type !== "dir" || !parent.children) {
+      return { success: false, error: `Not a directory: '${parentPath}'` };
+    }
+
+    if (parent.children.has(linkName)) {
+      return { success: false, error: `File exists: '${linkName}'` };
+    }
+
+    parent.children.set(
+      linkName,
+      this.createNode(linkName, "symlink", {
+        target,
+        permissions: "rwxrwxrwx",
+        owner: "root",
+        group: "root",
+      })
+    );
     return { success: true };
   }
 

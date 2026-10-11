@@ -199,6 +199,129 @@ ls -l /root/users_report.txt      # -rw-------
 
 ---
 
+### LX-BASIC-06 · Easy · 5 pts
+**Task:** Create a symbolic link at `/usr/local/bin/sysreport` pointing to `/root/sysinfo.sh`. Verify that the symbolic link resolves correctly.
+
+**Hints**
+1. `ln -s` creates symbolic links.
+2. The syntax is `ln -s TARGET LINK_NAME`.
+3. `ln -s /root/sysinfo.sh /usr/local/bin/sysreport`
+
+**Solution**
+```bash
+ln -s /root/sysinfo.sh /usr/local/bin/sysreport
+```
+**Verify**
+```bash
+ls -l /usr/local/bin/sysreport
+```
+**Watch out:** Forgetting `-s` creates a hard link instead of a soft symbolic link.
+
+---
+
+### LX-BASIC-07 · Average · 10 pts
+**Task:** Search recursively across `/etc` for regular files containing the string `student` (case-insensitive). Export only the matching filenames to `/tmp/student_configs.txt`, discarding permission errors.
+
+**Hints**
+1. `grep` has flags to recurse directories and print filenames only.
+2. `-r` recurses, `-i` ignores case, `-l` outputs matching filenames.
+3. `grep -ril "student" /etc 2>/dev/null > /tmp/student_configs.txt`
+
+**Solution**
+```bash
+grep -ril "student" /etc 2>/dev/null > /tmp/student_configs.txt
+```
+**Verify**
+```bash
+cat /tmp/student_configs.txt
+```
+**Watch out:** Without `2>/dev/null`, standard error messages will contaminate the output file.
+
+---
+
+### LX-BASIC-08 · Average · 10 pts
+**Task:** Extract group names and their GIDs (colon-delimited fields 1 and 3) from `/etc/group`. Convert all lowercase characters to uppercase using `tr` and save the formatted list to `/tmp/groups_upper.txt`.
+
+**Hints**
+1. `cut` selects delimited fields from a file.
+2. Pipe the cut output into `tr` with character sets.
+3. `cut -d: -f1,3 /etc/group | tr '[:lower:]' '[:upper:]' > /tmp/groups_upper.txt`
+
+**Solution**
+```bash
+cut -d: -f1,3 /etc/group | tr '[:lower:]' '[:upper:]' > /tmp/groups_upper.txt
+```
+**Verify**
+```bash
+cat /tmp/groups_upper.txt
+```
+**Watch out:** Using quotes inside `tr` without character sets can replace individual characters literally.
+
+---
+
+### LX-BASIC-09 · Average · 10 pts
+**Task:** Create a gzip-compressed tar archive at `/tmp/systemd_backup.tar.gz` containing `/etc/systemd`. Then verify the archive by listing its contents without extracting.
+
+**Hints**
+1. `tar` with `-c`, `-z`, and `-f` creates compressed gzip tar archives.
+2. List archive contents using `-t` instead of `-c`.
+3. `tar -czf /tmp/systemd_backup.tar.gz /etc/systemd` and `tar -tzf /tmp/systemd_backup.tar.gz`
+
+**Solution**
+```bash
+tar -czf /tmp/systemd_backup.tar.gz /etc/systemd
+tar -tzf /tmp/systemd_backup.tar.gz
+```
+**Verify**
+```bash
+ls -lh /tmp/systemd_backup.tar.gz
+```
+**Watch out:** Always place the target archive name immediately after the `-f` flag.
+
+---
+
+### LX-BASIC-10 · Difficult · 50 pts
+**Task:** Analyze web server access logs in `/var/log/httpd/access_log`:
+1. Parse the HTTP status codes (field 9 in standard combined log format).
+2. Count the occurrences of each status code.
+3. Rank them from most frequent to least frequent.
+4. Export the formatted output (`COUNT STATUS`) to `/root/http_status_report.txt`.
+5. Secure `/root/http_status_report.txt` with permissions `640`.
+
+**Setup**
+```bash
+mkdir -p /var/log/httpd
+cat > /var/log/httpd/access_log <<'EOF'
+192.168.1.10 - - [10/Oct/2026:13:55:36 -0400] "GET /index.html HTTP/1.1" 200 2326
+192.168.1.11 - - [10/Oct/2026:13:55:37 -0400] "GET /about.html HTTP/1.1" 200 1204
+192.168.1.12 - - [10/Oct/2026:13:55:38 -0400] "GET /missing.html HTTP/1.1" 404 312
+192.168.1.10 - - [10/Oct/2026:13:55:39 -0400] "GET /login HTTP/1.1" 200 4501
+192.168.1.14 - - [10/Oct/2026:13:55:40 -0400] "POST /api/auth HTTP/1.1" 401 180
+192.168.1.15 - - [10/Oct/2026:13:55:41 -0400] "GET /private HTTP/1.1" 403 245
+192.168.1.10 - - [10/Oct/2026:13:55:42 -0400] "GET /logo.png HTTP/1.1" 200 8920
+192.168.1.16 - - [10/Oct/2026:13:55:43 -0400] "GET /error HTTP/1.1" 500 523
+EOF
+```
+
+**Hints**
+1. Extract column 9 using `awk '{print $9}'`.
+2. Sort before grouping duplicates with `uniq -c`.
+3. Pipe into `sort -rn` and redirect to the target file, then `chmod 640`.
+
+**Solution**
+```bash
+awk '{print $9}' /var/log/httpd/access_log | sort | uniq -c | sort -rn > /root/http_status_report.txt
+chmod 640 /root/http_status_report.txt
+```
+**Verify**
+```bash
+cat /root/http_status_report.txt
+ls -l /root/http_status_report.txt
+```
+**Watch out:** `uniq -c` requires sorted input; running `uniq` on unsorted input misses non-consecutive duplicates.
+
+---
+
 ## Topic 2: User and Group Management
 
 ### LX-USER-01 · Easy · 5 pts
@@ -339,6 +462,123 @@ chage -l dave
 sudo -l -U dave
 ```
 **Watch out:** Sudoers files must be mode `440` and syntax-checked with `visudo -cf`. A broken sudoers file can lock you out of sudo.
+
+---
+
+### LX-USER-06 · Easy · 5 pts
+**Task:** Create a dedicated system daemon service user `prometheus` with system account flag, home directory `/var/lib/prometheus`, and login shell disabled (`/sbin/nologin`).
+
+**Hints**
+1. `useradd -r` creates a system user.
+2. `-d` specifies the home directory and `-s` sets the shell.
+3. `useradd -r -d /var/lib/prometheus -s /sbin/nologin prometheus`
+
+**Solution**
+```bash
+useradd -r -d /var/lib/prometheus -s /sbin/nologin prometheus
+```
+**Verify**
+```bash
+getent passwd prometheus
+```
+**Watch out:** Do not omit `-s /sbin/nologin`; system accounts should never have an interactive login shell.
+
+---
+
+### LX-USER-07 · Average · 10 pts
+**Task:** Customize the default new-user skeleton directory `/etc/skel` by adding a greeting file `/etc/skel/WELCOME.txt` containing the exact line `Welcome to Olympic CentOS Server`. Then create user `david` with a home directory and verify that `WELCOME.txt` is automatically populated in `/home/david/WELCOME.txt`.
+
+**Hints**
+1. Files in `/etc/skel` are copied into new user home directories when created with `-m`.
+2. Write the file into `/etc/skel/WELCOME.txt`.
+3. Run `useradd -m david`.
+
+**Solution**
+```bash
+echo "Welcome to Olympic CentOS Server" > /etc/skel/WELCOME.txt
+useradd -m david
+```
+**Verify**
+```bash
+cat /home/david/WELCOME.txt
+```
+**Watch out:** If user `david` is created with `useradd` without `-m`, the home directory and skeleton files will not be created.
+
+---
+
+### LX-USER-08 · Average · 10 pts
+**Task:** Configure a team collaboration directory:
+1. Create system group `qa_team`.
+2. Add user `alice` and user `bob` as supplementary members of `qa_team`.
+3. Create directory `/opt/qa_data`.
+4. Change group ownership of `/opt/qa_data` to `qa_team`.
+5. Set permissions on `/opt/qa_data` to `770` so only the owner and `qa_team` members can access it.
+
+**Solution**
+```bash
+groupadd qa_team
+usermod -aG qa_team alice
+usermod -aG qa_team bob
+mkdir -p /opt/qa_data
+chown :qa_team /opt/qa_data
+chmod 770 /opt/qa_data
+```
+**Verify**
+```bash
+ls -ld /opt/qa_data
+id alice; id bob
+```
+**Watch out:** Always use `-aG` with `usermod`. Forgetting `-a` removes the user from all their other supplementary groups.
+
+---
+
+### LX-USER-09 · Average · 10 pts
+**Task:** Enforce strict password aging rules for user `david`:
+1. Minimum days between password changes: 7 days.
+2. Maximum password validity: 60 days.
+3. Expiration warning period: 14 days before expiration.
+
+**Hints**
+1. `chage` manages user password aging and expiration parameters.
+2. Flags: `-m` minimum days, `-M` maximum days, `-W` warning days.
+3. `chage -m 7 -M 60 -W 14 david`
+
+**Solution**
+```bash
+chage -m 7 -M 60 -W 14 david
+```
+**Verify**
+```bash
+chage -l david
+```
+**Watch out:** Pay attention to capitalization: lowercase `-m` is minimum days, uppercase `-M` is maximum days.
+
+---
+
+### LX-USER-10 · Difficult · 50 pts
+**Task:** Configure privileged delegation via sudoers:
+1. Create a drop-in sudoers file at `/etc/sudoers.d/developers`.
+2. Grant all members of group `%developers` the privilege to execute `/usr/bin/systemctl restart httpd` and `/usr/bin/systemctl status httpd` as root without entering a password (`NOPASSWD:`).
+3. Set permissions of `/etc/sudoers.d/developers` to `0440`.
+
+**Hints**
+1. Sudoers drop-in files reside in `/etc/sudoers.d/`.
+2. Group specifications begin with `%`. Format: `%group ALL=(ALL) NOPASSWD: /path/to/cmd1, /path/to/cmd2`.
+3. Sudo requires strict `0440` or `0400` permissions on files in `/etc/sudoers.d/`.
+
+**Solution**
+```bash
+cat > /etc/sudoers.d/developers <<'EOF'
+%developers ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart httpd, /usr/bin/systemctl status httpd
+EOF
+chmod 0440 /etc/sudoers.d/developers
+```
+**Verify**
+```bash
+cat /etc/sudoers.d/developers
+ls -l /etc/sudoers.d/developers
+```
+**Watch out:** Sudo ignores drop-in files with world-writable or group-writable permissions. Ensure `chmod 0440` is applied.
 
 ---
 
@@ -491,6 +731,129 @@ rpm -q tree vim-enhanced
 
 ---
 
+### LX-PKG-06 · Easy · 5 pts
+**Task:** Remove the package `httpd` completely using `dnf` or `yum` without interactive prompts, then verify that `rpm -q httpd` confirms package absence.
+
+**Hints**
+1. `dnf remove` or `yum remove` uninstalls packages.
+2. The `-y` option answers yes to confirmation prompts.
+3. `dnf remove -y httpd` and check with `rpm -q httpd`.
+
+**Solution**
+```bash
+dnf remove -y httpd
+rpm -q httpd
+```
+**Verify**
+```bash
+rpm -q httpd
+```
+**Watch out:** Always test exit status; `rpm -q` returns non-zero when a package is not installed.
+
+---
+
+### LX-PKG-07 · Average · 10 pts
+**Task:** Query the RPM database for package `bash` metadata, summary, and architecture details using `rpm -qi bash`, and write the full package details to `/tmp/bash_info.txt`.
+
+**Hints**
+1. `rpm -q` queries packages; `-i` displays descriptive info.
+2. Redirect stdout with `> /tmp/bash_info.txt`.
+3. `rpm -qi bash > /tmp/bash_info.txt`
+
+**Solution**
+```bash
+rpm -qi bash > /tmp/bash_info.txt
+```
+**Verify**
+```bash
+cat /tmp/bash_info.txt
+```
+**Watch out:** Do not specify the `.rpm` extension when querying an already-installed package by name.
+
+---
+
+### LX-PKG-08 · Average · 10 pts
+**Task:** Verify the file integrity of all installed files belonging to package `coreutils` using `rpm -V coreutils`. Export the verification output to `/tmp/coreutils_verify.txt`.
+
+**Hints**
+1. `rpm -V` verifies installed package file checksums, sizes, and permissions.
+2. Redirect output to `/tmp/coreutils_verify.txt`.
+3. `rpm -V coreutils > /tmp/coreutils_verify.txt`
+
+**Solution**
+```bash
+rpm -V coreutils > /tmp/coreutils_verify.txt
+```
+**Verify**
+```bash
+cat /tmp/coreutils_verify.txt
+```
+**Watch out:** An empty file is normal if all files pass verification without discrepancies.
+
+---
+
+### LX-PKG-09 · Average · 10 pts
+**Task:** Configure a third-party software repository:
+1. Create repository configuration file `/etc/yum.repos.d/custom.repo`.
+2. Define repository section `[custom-tools]` with `name=Custom Tools Repository`.
+3. Set `baseurl=http://repo.internal/centos/`.
+4. Enable the repository (`enabled=1`) and disable GPG signature checking (`gpgcheck=0`).
+5. Purge the repository metadata cache and verify with `dnf repolist` (or `yum repolist`).
+
+**Solution**
+```bash
+cat > /etc/yum.repos.d/custom.repo <<'EOF'
+[custom-tools]
+name=Custom Tools Repository
+baseurl=http://repo.internal/centos/
+enabled=1
+gpgcheck=0
+EOF
+dnf clean all
+dnf repolist
+```
+**Verify**
+```bash
+cat /etc/yum.repos.d/custom.repo
+dnf repolist
+```
+**Watch out:** All repo definition files in `/etc/yum.repos.d/` must end in `.repo` to be recognized by DNF/YUM.
+
+---
+
+### LX-PKG-10 · Difficult · 50 pts
+**Task:** Enforce strict package security and GPG signature verification:
+1. In repository file `/etc/yum.repos.d/local.repo`, configure `gpgcheck=1`.
+2. Specify the official key location `gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial`.
+3. Clean all repository metadata caches with `dnf clean all` and verify active repolist.
+
+**Hints**
+1. Edit or overwrite `/etc/yum.repos.d/local.repo`.
+2. Add both `gpgcheck=1` and `gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial`.
+3. Clean the cache and test repository availability.
+
+**Solution**
+```bash
+cat > /etc/yum.repos.d/local.repo <<'EOF'
+[local-base]
+name=CentOS Local Repository
+baseurl=file:///mnt/cdrom/BaseOS
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+EOF
+dnf clean all
+dnf repolist
+```
+**Verify**
+```bash
+grep -E "gpgcheck|gpgkey" /etc/yum.repos.d/local.repo
+dnf repolist
+```
+**Watch out:** When `gpgcheck=1` is enabled without a valid `gpgkey` path, package installations from that repository will abort with signature verification failures.
+
+---
+
 ## Topic 4: Networking
 
 ### LX-NET-01 · Easy · 5 pts
@@ -615,6 +978,122 @@ firewall-cmd --list-all
 firewall-cmd --list-rich-rules
 ```
 **Watch out:** Without `--permanent`, the rule disappears at reload or reboot. With `--permanent` only, it is not active until `--reload`. Do both.
+
+---
+
+### LX-NET-06 · Easy · 5 pts
+**Task:** Inspect the Linux kernel routing table using `ip route show` and export the entire routing configuration to `/tmp/default_route.txt`.
+
+**Hints**
+1. `ip route` or `ip r` displays routing table entries.
+2. Redirect output to `/tmp/default_route.txt`.
+3. `ip route show > /tmp/default_route.txt`
+
+**Solution**
+```bash
+ip route show > /tmp/default_route.txt
+```
+**Verify**
+```bash
+cat /tmp/default_route.txt
+```
+**Watch out:** Do not confuse `ip addr show` (interfaces and IPs) with `ip route show` (gateways and next hops).
+
+---
+
+### LX-NET-07 · Average · 10 pts
+**Task:** Assign a secondary static IP address `192.168.122.150/24` to interface `ens33` using the `ip` utility, and verify that both IP addresses are visible on `ens33`.
+
+**Hints**
+1. `ip addr add` attaches additional IP addresses to an interface.
+2. Syntax: `ip addr add IP/PREFIX dev INTERFACE`.
+3. `ip addr add 192.168.122.150/24 dev ens33`
+
+**Solution**
+```bash
+ip addr add 192.168.122.150/24 dev ens33
+```
+**Verify**
+```bash
+ip addr show ens33
+```
+**Watch out:** Addresses added directly via `ip addr add` are ephemeral and will not persist across a network restart unless saved in NetworkManager configuration.
+
+---
+
+### LX-NET-08 · Average · 10 pts
+**Task:** Configure local static DNS name resolution in `/etc/hosts`:
+1. Add entry mapping `192.168.122.10` to FQDN `master.cluster.local` and alias `master`.
+2. Add entry mapping `192.168.122.11` to FQDN `worker1.cluster.local` and alias `worker1`.
+
+**Hints**
+1. Format for `/etc/hosts` lines: `IP_ADDRESS FQDN ALIAS`.
+2. Append entries with `>>` to preserve existing `127.0.0.1` localhost mappings.
+3. `echo "192.168.122.10 master.cluster.local master" >> /etc/hosts`
+
+**Solution**
+```bash
+cat >> /etc/hosts <<'EOF'
+192.168.122.10 master.cluster.local master
+192.168.122.11 worker1.cluster.local worker1
+EOF
+```
+**Verify**
+```bash
+grep "cluster.local" /etc/hosts
+```
+**Watch out:** Never overwrite `/etc/hosts` with `>`; doing so destroys the default `localhost` loopback resolution.
+
+---
+
+### LX-NET-09 · Average · 10 pts
+**Task:** Reconfigure NetworkManager connection `ens33`:
+1. Set DNS servers to `1.1.1.1` and `8.8.8.8`.
+2. Ensure connection autoconnect is set to `yes`.
+3. Activate the updated connection profile immediately.
+
+**Hints**
+1. Use `nmcli connection modify` or `nmcli con mod`.
+2. Properties: `ipv4.dns "1.1.1.1 8.8.8.8"`, `connection.autoconnect yes`.
+3. Activate with `nmcli con up ens33`.
+
+**Solution**
+```bash
+nmcli con mod ens33 ipv4.dns "1.1.1.1 8.8.8.8" connection.autoconnect yes
+nmcli con up ens33
+```
+**Verify**
+```bash
+nmcli con show ens33
+```
+**Watch out:** Changes made with `nmcli con mod` take effect only after running `nmcli con up` to reload the connection runtime state.
+
+---
+
+### LX-NET-10 · Difficult · 50 pts
+**Task:** Create an isolated private host-only network profile:
+1. Create a new Ethernet connection profile named `internal-net` bound to interface `ens33`.
+2. Configure static IPv4 address `10.0.0.50/24` with default gateway `10.0.0.1`.
+3. Configure DNS resolver `10.0.0.1`.
+4. Ensure autoconnect is enabled and activate the profile.
+
+**Hints**
+1. `nmcli connection add type ethernet con-name internal-net ifname ens33 ...`
+2. Specify `ip4 10.0.0.50/24 gw4 10.0.0.1`.
+3. Modify DNS and bring the interface up.
+
+**Solution**
+```bash
+nmcli connection add type ethernet con-name internal-net ifname ens33 ip4 10.0.0.50/24 gw4 10.0.0.1
+nmcli con mod internal-net ipv4.dns "10.0.0.1" connection.autoconnect yes
+nmcli con up internal-net
+```
+**Verify**
+```bash
+nmcli connection show internal-net
+ip addr show ens33
+```
+**Watch out:** Specifying wrong interface names will cause NetworkManager to fail activating the profile.
 
 ---
 
@@ -752,6 +1231,130 @@ lvs
 findmnt /data
 ```
 **Watch out:** XFS can be **grown but never shrunk**. `lvextend` alone does not grow the filesystem, so use `-r` (or run `xfs_growfs /data`). If the task requires a partition instead of the whole disk, create one first with `fdisk /dev/sdb` (type `8e` Linux LVM).
+
+---
+
+### LX-FS-06 · Easy · 5 pts
+**Task:** Create a shared drop-box directory `/shared/public_dropbox` with group ownership `developers` and permissions `1777` (read/write/execute for all, with the **sticky bit** set so users cannot delete files created by others).
+
+**Hints**
+1. `mkdir -p` creates directory paths.
+2. The sticky bit octal prefix is `1` (e.g. `chmod 1777`).
+3. Set group with `chgrp developers` or `chown :developers`.
+
+**Solution**
+```bash
+mkdir -p /shared/public_dropbox
+chown :developers /shared/public_dropbox
+chmod 1777 /shared/public_dropbox
+```
+**Verify**
+```bash
+ls -ld /shared/public_dropbox
+```
+**Watch out:** Without the sticky bit (`1777`), any user with write permissions in the directory can delete any other user's files.
+
+---
+
+### LX-FS-07 · Average · 10 pts
+**Task:** Search `/var` for all regular files larger than 10MB, format their sizes with `find` or `du`, and write the matching file list to `/tmp/large_var_files.txt`.
+
+**Hints**
+1. Use `find /var -type f -size +10M`.
+2. Suppress permission denied errors with `2>/dev/null`.
+3. Redirect stdout to `/tmp/large_var_files.txt`.
+
+**Solution**
+```bash
+find /var -type f -size +10M 2>/dev/null > /tmp/large_var_files.txt
+```
+**Verify**
+```bash
+cat /tmp/large_var_files.txt
+```
+**Watch out:** File size units: `+10M` for megabytes, `+10G` for gigabytes. Lowercase `m` means minutes, not megabytes!
+
+---
+
+### LX-FS-08 · Average · 10 pts
+**Task:** Configure default POSIX ACL inheritance on `/data/projects`:
+1. Ensure directory `/data/projects` exists.
+2. Set a default ACL granting group `developers` read, write, and execute permissions (`rwx`) on all newly created files and subdirectories.
+
+**Hints**
+1. Default ACLs are configured using the `-d` option in `setfacl`.
+2. Syntax: `setfacl -d -m g:GROUP:PERMS PATH`.
+3. `setfacl -d -m g:developers:rwx /data/projects`
+
+**Solution**
+```bash
+mkdir -p /data/projects
+setfacl -d -m g:developers:rwx /data/projects
+```
+**Verify**
+```bash
+getfacl /data/projects
+```
+**Watch out:** Setting an access ACL without `-d` only affects existing items; `-d` ensures future child items automatically inherit the ACL.
+
+---
+
+### LX-FS-09 · Average · 10 pts
+**Task:** Configure a persistent mount point:
+1. Create directory `/mnt/data`.
+2. Add a persistent filesystem mount entry in `/etc/fstab` for device `/dev/vdb1` at mount point `/mnt/data` with filesystem type `xfs`, options `defaults`, dump `0`, pass `0`.
+3. Test mount persistence with `mount -a`.
+
+**Hints**
+1. Append entry to `/etc/fstab`. Format: `<device> <mount_point> <type> <options> <dump> <pass>`.
+2. Always test fstab changes immediately with `mount -a` to catch syntax errors before rebooting.
+
+**Solution**
+```bash
+mkdir -p /mnt/data
+echo "/dev/vdb1 /mnt/data xfs defaults 0 0" >> /etc/fstab
+mount -a
+```
+**Verify**
+```bash
+grep "/mnt/data" /etc/fstab
+mount | grep "/mnt/data"
+```
+**Watch out:** A syntax typo in `/etc/fstab` can cause Linux systems to drop into emergency recovery shell during boot.
+
+---
+
+### LX-FS-10 · Difficult · 50 pts
+**Task:** Perform LVM storage expansion and filesystem resizing:
+1. Extend existing logical volume `/dev/data_vg/data_lv` by `+500M`.
+2. Ensure the volume is formatted with XFS and persistently mounted at `/mnt/reports` in `/etc/fstab`.
+
+**Setup**
+```bash
+mkdir -p /mnt/reports
+pvcreate /dev/sdb1
+vgcreate data_vg /dev/sdb1
+lvcreate -L 1G -n data_lv data_vg
+mkfs.xfs /dev/data_vg/data_lv
+mount /dev/data_vg/data_lv /mnt/reports
+echo "/dev/data_vg/data_lv /mnt/reports xfs defaults 0 0" >> /etc/fstab
+```
+
+**Hints**
+1. `lvextend -L +500M` extends the logical volume.
+2. The `-r` flag resizes the underlying filesystem in the same operation.
+3. `lvextend -L +500M /dev/data_vg/data_lv -r`
+
+**Solution**
+```bash
+lvextend -L +500M /dev/data_vg/data_lv -r
+```
+**Verify**
+```bash
+lvs data_vg/data_lv
+df -h /mnt/reports
+```
+**Watch out:** Extending an LVM volume without resizing the filesystem leaves the new capacity inaccessible until resized with `xfs_growfs` or `lvextend -r`.
 
 ---
 
@@ -918,6 +1521,143 @@ journalctl -u backup.service --no-pager | tail
 
 ---
 
+### LX-SVC-06 · Easy · 5 pts
+**Task:** Immediately stop service `postfix` and disable it from auto-starting on system boot using a single `systemctl` command.
+
+**Hints**
+1. `systemctl disable` prevents service startup at boot.
+2. The `--now` flag stops the service immediately as well.
+3. `systemctl disable --now postfix`
+
+**Solution**
+```bash
+systemctl disable --now postfix
+```
+**Verify**
+```bash
+systemctl is-active postfix
+systemctl is-enabled postfix
+```
+**Watch out:** Running `systemctl disable postfix` without `--now` leaves the service actively running in memory until the next reboot.
+
+---
+
+### LX-SVC-07 · Average · 10 pts
+**Task:** Query all currently failed systemd units on the system using `systemctl --failed` and save the diagnostic summary to `/tmp/failed_services.txt`.
+
+**Hints**
+1. `systemctl --failed` lists all units in a degraded or failed state.
+2. Redirect output to `/tmp/failed_services.txt`.
+3. `systemctl --failed > /tmp/failed_services.txt`
+
+**Solution**
+```bash
+systemctl --failed > /tmp/failed_services.txt
+```
+**Verify**
+```bash
+cat /tmp/failed_services.txt
+```
+**Watch out:** In competitive troubleshooting, `systemctl --failed` should be one of the very first commands run to pinpoint broken daemons.
+
+---
+
+### LX-SVC-08 · Average · 10 pts
+**Task:** Inspect the dependency hierarchy for `sshd.service` using `systemctl list-dependencies sshd` and save the output tree to `/tmp/sshd_deps.txt`.
+
+**Hints**
+1. `systemctl list-dependencies UNIT` displays target dependencies and requisites.
+2. Redirect stdout with `> /tmp/sshd_deps.txt`.
+3. `systemctl list-dependencies sshd > /tmp/sshd_deps.txt`
+
+**Solution**
+```bash
+systemctl list-dependencies sshd > /tmp/sshd_deps.txt
+```
+**Verify**
+```bash
+cat /tmp/sshd_deps.txt
+```
+**Watch out:** Systemd dependency ordering issues frequently prevent services from starting if network or storage targets fail to activate first.
+
+---
+
+### LX-SVC-09 · Average · 10 pts
+**Task:** Configure a systemd service drop-in configuration override:
+1. Create drop-in configuration directory `/etc/systemd/system/httpd.service.d`.
+2. Create drop-in file `/etc/systemd/system/httpd.service.d/override.conf` defining `[Service]` with environment variable `Environment="PORT=8080"`.
+3. Reload systemd manager configuration and restart `httpd`.
+
+**Hints**
+1. Drop-in directories follow the convention `/etc/systemd/system/<unit>.d/`.
+2. Always run `systemctl daemon-reload` after altering unit files or drop-ins.
+3. Restart the service to apply updated environment variables.
+
+**Solution**
+```bash
+mkdir -p /etc/systemd/system/httpd.service.d
+cat > /etc/systemd/system/httpd.service.d/override.conf <<'EOF'
+[Service]
+Environment="PORT=8080"
+EOF
+systemctl daemon-reload
+systemctl restart httpd
+```
+**Verify**
+```bash
+cat /etc/systemd/system/httpd.service.d/override.conf
+systemctl status httpd
+```
+**Watch out:** Editing packaged units in `/usr/lib/systemd/system/` directly can be overwritten during package updates. Always use `/etc/systemd/system/` drop-ins.
+
+---
+
+### LX-SVC-10 · Difficult · 50 pts
+**Task:** Implement an automated scheduled maintenance task using systemd timers:
+1. Create service unit `/etc/systemd/system/logclean.service` executing `/usr/bin/find /var/log -type f -name "*.tmp" -delete`.
+2. Create accompanying timer unit `/etc/systemd/system/logclean.timer` set to run every day (`OnCalendar=daily`).
+3. Reload systemd daemon, then enable and start the timer unit immediately (`systemctl enable --now logclean.timer`).
+
+**Hints**
+1. The service unit needs `[Unit]` and `[Service]` sections with `ExecStart`.
+2. The timer unit needs `[Timer]` section with `OnCalendar=daily` and `[Install]` section with `WantedBy=timers.target`.
+3. Enable and activate the `.timer` unit, not the `.service` unit.
+
+**Solution**
+```bash
+cat > /etc/systemd/system/logclean.service <<'EOF'
+[Unit]
+Description=Log Cleanup Maintenance
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/find /var/log -type f -name "*.tmp" -delete
+EOF
+
+cat > /etc/systemd/system/logclean.timer <<'EOF'
+[Unit]
+Description=Daily Log Cleanup Timer
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now logclean.timer
+```
+**Verify**
+```bash
+systemctl is-enabled logclean.timer
+systemctl list-timers
+```
+**Watch out:** Timers will not trigger automatically unless their unit contains a valid `[Install]` section with `WantedBy=timers.target`.
+
+---
+
 ## Topic 7: Security
 
 ### LX-SEC-01 · Easy · 5 pts
@@ -1062,6 +1802,132 @@ ssh -o PasswordAuthentication=no alice@localhost 'echo key login OK'
 ssh bob@localhost          # should be denied
 ```
 **Watch out:** If a directive appears twice, sshd uses the **first** one it reads. If the file has an earlier `PasswordAuthentication yes` line, edit it instead of appending, and confirm with `sshd -T`.
+
+---
+
+### LX-SEC-06 · Easy · 5 pts
+**Task:** Permanently open inbound firewall access for both `http` and `https` services in the active firewall zone, reload firewalld, and verify that both services appear in the active firewall configuration.
+
+**Hints**
+1. Use `firewall-cmd --permanent --add-service=SERVICE`.
+2. Add both `http` and `https`.
+3. Reload firewalld with `firewall-cmd --reload`.
+
+**Solution**
+```bash
+firewall-cmd --permanent --add-service=http
+firewall-cmd --permanent --add-service=https
+firewall-cmd --reload
+```
+**Verify**
+```bash
+firewall-cmd --list-services
+```
+**Watch out:** Rules added without `--permanent` are lost when the firewall reloads or the server restarts.
+
+---
+
+### LX-SEC-07 · Average · 10 pts
+**Task:** Configure a permanent port forwarding rule in `firewalld` redirecting external incoming traffic on port `8080/tcp` to internal web server port `80/tcp`, and reload the firewall.
+
+**Hints**
+1. `firewall-cmd` has a `--add-forward-port` flag.
+2. Syntax: `--add-forward-port=port=PORT:proto=tcp:toport=TARGET_PORT`.
+3. Don't forget `--permanent` and `--reload`.
+
+**Solution**
+```bash
+firewall-cmd --permanent --add-forward-port=port=8080:proto=tcp:toport=80
+firewall-cmd --reload
+```
+**Verify**
+```bash
+firewall-cmd --list-all
+```
+**Watch out:** Forgetting to reload the firewall leaves the permanent configuration file saved on disk but inactive in runtime.
+
+---
+
+### LX-SEC-08 · Average · 10 pts
+**Task:** Configure an IP-restricted firewall rich rule:
+1. Allow incoming SSH traffic (service `ssh` or port `22/tcp`) ONLY from subnet `192.168.122.0/24`.
+2. Save the rule permanently and reload the firewall.
+
+**Hints**
+1. Use `firewall-cmd --permanent --add-rich-rule='...'`.
+2. Syntax: `rule family="ipv4" source address="192.168.122.0/24" service name="ssh" accept`.
+3. Run `firewall-cmd --reload`.
+
+**Solution**
+```bash
+firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.122.0/24" service name="ssh" accept'
+firewall-cmd --reload
+```
+**Verify**
+```bash
+firewall-cmd --list-all
+```
+**Watch out:** Quotation mismatches inside rich rules will cause `firewall-cmd` to abort with syntax validation errors.
+
+---
+
+### LX-SEC-09 · Average · 10 pts
+**Task:** Configure custom web server document root directory security:
+1. Create directory `/srv/www/html` and create test file `/srv/www/html/index.html` with content `CentOS Production Web`.
+2. Set directory permissions to `755` and ownership to `root:root`.
+3. Ensure SELinux enforcement mode is active (`Enforcing`).
+
+**Hints**
+1. `mkdir -p` and `chmod 755`.
+2. Check SELinux status with `getenforce` and ensure it is `Enforcing`.
+3. Verify `/etc/selinux/config` has `SELINUX=enforcing`.
+
+**Solution**
+```bash
+mkdir -p /srv/www/html
+echo "CentOS Production Web" > /srv/www/html/index.html
+chmod 755 /srv/www/html
+setenforce 1
+sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+```
+**Verify**
+```bash
+ls -ld /srv/www/html
+getenforce
+```
+**Watch out:** Web servers fail to serve files if parent directory permissions prevent traversal (`+x`).
+
+---
+
+### LX-SEC-10 · Difficult · 50 pts
+**Task:** Harden the OpenSSH daemon configuration in `/etc/ssh/sshd_config`:
+1. Limit failed login attempts: set `MaxAuthTries 3`.
+2. Set client inactivity keep-alive timeout: `ClientAliveInterval 300` and `ClientAliveCountMax 2`.
+3. Disable graphical X11 forwarding: `X11Forwarding no`.
+4. Validate configuration syntax with `sshd -t` and restart `sshd`.
+
+**Hints**
+1. Append or modify parameters in `/etc/ssh/sshd_config`.
+2. Always validate configuration syntax with `sshd -t` before restarting the service to avoid lockouts.
+3. Reload or restart sshd with `systemctl restart sshd`.
+
+**Solution**
+```bash
+cat >> /etc/ssh/sshd_config <<'EOF'
+MaxAuthTries 3
+ClientAliveInterval 300
+ClientAliveCountMax 2
+X11Forwarding no
+EOF
+sshd -t
+systemctl restart sshd
+```
+**Verify**
+```bash
+grep -E "MaxAuthTries|ClientAlive|X11Forwarding" /etc/ssh/sshd_config
+systemctl is-active sshd
+```
+**Watch out:** A bad configuration directive in `sshd_config` can crash the SSH daemon upon restart, cutting off remote access to the host.
 
 ---
 
@@ -1244,6 +2110,188 @@ tail /var/log/backup.log
 cat /etc/cron.d/backup
 ```
 **Watch out:** `tar` strips the leading `/`, so the files are restored to `/tmp/restore/etc/`, not `/tmp/restore/`. Files in `/etc/cron.d/` need the **user** field (`root`), unlike `crontab -e`. Small `diff` differences are normal because `/etc` changes while you work.
+
+---
+
+### LX-SCR-06 · Easy · 5 pts
+**Task:** Create an executable health-check script at `/root/check_service.sh`:
+1. It accepts a service name as argument `$1`.
+2. If the service is active, it prints `UP` and exits with code 0.
+3. If the service is inactive or not found, it prints `DOWN` and exits with code 1.
+4. Make the script executable (`chmod +x`).
+
+**Hints**
+1. `systemctl is-active "$1"` returns exit code 0 if running.
+2. Use an `if ...; then ...; else ...; fi` block.
+3. Print `UP` or `DOWN` and exit accordingly.
+
+**Solution**
+```bash
+cat > /root/check_service.sh <<'EOF'
+#!/bin/bash
+if systemctl is-active "$1" >/dev/null 2>&1; then
+  echo "UP"
+  exit 0
+else
+  echo "DOWN"
+  exit 1
+fi
+EOF
+chmod +x /root/check_service.sh
+```
+**Verify**
+```bash
+/root/check_service.sh sshd; echo "exit=$?"
+/root/check_service.sh nonexistent; echo "exit=$?"
+```
+**Watch out:** Remember to add `chmod +x` so the script can be directly executed.
+
+---
+
+### LX-SCR-07 · Average · 10 pts
+**Task:** Create an automated password provisioning script at `/root/reset_passwords.sh`:
+1. It reads colon-separated user account pairs (`username:password`) from `/root/users.txt`.
+2. For each line, it applies the updated password using `chpasswd`.
+3. Make the script executable (`chmod +x`).
+
+**Setup**
+```bash
+cat > /root/users.txt <<'EOF'
+alice:NewPass@2026
+bob:SecureKey#99
+carol:Winter$2026
+EOF
+```
+
+**Hints**
+1. `chpasswd` reads `username:password` pairs directly from standard input.
+2. The script can pipe or redirect `/root/users.txt` into `chpasswd`.
+3. `chpasswd < /root/users.txt`
+
+**Solution**
+```bash
+cat > /root/reset_passwords.sh <<'EOF'
+#!/bin/bash
+chpasswd < /root/users.txt
+EOF
+chmod +x /root/reset_passwords.sh
+/root/reset_passwords.sh
+```
+**Verify**
+```bash
+ls -l /root/reset_passwords.sh
+```
+**Watch out:** Passing cleartext passwords as command line arguments leaves them visible in process tables (`ps aux`); `chpasswd` reads via stdin securely.
+
+---
+
+### LX-SCR-08 · Average · 10 pts
+**Task:** Create an automated log rotation cleanup script at `/root/clean_old_logs.sh`:
+1. It finds and deletes all `.log` files in `/tmp/test_logs` that are modified more than 7 days ago (`-mtime +7`).
+2. Make the script executable (`chmod +x`).
+
+**Setup**
+```bash
+mkdir -p /tmp/test_logs
+touch -d "10 days ago" /tmp/test_logs/old1.log /tmp/test_logs/old2.log
+touch /tmp/test_logs/fresh.log
+```
+
+**Hints**
+1. Use `find /tmp/test_logs -name "*.log" -mtime +7 -delete`.
+2. Wrap in script with `#!/bin/bash`.
+3. Make executable with `chmod +x /root/clean_old_logs.sh`.
+
+**Solution**
+```bash
+cat > /root/clean_old_logs.sh <<'EOF'
+#!/bin/bash
+find /tmp/test_logs -name "*.log" -mtime +7 -delete
+EOF
+chmod +x /root/clean_old_logs.sh
+/root/clean_old_logs.sh
+```
+**Verify**
+```bash
+ls -l /tmp/test_logs
+```
+**Watch out:** Testing `find` with `-print` before using `-delete` prevents accidental file deletion.
+
+---
+
+### LX-SCR-09 · Average · 10 pts
+**Task:** Create a report extraction script at `/root/csv_report.sh`:
+1. It parses employee records in `/root/employees.csv` (format: `Name,Department,Salary`).
+2. It filters employees in department `IT`, calculates the count of IT employees, and outputs `IT Department Count: N` to `/root/it_summary.txt`.
+3. Make the script executable (`chmod +x`).
+
+**Setup**
+```bash
+cat > /root/employees.csv <<'EOF'
+John,IT,75000
+Sarah,HR,62000
+Michael,IT,82000
+Elena,Finance,71000
+David,IT,68000
+EOF
+```
+
+**Hints**
+1. Use `grep ",IT,"` or `awk -F, '$2=="IT"'` to filter lines.
+2. Count lines with `wc -l`.
+3. Output `IT Department Count: <count>` into `/root/it_summary.txt`.
+
+**Solution**
+```bash
+cat > /root/csv_report.sh <<'EOF'
+#!/bin/bash
+count=$(awk -F, '$2=="IT"' /root/employees.csv | wc -l)
+echo "IT Department Count: $count" > /root/it_summary.txt
+EOF
+chmod +x /root/csv_report.sh
+/root/csv_report.sh
+```
+**Verify**
+```bash
+cat /root/it_summary.txt
+```
+**Watch out:** Trailing whitespace or commas in CSV files can shift field numbers if delimiters are not specified accurately.
+
+---
+
+### LX-SCR-10 · Difficult · 50 pts
+**Task:** Build an automated system resource monitor and alert script at `/root/sysmonitor.sh`:
+1. Collect current timestamp (`date "+%F %T"`).
+2. Collect root filesystem usage percentage from `df -h /`.
+3. If root disk usage exceeds threshold 80% (or pass threshold parameter `$1`), append an alert entry formatted as `[ALERT] <timestamp> Root disk usage at <percent>%` to log file `/var/log/sysalert.log`.
+4. Make the script executable (`chmod +x`) and execute it with threshold test `1`.
+
+**Hints**
+1. Extract usage integer with `df / | awk 'NR==2 {print $5}' | tr -d '%'`.
+2. Compare with `if [ "$usage" -ge "$threshold" ]; then ...; fi`.
+3. Ensure log directory exists and write the formatted alert.
+
+**Solution**
+```bash
+cat > /root/sysmonitor.sh <<'EOF'
+#!/bin/bash
+THRESHOLD=${1:-80}
+USAGE=$(df / | awk 'NR==2 {print $5}' | tr -d '%')
+STAMP=$(date '+%F %T')
+
+if [ "$USAGE" -ge "$THRESHOLD" ]; then
+  mkdir -p /var/log
+  echo "[ALERT] $STAMP Root disk usage at $USAGE%" >> /var/log/sysalert.log
+fi
+EOF
+chmod +x /root/sysmonitor.sh
+/root/sysmonitor.sh 1
+```
+**Verify**
+```bash
+cat /var/log/sysalert.log
+```
+**Watch out:** `df` prints percentage with a `%` symbol; strip it with `tr -d '%'` before numeric comparisons in bash `[ "$USAGE" -ge "$THRESHOLD" ]`.
 
 ---
 

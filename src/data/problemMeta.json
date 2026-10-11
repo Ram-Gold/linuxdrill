@@ -158,5 +158,165 @@
   "LX-SCR-05": {
     "title": "Automated Backup, Log & Retention Script",
     "description": "Write comprehensive backup script creating tar archives, logging execution, and rotating old backups."
+  },
+  "LX-BASIC-06": {
+    "title": "Symbolic Link Creation & Inode Inspection",
+    "description": "Create a symbolic link at /usr/local/bin/sysreport pointing to /root/sysinfo.sh and verify resolution."
+  },
+  "LX-BASIC-07": {
+    "title": "Recursive Grep & Config Path Extraction",
+    "description": "Search /etc recursively for 'student', suppress permission errors, and save matching filenames."
+  },
+  "LX-BASIC-08": {
+    "title": "Field Extraction & Character Case Conversion",
+    "description": "Extract group names and GIDs from /etc/group and convert lowercase characters to uppercase with tr."
+  },
+  "LX-BASIC-09": {
+    "title": "Compressed Archive Creation & Manifest Query",
+    "description": "Create gzip tar archive /tmp/systemd_backup.tar.gz for /etc/systemd and inspect contents without extracting."
+  },
+  "LX-BASIC-10": {
+    "title": "Access Log HTTP Status Frequency Pipeline",
+    "description": "Parse web server status codes from access logs, aggregate occurrences, rank frequency, and secure permissions."
+  },
+  "LX-USER-06": {
+    "title": "System Service Account Without Login Shell",
+    "description": "Create system daemon user prometheus with disabled login shell and dedicated service home directory."
+  },
+  "LX-USER-07": {
+    "title": "Default User Skeleton Customization",
+    "description": "Deploy greeting file in /etc/skel to automatically provision welcoming banner inside new user home directories."
+  },
+  "LX-USER-08": {
+    "title": "Team Collaboration Directory & Group Rights",
+    "description": "Create group qa_team, add users, provision /opt/qa_data with group ownership, and enforce 770 permissions."
+  },
+  "LX-USER-09": {
+    "title": "Fine-Grained Password Aging & Warning Policy",
+    "description": "Enforce minimum days, maximum validity, and advance warning periods using chage aging flags."
+  },
+  "LX-USER-10": {
+    "title": "Sudoers Drop-in Delegation & NOPASSWD Rights",
+    "description": "Create /etc/sudoers.d/developers granting passwordless systemctl privileges to group members with 0440 mode."
+  },
+  "LX-PKG-06": {
+    "title": "Non-Interactive Package Removal & Status Check",
+    "description": "Remove httpd using dnf/yum with non-interactive flags and verify package absence via RPM database query."
+  },
+  "LX-PKG-07": {
+    "title": "RPM Metadata, Architecture & Summary Query",
+    "description": "Query RPM package metadata and descriptions for bash and export comprehensive info to /tmp/bash_info.txt."
+  },
+  "LX-PKG-08": {
+    "title": "Installed Package File Integrity Verification",
+    "description": "Verify file checksums, file sizes, and file permissions of installed package coreutils using rpm -V."
+  },
+  "LX-PKG-09": {
+    "title": "Third-Party Repository Definition & DNF Repolist",
+    "description": "Configure /etc/yum.repos.d/custom.repo, purge repository cache, and verify active repositories with dnf."
+  },
+  "LX-PKG-10": {
+    "title": "GPG Signature Enforcement & Key Configuration",
+    "description": "Enforce gpgcheck=1 and configure gpgkey location in local repository to prevent untrusted package installation."
+  },
+  "LX-NET-06": {
+    "title": "Kernel IP Routing Table & Gateway Inspection",
+    "description": "Display system kernel routing table using ip route show and export default gateway details."
+  },
+  "LX-NET-07": {
+    "title": "Secondary Static IP Address Alias Assignment",
+    "description": "Attach a secondary static IPv4 address alias to interface ens33 using ip addr add and verify binding."
+  },
+  "LX-NET-08": {
+    "title": "Cluster Hostname Resolution Mapping in /etc/hosts",
+    "description": "Add cluster node static name resolutions to /etc/hosts while preserving default localhost loopback entries."
+  },
+  "LX-NET-09": {
+    "title": "NetworkManager DNS & Autoconnect Configuration",
+    "description": "Update connection ens33 with custom DNS servers, enable autoconnect, and reactivate interface profile."
+  },
+  "LX-NET-10": {
+    "title": "Isolated Host-Only Network Profile Provisioning",
+    "description": "Create and activate an isolated NetworkManager ethernet profile internal-net with static IP addressing."
+  },
+  "LX-FS-06": {
+    "title": "Sticky Bit Enforcement on Public Drop-Box",
+    "description": "Create shared directory /shared/public_dropbox with 1777 permissions to protect files from unauthorized deletion."
+  },
+  "LX-FS-07": {
+    "title": "Filesystem Storage Audit & Large File Discovery",
+    "description": "Locate all regular files larger than 10MB in /var, format sizes, and export audit list."
+  },
+  "LX-FS-08": {
+    "title": "Default POSIX ACL Inheritance on Project Tree",
+    "description": "Configure default ACL inheritance on /data/projects ensuring future child files inherit group permissions."
+  },
+  "LX-FS-09": {
+    "title": "Persistent File System Mounting in /etc/fstab",
+    "description": "Add persistent XFS mount entry in /etc/fstab for /dev/vdb1 and validate syntax immediately with mount -a."
+  },
+  "LX-FS-10": {
+    "title": "LVM Volume Expansion & Online Filesystem Resize",
+    "description": "Extend logical volume data_lv by +500M with online XFS filesystem expansion and verify mount availability."
+  },
+  "LX-SVC-06": {
+    "title": "Immediate Service Stop & Boot Disablement",
+    "description": "Disable and stop unnecessary service postfix in a single command using systemctl disable --now."
+  },
+  "LX-SVC-07": {
+    "title": "Failed Systemd Units Inspection & Diagnostic Audit",
+    "description": "Query all degraded or failed systemd units on the host and export summary to /tmp/failed_services.txt."
+  },
+  "LX-SVC-08": {
+    "title": "Service Dependency Tree Analysis with Systemd",
+    "description": "Inspect service dependencies and unit ordering for sshd.service using systemctl list-dependencies."
+  },
+  "LX-SVC-09": {
+    "title": "Systemd Service Drop-In Configuration Override",
+    "description": "Create drop-in override directory and config for httpd, declare environment variables, and reload daemon."
+  },
+  "LX-SVC-10": {
+    "title": "Periodic Scheduled Systemd Timer & Service Unit",
+    "description": "Create systemd oneshot service and persistent calendar timer unit logclean.timer, enable and activate."
+  },
+  "LX-SEC-06": {
+    "title": "Inbound Web Services Firewall Configuration",
+    "description": "Permanently enable both http and https services in active firewalld zone and reload runtime rules."
+  },
+  "LX-SEC-07": {
+    "title": "Firewalld Inbound Port Forwarding Rule",
+    "description": "Configure permanent port forwarding redirecting external port 8080/tcp to internal web port 80/tcp."
+  },
+  "LX-SEC-08": {
+    "title": "Subnet-Restricted SSH Access via Rich Rules",
+    "description": "Add a permanent firewall rich rule allowing SSH connections exclusively from subnet 192.168.122.0/24."
+  },
+  "LX-SEC-09": {
+    "title": "Custom Web Document Root Hardening & Permissions",
+    "description": "Deploy secure directory permissions on /srv/www/html and ensure SELinux is set to Enforcing."
+  },
+  "LX-SEC-10": {
+    "title": "OpenSSH Daemon Hardening & Authentication Limits",
+    "description": "Harden sshd_config with MaxAuthTries, ClientAlive timeouts, disable X11 forwarding, and validate with sshd -t."
+  },
+  "LX-SCR-06": {
+    "title": "Service Health Checker Script with Exit Codes",
+    "description": "Write /root/check_service.sh evaluating systemctl is-active, outputting UP or DOWN with proper exit codes."
+  },
+  "LX-SCR-07": {
+    "title": "Batch User Password Reset Script with chpasswd",
+    "description": "Write /root/reset_passwords.sh processing colon-delimited username:password pairs via standard input."
+  },
+  "LX-SCR-08": {
+    "title": "Automated Old Log Deletion & Housekeeping Script",
+    "description": "Write /root/clean_old_logs.sh utilizing find -mtime +7 -delete to purge old logs safely."
+  },
+  "LX-SCR-09": {
+    "title": "Delimited CSV Department Filter & Summary Script",
+    "description": "Write /root/csv_report.sh parsing employees.csv, counting IT personnel, and exporting formatted total."
+  },
+  "LX-SCR-10": {
+    "title": "System Resource Health Monitor & Alert Logger",
+    "description": "Write /root/sysmonitor.sh monitoring disk usage percentage against threshold and logging alerts to sysalert.log."
   }
 }

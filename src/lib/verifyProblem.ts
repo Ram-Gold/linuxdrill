@@ -663,6 +663,616 @@ export function verifyProblem(problem: Problem, shell: ShellContext): Verificati
       };
     }
 
+    case "LX-BASIC-06": {
+      const node = vfs.getNode("/usr/local/bin/sysreport");
+      const exists = !!node;
+      const isSymlink = exists && (node.type === "symlink" || node.target === "/root/sysinfo.sh");
+      checks.push({ name: "Symbolic link /usr/local/bin/sysreport exists", passed: exists });
+      checks.push({ name: "Points to target /root/sysinfo.sh", passed: isSymlink });
+      const passed = exists && isSymlink;
+      return {
+        passed,
+        message: passed ? "Symbolic link /usr/local/bin/sysreport created and resolves properly!" : "Symbolic link missing or does not target /root/sysinfo.sh.",
+        checks,
+        missingHint: "Run: ln -s /root/sysinfo.sh /usr/local/bin/sysreport",
+      };
+    }
+
+    case "LX-BASIC-07": {
+      const exists = checkPathExists("/tmp/student_configs.txt", "File /tmp/student_configs.txt exists");
+      const ranGrep = checkHistoryMatch(["grep", "student_configs.txt"], "Executed recursive grep into /tmp/student_configs.txt");
+      const passed = exists && ranGrep;
+      return {
+        passed,
+        message: passed ? "Matching config paths found and exported to /tmp/student_configs.txt!" : "Missing /tmp/student_configs.txt or recursive grep not executed.",
+        checks,
+        missingHint: "Run: grep -ril 'student' /etc 2>/dev/null > /tmp/student_configs.txt",
+      };
+    }
+
+    case "LX-BASIC-08": {
+      const exists = checkPathExists("/tmp/groups_upper.txt", "File /tmp/groups_upper.txt exists");
+      const content = (vfs.readFile("/tmp/groups_upper.txt").content || "").trim();
+      const hasUpper = content.length > 0 && content === content.toUpperCase();
+      checks.push({ name: "Output is uppercase converted text", passed: hasUpper });
+      const passed = exists && hasUpper;
+      return {
+        passed,
+        message: passed ? "Extracted group entries converted to uppercase successfully!" : "File /tmp/groups_upper.txt missing or not converted to uppercase.",
+        checks,
+        missingHint: "Run: cut -d: -f1,3 /etc/group | tr '[:lower:]' '[:upper:]' > /tmp/groups_upper.txt",
+      };
+    }
+
+    case "LX-BASIC-09": {
+      const exists = checkPathExists("/tmp/systemd_backup.tar.gz", "Archive /tmp/systemd_backup.tar.gz exists");
+      const ranTar = checkHistoryMatch(["tar", "systemd_backup.tar.gz"], "Executed tar archive creation");
+      const passed = exists && ranTar;
+      return {
+        passed,
+        message: passed ? "Gzip compressed archive /tmp/systemd_backup.tar.gz created!" : "Archive /tmp/systemd_backup.tar.gz not found or tar not executed.",
+        checks,
+        missingHint: "Run: tar -czf /tmp/systemd_backup.tar.gz /etc/systemd",
+      };
+    }
+
+    case "LX-BASIC-10": {
+      const exists = checkPathExists("/root/http_status_report.txt", "Report /root/http_status_report.txt exists");
+      const node = vfs.getNode("/root/http_status_report.txt");
+      const permOk = node ? node.permissions.startsWith("rw-r-----") || node.permissions === "rw-r-----" : false;
+      checks.push({ name: "Permissions set strictly (0640 or rw-r-----)", passed: permOk });
+      const content = vfs.readFile("/root/http_status_report.txt").content || "";
+      const hasStatus = content.includes("200") || content.includes("404");
+      checks.push({ name: "Contains aggregated HTTP status counts", passed: hasStatus });
+      const passed = exists && permOk && hasStatus;
+      return {
+        passed,
+        message: passed ? "HTTP access log status analysis report generated with mode 640!" : "Report missing, wrong permissions, or missing status aggregations.",
+        checks,
+        missingHint: "Run: awk '{print $9}' /var/log/httpd/access_log | sort | uniq -c | sort -rn > /root/http_status_report.txt && chmod 640 /root/http_status_report.txt",
+      };
+    }
+
+    case "LX-USER-06": {
+      const passwd = vfs.readFile("/etc/passwd").content || "";
+      const userCreated = passwd.includes("prometheus:") && passwd.includes("/sbin/nologin");
+      checks.push({ name: "User prometheus created with /sbin/nologin shell", passed: userCreated });
+      const passed = userCreated;
+      return {
+        passed,
+        message: passed ? "System daemon user prometheus created with nologin shell!" : "User prometheus not found in /etc/passwd or login shell not set to /sbin/nologin.",
+        checks,
+        missingHint: "Run: useradd -r -d /var/lib/prometheus -s /sbin/nologin prometheus",
+      };
+    }
+
+    case "LX-USER-07": {
+      const skelOk = checkPathExists("/etc/skel/WELCOME.txt", "Greeting template /etc/skel/WELCOME.txt exists");
+      const userHomeOk = checkPathExists("/home/david/WELCOME.txt", "Provisioned in /home/david/WELCOME.txt");
+      const passed = skelOk && userHomeOk;
+      return {
+        passed,
+        message: passed ? "Skeleton template configured and populated into /home/david/WELCOME.txt!" : "Missing /etc/skel/WELCOME.txt or user david not created with skeleton file.",
+        checks,
+        missingHint: "Run: echo 'Welcome to Olympic CentOS Server' > /etc/skel/WELCOME.txt && useradd -m david",
+      };
+    }
+
+    case "LX-USER-08": {
+      const groupExists = (vfs.readFile("/etc/group").content || "").includes("qa_team:");
+      checks.push({ name: "Group qa_team created", passed: groupExists });
+      const dirExists = checkPathExists("/opt/qa_data", "Directory /opt/qa_data exists");
+      const node = vfs.getNode("/opt/qa_data");
+      const groupOwned = node?.group === "qa_team";
+      checks.push({ name: "Group ownership set to qa_team", passed: groupOwned });
+      const permOk = node?.permissions.startsWith("rwxrwx---") || node?.permissions === "rwxrwx---";
+      checks.push({ name: "Permissions set strictly to 770 (rwxrwx---)", passed: !!permOk });
+      const passed = groupExists && dirExists && groupOwned && !!permOk;
+      return {
+        passed,
+        message: passed ? "Team directory /opt/qa_data provisioned with qa_team ownership and 770 mode!" : "Group, directory, ownership, or 770 permissions incomplete.",
+        checks,
+        missingHint: "Run: groupadd qa_team && usermod -aG qa_team alice && usermod -aG qa_team bob && mkdir -p /opt/qa_data && chown :qa_team /opt/qa_data && chmod 770 /opt/qa_data",
+      };
+    }
+
+    case "LX-USER-09": {
+      const aging = shell.userAging.get("david");
+      const minOk = aging?.minDays === 7;
+      const maxOk = aging?.maxDays === 60;
+      const warnOk = aging?.warnAge === 14;
+      checks.push({ name: "Minimum password age set to 7 days", passed: !!minOk });
+      checks.push({ name: "Maximum password validity set to 60 days", passed: !!maxOk });
+      checks.push({ name: "Expiration warning set to 14 days", passed: !!warnOk });
+      const passed = !!(minOk && maxOk && warnOk);
+      return {
+        passed,
+        message: passed ? "Password aging parameters configured for user david!" : "Password aging values missing or incomplete for user david.",
+        checks,
+        missingHint: "Run: chage -m 7 -M 60 -W 14 david",
+      };
+    }
+
+    case "LX-USER-10": {
+      const exists = checkPathExists("/etc/sudoers.d/developers", "Drop-in file /etc/sudoers.d/developers exists");
+      const content = vfs.readFile("/etc/sudoers.d/developers").content || "";
+      const hasDev = content.includes("%developers") && content.includes("NOPASSWD");
+      checks.push({ name: "Rule grants %developers NOPASSWD systemctl rights", passed: hasDev });
+      const node = vfs.getNode("/etc/sudoers.d/developers");
+      const permOk = node ? node.permissions.startsWith("r--r-----") || node.permissions === "r--r-----" : false;
+      checks.push({ name: "Strict permissions 0440 (r--r-----)", passed: permOk });
+      const passed = exists && hasDev && permOk;
+      return {
+        passed,
+        message: passed ? "Sudoers drop-in delegation file created with 0440 permissions!" : "File /etc/sudoers.d/developers missing, wrong syntax, or incorrect permissions.",
+        checks,
+        missingHint: "Write rule to /etc/sudoers.d/developers and run: chmod 0440 /etc/sudoers.d/developers",
+      };
+    }
+
+    case "LX-PKG-06": {
+      const notInstalled = !shell.installedPackages.has("httpd");
+      checks.push({ name: "Package httpd is uninstalled", passed: notInstalled });
+      const ranRemove = checkHistoryMatch(["remove", "erase", "httpd"], "Executed package removal command");
+      checks.push({ name: "Ran dnf/yum remove -y httpd", passed: ranRemove });
+      const passed = notInstalled && ranRemove;
+      return {
+        passed,
+        message: passed ? "Package httpd successfully uninstalled and removed from RPM database!" : "Package httpd is still installed or removal command not detected.",
+        checks,
+        missingHint: "Run: dnf remove -y httpd",
+      };
+    }
+
+    case "LX-PKG-07": {
+      const exists = checkPathExists("/tmp/bash_info.txt", "File /tmp/bash_info.txt exists");
+      const ranRpm = checkHistoryMatch(["rpm -qi", "bash_info.txt"], "Executed rpm -qi bash query");
+      checks.push({ name: "Queried RPM info for bash", passed: ranRpm });
+      const passed = exists && ranRpm;
+      return {
+        passed,
+        message: passed ? "Package bash metadata queried and exported to /tmp/bash_info.txt!" : "Missing /tmp/bash_info.txt or rpm -qi command not executed.",
+        checks,
+        missingHint: "Run: rpm -qi bash > /tmp/bash_info.txt",
+      };
+    }
+
+    case "LX-PKG-08": {
+      const exists = checkPathExists("/tmp/coreutils_verify.txt", "File /tmp/coreutils_verify.txt exists");
+      const ranVerify = checkHistoryMatch(["rpm -v", "coreutils_verify.txt"], "Executed rpm -V coreutils verification");
+      checks.push({ name: "Verified coreutils file integrity with rpm -V", passed: ranVerify });
+      const passed = exists && ranVerify;
+      return {
+        passed,
+        message: passed ? "Package coreutils integrity verification completed and exported!" : "File /tmp/coreutils_verify.txt missing or rpm -V coreutils not executed.",
+        checks,
+        missingHint: "Run: rpm -V coreutils > /tmp/coreutils_verify.txt",
+      };
+    }
+
+    case "LX-PKG-09": {
+      const exists = checkPathExists("/etc/yum.repos.d/custom.repo", "Repository file /etc/yum.repos.d/custom.repo exists");
+      const content = vfs.readFile("/etc/yum.repos.d/custom.repo").content || "";
+      const validConfig = content.includes("[custom-tools]") && content.includes("baseurl=");
+      checks.push({ name: "Configured [custom-tools] repository with baseurl", passed: validConfig });
+      const ranRepolist = checkHistoryMatch(["repolist"], "Cleaned cache and checked repolist");
+      checks.push({ name: "Executed dnf repolist verification", passed: ranRepolist });
+      const passed = exists && validConfig && ranRepolist;
+      return {
+        passed,
+        message: passed ? "Third-party repository custom.repo configured and repolist checked!" : "File /etc/yum.repos.d/custom.repo missing or repolist not checked.",
+        checks,
+        missingHint: "Create /etc/yum.repos.d/custom.repo with [custom-tools] section, run: dnf clean all && dnf repolist",
+      };
+    }
+
+    case "LX-PKG-10": {
+      const content = vfs.readFile("/etc/yum.repos.d/local.repo").content || "";
+      const gpgCheckOk = content.includes("gpgcheck=1");
+      const gpgKeyOk = content.includes("gpgkey=") && content.includes("RPM-GPG-KEY");
+      checks.push({ name: "local.repo enforces gpgcheck=1", passed: gpgCheckOk });
+      checks.push({ name: "local.repo specifies valid gpgkey path", passed: gpgKeyOk });
+      const passed = gpgCheckOk && gpgKeyOk;
+      return {
+        passed,
+        message: passed ? "GPG signature checking and key path configured in local repository!" : "Missing gpgcheck=1 or gpgkey entry in /etc/yum.repos.d/local.repo.",
+        checks,
+        missingHint: "Add 'gpgcheck=1' and 'gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial' to /etc/yum.repos.d/local.repo",
+      };
+    }
+
+    case "LX-NET-06": {
+      const exists = checkPathExists("/tmp/default_route.txt", "File /tmp/default_route.txt exists");
+      const ranRoute = checkHistoryMatch(["ip route", "ip r", "default_route.txt"], "Executed ip route show query");
+      checks.push({ name: "Queried kernel routing table", passed: ranRoute });
+      const passed = exists && ranRoute;
+      return {
+        passed,
+        message: passed ? "Kernel routing table exported to /tmp/default_route.txt!" : "File /tmp/default_route.txt missing or ip route command not executed.",
+        checks,
+        missingHint: "Run: ip route show > /tmp/default_route.txt",
+      };
+    }
+
+    case "LX-NET-07": {
+      const ranIpAdd = checkHistoryMatch(["ip addr add", "192.168.122.150"], "Executed ip addr add 192.168.122.150/24");
+      checks.push({ name: "Added secondary static IP alias to ens33", passed: ranIpAdd });
+      const passed = ranIpAdd;
+      return {
+        passed,
+        message: passed ? "Secondary IP address alias added to interface ens33!" : "Secondary IP alias 192.168.122.150/24 not assigned.",
+        checks,
+        missingHint: "Run: ip addr add 192.168.122.150/24 dev ens33",
+      };
+    }
+
+    case "LX-NET-08": {
+      const hosts = vfs.readFile("/etc/hosts").content || "";
+      const masterOk = hosts.includes("192.168.122.10") && hosts.includes("master.cluster.local");
+      const workerOk = hosts.includes("192.168.122.11") && hosts.includes("worker1.cluster.local");
+      checks.push({ name: "Static resolution for master.cluster.local (192.168.122.10)", passed: masterOk });
+      checks.push({ name: "Static resolution for worker1.cluster.local (192.168.122.11)", passed: workerOk });
+      const passed = masterOk && workerOk;
+      return {
+        passed,
+        message: passed ? "Cluster host mappings added to /etc/hosts!" : "Mappings for master or worker1 missing in /etc/hosts.",
+        checks,
+        missingHint: "Append '192.168.122.10 master.cluster.local master' and '192.168.122.11 worker1.cluster.local worker1' to /etc/hosts",
+      };
+    }
+
+    case "LX-NET-09": {
+      const iface = shell.networkInterfaces.get("ens33");
+      const dnsOk = iface ? iface.dns.includes("1.1.1.1") || iface.dns.includes("8.8.8.8") : false;
+      const autoOk = iface ? iface.autoconnect : false;
+      const ranUp = checkHistoryMatch(["nmcli con up", "nmcli connection up"], "Reactivated connection profile");
+      checks.push({ name: "Configured DNS servers (1.1.1.1 / 8.8.8.8)", passed: dnsOk });
+      checks.push({ name: "Enabled connection autoconnect", passed: autoOk });
+      checks.push({ name: "Reactivated connection with nmcli con up ens33", passed: ranUp });
+      const passed = dnsOk && autoOk && ranUp;
+      return {
+        passed,
+        message: passed ? "Connection ens33 updated with custom DNS, autoconnect, and reactivated!" : "DNS servers, autoconnect flag, or nmcli con up incomplete.",
+        checks,
+        missingHint: "Run: nmcli con mod ens33 ipv4.dns '1.1.1.1 8.8.8.8' connection.autoconnect yes && nmcli con up ens33",
+      };
+    }
+
+    case "LX-NET-10": {
+      const ranAdd = checkHistoryMatch(["internal-net", "10.0.0.50"], "Added internal-net connection profile");
+      checks.push({ name: "Created internal-net connection profile with 10.0.0.50/24", passed: ranAdd });
+      const ranUp = checkHistoryMatch(["nmcli con up internal-net", "nmcli connection up internal-net"], "Activated internal-net connection");
+      checks.push({ name: "Activated internal-net connection", passed: ranUp });
+      const passed = ranAdd && ranUp;
+      return {
+        passed,
+        message: passed ? "Isolated private network profile internal-net created and brought up!" : "Connection profile internal-net not created or not activated.",
+        checks,
+        missingHint: "Run: nmcli connection add type ethernet con-name internal-net ifname ens33 ip4 10.0.0.50/24 gw4 10.0.0.1 && nmcli con up internal-net",
+      };
+    }
+
+    case "LX-FS-06": {
+      const exists = checkPathExists("/shared/public_dropbox", "Directory /shared/public_dropbox exists");
+      const node = vfs.getNode("/shared/public_dropbox");
+      const stickyOk = node?.permissions === "rwxrwxrwt" || (node?.permissions.endsWith("t") && node?.permissions.startsWith("rwx"));
+      checks.push({ name: "Sticky bit and 1777 mode set (drwxrwxrwt)", passed: !!stickyOk });
+      const groupOk = node?.group === "developers";
+      checks.push({ name: "Group ownership assigned to developers", passed: groupOk });
+      const passed = exists && !!stickyOk && groupOk;
+      return {
+        passed,
+        message: passed ? "Public drop-box configured with developers group and sticky bit (1777)!" : "Directory /shared/public_dropbox missing, group not developers, or sticky bit not set.",
+        checks,
+        missingHint: "Run: mkdir -p /shared/public_dropbox && chown :developers /shared/public_dropbox && chmod 1777 /shared/public_dropbox",
+      };
+    }
+
+    case "LX-FS-07": {
+      const exists = checkPathExists("/tmp/large_var_files.txt", "File /tmp/large_var_files.txt exists");
+      const ranFind = checkHistoryMatch(["find /var", "large_var_files.txt"], "Executed find on /var with size filter");
+      checks.push({ name: "Executed search for files > 10MB into export file", passed: ranFind });
+      const passed = exists && ranFind;
+      return {
+        passed,
+        message: passed ? "Large file search across /var completed and exported to /tmp/large_var_files.txt!" : "File /tmp/large_var_files.txt missing or find search not executed.",
+        checks,
+        missingHint: "Run: find /var -type f -size +10M 2>/dev/null > /tmp/large_var_files.txt",
+      };
+    }
+
+    case "LX-FS-08": {
+      const exists = checkPathExists("/data/projects", "Directory /data/projects exists");
+      const aclData = shell.acls.get("/data/projects");
+      const hasDefaultAcl = aclData ? aclData.defaultEntries.some((e) => e.includes("developers") && e.includes("rwx")) : false;
+      const ranSetfacl = checkHistoryMatch(["setfacl", "-d", "developers", "/data/projects"], "Executed default ACL configuration");
+      checks.push({ name: "Default ACL configured on /data/projects for group developers:rwx", passed: hasDefaultAcl || ranSetfacl });
+      const passed = exists && (hasDefaultAcl || ranSetfacl);
+      return {
+        passed,
+        message: passed ? "Default POSIX ACL inheritance configured on /data/projects for developers:rwx!" : "Directory /data/projects missing or default group ACL not configured.",
+        checks,
+        missingHint: "Run: mkdir -p /data/projects && setfacl -d -m g:developers:rwx /data/projects",
+      };
+    }
+
+    case "LX-FS-09": {
+      const dirExists = checkPathExists("/mnt/data", "Mount point directory /mnt/data exists");
+      const fstab = vfs.readFile("/etc/fstab").content || "";
+      const fstabOk = fstab.includes("/mnt/data") && (fstab.includes("/dev/vdb1") || fstab.includes("xfs"));
+      checks.push({ name: "Persistent entry for /mnt/data in /etc/fstab", passed: fstabOk });
+      const ranMount = checkHistoryMatch(["mount -a", "mount /mnt/data"], "Tested mount persistence with mount -a");
+      checks.push({ name: "Tested mount command", passed: ranMount });
+      const passed = dirExists && fstabOk && ranMount;
+      return {
+        passed,
+        message: passed ? "Persistent mount configured in /etc/fstab and validated with mount -a!" : "Mount point /mnt/data missing, /etc/fstab entry missing, or mount -a not executed.",
+        checks,
+        missingHint: "Run: mkdir -p /mnt/data && echo '/dev/vdb1 /mnt/data xfs defaults 0 0' >> /etc/fstab && mount -a",
+      };
+    }
+
+    case "LX-FS-10": {
+      const ranLvextend = checkHistoryMatch(["lvextend", "data_lv", "+500m"], "Executed lvextend -L +500M on /dev/data_vg/data_lv");
+      checks.push({ name: "Extended logical volume data_lv by +500MB", passed: ranLvextend });
+      const passed = ranLvextend;
+      return {
+        passed,
+        message: passed ? "LVM volume data_lv extended and filesystem resized!" : "lvextend command not executed on data_lv.",
+        checks,
+        missingHint: "Run: lvextend -L +500M /dev/data_vg/data_lv -r",
+      };
+    }
+
+    case "LX-SVC-06": {
+      const svc = shell.servicesState.get("postfix");
+      const disabled = svc ? !svc.enabled : true;
+      const stopped = svc ? !svc.active : true;
+      checks.push({ name: "Service postfix is disabled from boot", passed: disabled });
+      checks.push({ name: "Service postfix is stopped immediately", passed: stopped });
+      const ranCmd = checkHistoryMatch(["disable --now postfix", "disable postfix"], "Executed systemctl disable --now postfix");
+      checks.push({ name: "Ran systemctl disable --now postfix", passed: ranCmd });
+      const passed = disabled && stopped && ranCmd;
+      return {
+        passed,
+        message: passed ? "Service postfix stopped immediately and disabled from boot!" : "Service postfix is still active, enabled, or disable command not detected.",
+        checks,
+        missingHint: "Run: systemctl disable --now postfix",
+      };
+    }
+
+    case "LX-SVC-07": {
+      const exists = checkPathExists("/tmp/failed_services.txt", "File /tmp/failed_services.txt exists");
+      const ranFailed = checkHistoryMatch(["systemctl --failed", "failed_services.txt"], "Executed systemctl --failed query");
+      checks.push({ name: "Queried degraded units with systemctl --failed", passed: ranFailed });
+      const passed = exists && ranFailed;
+      return {
+        passed,
+        message: passed ? "Failed systemd units exported to /tmp/failed_services.txt!" : "File /tmp/failed_services.txt missing or systemctl --failed not executed.",
+        checks,
+        missingHint: "Run: systemctl --failed > /tmp/failed_services.txt",
+      };
+    }
+
+    case "LX-SVC-08": {
+      const exists = checkPathExists("/tmp/sshd_deps.txt", "File /tmp/sshd_deps.txt exists");
+      const ranDeps = checkHistoryMatch(["list-dependencies", "sshd_deps.txt"], "Executed systemctl list-dependencies sshd");
+      checks.push({ name: "Queried sshd service dependency tree", passed: ranDeps });
+      const passed = exists && ranDeps;
+      return {
+        passed,
+        message: passed ? "Service dependency hierarchy exported to /tmp/sshd_deps.txt!" : "File /tmp/sshd_deps.txt missing or systemctl list-dependencies sshd not executed.",
+        checks,
+        missingHint: "Run: systemctl list-dependencies sshd > /tmp/sshd_deps.txt",
+      };
+    }
+
+    case "LX-SVC-09": {
+      const exists = checkPathExists("/etc/systemd/system/httpd.service.d/override.conf", "Drop-in override /etc/systemd/system/httpd.service.d/override.conf exists");
+      const content = vfs.readFile("/etc/systemd/system/httpd.service.d/override.conf").content || "";
+      const hasEnv = content.includes("PORT=8080") && content.includes("[Service]");
+      checks.push({ name: "Override defines [Service] Environment PORT=8080", passed: hasEnv });
+      const ranReload = checkHistoryMatch(["daemon-reload"], "Executed systemctl daemon-reload");
+      checks.push({ name: "Reloaded systemd daemon configuration", passed: ranReload });
+      const passed = exists && hasEnv && ranReload;
+      return {
+        passed,
+        message: passed ? "Systemd drop-in override configured and daemon reloaded!" : "Drop-in override.conf missing, wrong syntax, or daemon-reload not executed.",
+        checks,
+        missingHint: "Create /etc/systemd/system/httpd.service.d/override.conf with Environment='PORT=8080', run: systemctl daemon-reload && systemctl restart httpd",
+      };
+    }
+
+    case "LX-SVC-10": {
+      const svcExists = checkPathExists("/etc/systemd/system/logclean.service", "Service unit /etc/systemd/system/logclean.service exists");
+      const timerExists = checkPathExists("/etc/systemd/system/logclean.timer", "Timer unit /etc/systemd/system/logclean.timer exists");
+      const timerContent = vfs.readFile("/etc/systemd/system/logclean.timer").content || "";
+      const timerConfigOk = timerContent.includes("OnCalendar") && timerContent.includes("[Timer]");
+      checks.push({ name: "Timer defines calendar schedule", passed: timerConfigOk });
+      const ranEnable = checkHistoryMatch(["enable", "logclean.timer"], "Enabled logclean.timer");
+      checks.push({ name: "Enabled logclean.timer", passed: ranEnable });
+      const passed = svcExists && timerExists && timerConfigOk && ranEnable;
+      return {
+        passed,
+        message: passed ? "Automated systemd timer and service units configured and enabled!" : "logclean.service or logclean.timer missing, or timer not enabled.",
+        checks,
+        missingHint: "Create /etc/systemd/system/logclean.service and logclean.timer, run: systemctl daemon-reload && systemctl enable --now logclean.timer",
+      };
+    }
+
+    case "LX-SEC-06": {
+      const httpOk = shell.firewallServices.has("http");
+      const httpsOk = shell.firewallServices.has("https");
+      checks.push({ name: "Firewall service http is active", passed: httpOk });
+      checks.push({ name: "Firewall service https is active", passed: httpsOk });
+      const ranReload = checkHistoryMatch(["firewall-cmd", "reload"], "Reloaded firewall configuration");
+      checks.push({ name: "Reloaded firewall with firewall-cmd --reload", passed: ranReload });
+      const passed = httpOk && httpsOk && ranReload;
+      return {
+        passed,
+        message: passed ? "Web services http and https enabled in firewall and reloaded!" : "Firewall missing http/https services or not reloaded.",
+        checks,
+        missingHint: "Run: firewall-cmd --permanent --add-service=http && firewall-cmd --permanent --add-service=https && firewall-cmd --reload",
+      };
+    }
+
+    case "LX-SEC-07": {
+      const ranFwd = checkHistoryMatch(["add-forward-port", "8080", "80"], "Configured port forwarding rule 8080 -> 80");
+      checks.push({ name: "Port forwarding rule 8080/tcp to port 80 configured", passed: ranFwd });
+      const ranReload = checkHistoryMatch(["firewall-cmd", "reload"], "Reloaded firewall configuration");
+      checks.push({ name: "Reloaded firewall configuration", passed: ranReload });
+      const passed = ranFwd && ranReload;
+      return {
+        passed,
+        message: passed ? "Port forwarding 8080/tcp -> 80/tcp permanently configured and active!" : "Port forwarding rule not configured or firewall not reloaded.",
+        checks,
+        missingHint: "Run: firewall-cmd --permanent --add-forward-port=port=8080:proto=tcp:toport=80 && firewall-cmd --reload",
+      };
+    }
+
+    case "LX-SEC-08": {
+      const hasRule = Array.from(shell.firewallRichRules).some((r) => r.includes("192.168.122.0/24") && r.includes("ssh")) ||
+        checkHistoryMatch(["add-rich-rule", "192.168.122.0/24"], "Added rich rule for subnet 192.168.122.0/24");
+      checks.push({ name: "Firewall rich rule whitelists subnet 192.168.122.0/24 for SSH", passed: hasRule });
+      const ranReload = checkHistoryMatch(["firewall-cmd", "reload"], "Reloaded firewall configuration");
+      checks.push({ name: "Reloaded firewall configuration", passed: ranReload });
+      const passed = hasRule && ranReload;
+      return {
+        passed,
+        message: passed ? "Subnet-restricted SSH rich rule configured and reloaded!" : "Rich rule for 192.168.122.0/24 missing or firewall not reloaded.",
+        checks,
+        missingHint: "Run: firewall-cmd --permanent --add-rich-rule='rule family=\"ipv4\" source address=\"192.168.122.0/24\" service name=\"ssh\" accept' && firewall-cmd --reload",
+      };
+    }
+
+    case "LX-SEC-09": {
+      const dirExists = checkPathExists("/srv/www/html", "Directory /srv/www/html exists");
+      const fileExists = checkPathExists("/srv/www/html/index.html", "Test file /srv/www/html/index.html exists");
+      const node = vfs.getNode("/srv/www/html");
+      const permOk = node?.permissions.startsWith("rwxr-xr-x") || node?.permissions === "rwxr-xr-x";
+      checks.push({ name: "Directory permissions set to 755 (rwxr-xr-x)", passed: !!permOk });
+      const selinuxOk = shell.selinuxMode === "Enforcing";
+      checks.push({ name: "SELinux mode is Enforcing", passed: selinuxOk });
+      const passed = dirExists && fileExists && !!permOk && selinuxOk;
+      return {
+        passed,
+        message: passed ? "Custom web root directory /srv/www/html provisioned with 755 permissions and SELinux enforcing!" : "Directory missing, file missing, wrong permissions, or SELinux not Enforcing.",
+        checks,
+        missingHint: "Run: mkdir -p /srv/www/html && echo 'CentOS Production Web' > /srv/www/html/index.html && chmod 755 /srv/www/html && setenforce 1",
+      };
+    }
+
+    case "LX-SEC-10": {
+      const config = vfs.readFile("/etc/ssh/sshd_config").content || "";
+      const maxAuthOk = config.includes("MaxAuthTries") && config.includes("3");
+      const clientAliveOk = config.includes("ClientAliveInterval") && config.includes("300");
+      const x11Ok = config.includes("X11Forwarding no");
+      checks.push({ name: "sshd_config enforces MaxAuthTries 3", passed: maxAuthOk });
+      checks.push({ name: "sshd_config enforces ClientAliveInterval 300", passed: clientAliveOk });
+      checks.push({ name: "sshd_config disables X11Forwarding", passed: x11Ok });
+      const ranSshd = checkHistoryMatch(["systemctl restart sshd", "systemctl reload sshd"], "Reloaded/restarted sshd");
+      checks.push({ name: "Restarted/reloaded sshd service", passed: ranSshd });
+      const passed = maxAuthOk && clientAliveOk && x11Ok && ranSshd;
+      return {
+        passed,
+        message: passed ? "OpenSSH server configuration hardened with MaxAuthTries, timeouts, and restarted!" : "sshd_config hardening directives missing or sshd not restarted.",
+        checks,
+        missingHint: "Append MaxAuthTries 3, ClientAliveInterval 300, ClientAliveCountMax 2, X11Forwarding no to /etc/ssh/sshd_config and run: systemctl restart sshd",
+      };
+    }
+
+    case "LX-SCR-06": {
+      const exists = checkPathExists("/root/check_service.sh", "Script /root/check_service.sh exists");
+      const node = vfs.getNode("/root/check_service.sh");
+      const isExec = node?.permissions.includes("x") || false;
+      const content = vfs.readFile("/root/check_service.sh").content || "";
+      const hasLogic = content.includes("is-active") && content.includes("UP") && content.includes("DOWN");
+      checks.push({ name: "/root/check_service.sh is executable (+x)", passed: isExec });
+      checks.push({ name: "Tests service active state and prints UP/DOWN", passed: hasLogic });
+      const passed = exists && isExec && hasLogic;
+      return {
+        passed,
+        message: passed ? "Service health-check script /root/check_service.sh created and verified!" : "Script /root/check_service.sh missing, not executable, or logic incomplete.",
+        checks,
+        missingHint: "Create /root/check_service.sh with systemctl is-active '$1' check, echo UP/DOWN, and chmod +x /root/check_service.sh",
+      };
+    }
+
+    case "LX-SCR-07": {
+      const exists = checkPathExists("/root/reset_passwords.sh", "Script /root/reset_passwords.sh exists");
+      const node = vfs.getNode("/root/reset_passwords.sh");
+      const isExec = node?.permissions.includes("x") || false;
+      const content = vfs.readFile("/root/reset_passwords.sh").content || "";
+      const hasChpasswd = content.includes("chpasswd");
+      checks.push({ name: "/root/reset_passwords.sh is executable (+x)", passed: isExec });
+      checks.push({ name: "Applies passwords via chpasswd batch utility", passed: hasChpasswd });
+      const ran = checkHistoryMatch(["reset_passwords.sh", "chpasswd"], "Executed reset_passwords.sh");
+      checks.push({ name: "Executed password reset script", passed: ran });
+      const passed = exists && isExec && hasChpasswd && ran;
+      return {
+        passed,
+        message: passed ? "Batch password reset script /root/reset_passwords.sh created and executed!" : "Script missing, not executable, missing chpasswd, or not executed.",
+        checks,
+        missingHint: "Create /root/reset_passwords.sh with 'chpasswd < /root/users.txt', chmod +x, and execute it.",
+      };
+    }
+
+    case "LX-SCR-08": {
+      const exists = checkPathExists("/root/clean_old_logs.sh", "Script /root/clean_old_logs.sh exists");
+      const node = vfs.getNode("/root/clean_old_logs.sh");
+      const isExec = node?.permissions.includes("x") || false;
+      const content = vfs.readFile("/root/clean_old_logs.sh").content || "";
+      const hasFind = content.includes("find") && (content.includes("-delete") || content.includes("-mtime"));
+      checks.push({ name: "/root/clean_old_logs.sh is executable (+x)", passed: isExec });
+      checks.push({ name: "Cleans old logs using find with -mtime filter", passed: hasFind });
+      const ran = checkHistoryMatch(["clean_old_logs.sh", "find"], "Executed clean_old_logs.sh");
+      checks.push({ name: "Executed log cleaning script", passed: ran });
+      const passed = exists && isExec && hasFind && ran;
+      return {
+        passed,
+        message: passed ? "Log rotation cleanup script /root/clean_old_logs.sh created and verified!" : "Script missing, not executable, missing find logic, or not executed.",
+        checks,
+        missingHint: "Create /root/clean_old_logs.sh with 'find /tmp/test_logs -name \"*.log\" -mtime +7 -delete', chmod +x, and run it.",
+      };
+    }
+
+    case "LX-SCR-09": {
+      const exists = checkPathExists("/root/csv_report.sh", "Script /root/csv_report.sh exists");
+      const node = vfs.getNode("/root/csv_report.sh");
+      const isExec = node?.permissions.includes("x") || false;
+      checks.push({ name: "/root/csv_report.sh is executable (+x)", passed: isExec });
+      const ran = checkHistoryMatch(["csv_report.sh", "awk", "it_summary.txt"], "Executed csv_report.sh");
+      checks.push({ name: "Ran script /root/csv_report.sh", passed: ran });
+      const reportOk = checkPathExists("/root/it_summary.txt", "Report file /root/it_summary.txt exists");
+      checks.push({ name: "Output report /root/it_summary.txt created", passed: reportOk });
+      const passed = exists && isExec && (ran || reportOk);
+      return {
+        passed,
+        message: passed ? "CSV department summary script /root/csv_report.sh verified!" : "Script /root/csv_report.sh missing, not executable, or /root/it_summary.txt not created.",
+        checks,
+        missingHint: "Create /root/csv_report.sh parsing /root/employees.csv, write count to /root/it_summary.txt, chmod +x, and execute it.",
+      };
+    }
+
+    case "LX-SCR-10": {
+      const exists = checkPathExists("/root/sysmonitor.sh", "Script /root/sysmonitor.sh exists");
+      const node = vfs.getNode("/root/sysmonitor.sh");
+      const isExec = node?.permissions.includes("x") || false;
+      const content = vfs.readFile("/root/sysmonitor.sh").content || "";
+      const hasMonitor = content.includes("df") && content.includes("sysalert.log");
+      checks.push({ name: "/root/sysmonitor.sh is executable (+x)", passed: isExec });
+      checks.push({ name: "Monitors disk usage and logs alerts to sysalert.log", passed: hasMonitor });
+      const ran = checkHistoryMatch(["sysmonitor.sh", "sysalert.log"], "Executed sysmonitor.sh alert run");
+      checks.push({ name: "Executed sysmonitor.sh alert verification", passed: ran });
+      const passed = exists && isExec && hasMonitor && ran;
+      return {
+        passed,
+        message: passed ? "System resource monitor and alert logger /root/sysmonitor.sh verified!" : "Script missing, not executable, missing alert logic, or test run not executed.",
+        checks,
+        missingHint: "Create /root/sysmonitor.sh monitoring df usage, logging to /var/log/sysalert.log, chmod +x, and execute: /root/sysmonitor.sh 1",
+      };
+    }
+
     default: {
       return {
         passed: false,

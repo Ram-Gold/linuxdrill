@@ -8,7 +8,7 @@
 [![Vite](https://img.shields.io/badge/Vite-8.3-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Oxlint](https://img.shields.io/badge/Linter-Oxlint-F28B24)](https://oxc.rs/)
-[![Verification Accuracy](https://img.shields.io/badge/Challenges_Audit-40%2F40_Passing_(100%25)-success)](scripts/test-all-problems.ts)
+[![Verification Accuracy](https://img.shields.io/badge/Challenges_Audit-80%2F80_Passing_(100%25)-success)](scripts/test-all-problems.ts)
 
 ---
 
@@ -55,7 +55,12 @@ Whether preparing for timed competitive sysadmin olympiads, studying for Red Hat
 ### 🧪 Automated Verification Engine
 - Real-time evaluation against the live Virtual File System and shell execution history.
 - Verifies directory structures, file contents, file permissions, daemon states, firewall entries, and command invocations.
-- 100% verified accuracy across all 40 core challenges with zero false positives.
+- 100% verified accuracy across all 80 core challenges with zero false positives.
+
+### ⚡ Speed Drills & Flashcard Typing Engine (`/drills`)
+- **136 Flashcard Speed Drills**: 17 specialized command drills per domain across 8 competency decks.
+- **Cloze Deletion Masks**: Progressive prompt masking to train rapid muscle memory for flags and paths.
+- **Semantic Equivalence Grading**: Accepts valid alternate flags, flag re-ordering, unquoted arguments, and standard POSIX variations.
 
 ### 💡 Multi-Tiered Progressive Hint System
 - **Level 1 (Concept Nudge)**: Guides your conceptual approach without giving away commands.
@@ -81,18 +86,18 @@ Whether preparing for timed competitive sysadmin olympiads, studying for Red Hat
 
 ## 📚 The Curriculum & Domains
 
-Bashist includes **40 rigorous challenges** grouped into 8 official competency domains:
+Bashist includes **80 rigorous lab challenges** (10 per domain) and **136 Speed Drills** (17 per domain) grouped into 8 official competency domains:
 
-| Code | Domain | Description | Count | Point Tier |
-|---|---|---|:---:|:---:|
-| `BASIC` | **Basic Shell** | File navigation, globbing, pipelines, output streams, and text wrangling | 5 | 5 - 10 pts |
-| `USER` | **User & Auth** | User creation, group assignment, password aging, sudoers, and POSIX permissions | 5 | 5 - 10 pts |
-| `PKG` | **Package Manager** | `dnf` / `rpm` / `apt` repositories, queries, package installation, and verification | 5 | 5 - 10 pts |
-| `NET` | **Networking** | Static IP configuration with `nmcli`, DNS, interface control, and route tables | 5 | 5 - 10 pts |
-| `FS` | **Filesystems & LVM** | Partitions, LVM volume creation & extension, XFS formatting, mounts, `/etc/fstab` | 5 | 5 - 50 pts |
-| `SVC` | **Service Management** | Systemd unit administration, auto-start enablement, journal logs, and signal handling | 5 | 5 - 10 pts |
-| `SEC` | **Security** | `firewalld` rule management, rich rules, port forwarding, SELinux enforcement, and SSH | 5 | 5 - 50 pts |
-| `SCR` | **Batch Scripting** | Bash automation, loops, argument parsing, automated reporting, and cron jobs | 5 | 10 - 50 pts |
+| Code | Domain | Description | Challenges | Drills | Point Range |
+|---|---|---|:---:|:---:|:---:|
+| `BASIC` | **Basic Shell** | File navigation, globbing, pipelines, output streams, and text wrangling | 10 | 17 | 5 - 50 pts |
+| `USER` | **User & Auth** | User creation, group assignment, password aging, sudoers, and POSIX permissions | 10 | 17 | 5 - 50 pts |
+| `PKG` | **Package Manager** | `dnf` / `rpm` / `apt` repositories, queries, package installation, and verification | 10 | 17 | 5 - 50 pts |
+| `NET` | **Networking** | Static IP configuration with `nmcli`, DNS, interface control, and route tables | 10 | 17 | 5 - 50 pts |
+| `FS` | **Filesystems & LVM** | Partitions, LVM volume creation & extension, XFS formatting, mounts, `/etc/fstab` | 10 | 17 | 5 - 50 pts |
+| `SVC` | **Service Management** | Systemd unit administration, auto-start enablement, journal logs, and signal handling | 10 | 17 | 5 - 50 pts |
+| `SEC` | **Security** | `firewalld` rule management, rich rules, port forwarding, SELinux enforcement, and SSH | 10 | 17 | 5 - 50 pts |
+| `SCR` | **Batch Scripting** | Bash automation, loops, argument parsing, automated reporting, and cron jobs | 10 | 17 | 5 - 50 pts |
 
 ### Scoring & Time Management
 - **Easy**: 5 pts (Fundamental single-utility operations)
@@ -185,7 +190,7 @@ In the project root, you can execute:
 Bashist comes with comprehensive automated audit suites to ensure simulation authenticity and verification accuracy:
 
 ### 1. Challenge & Verification Accuracy Audit
-Runs all 40 challenge scenarios through three test stages:
+Runs all 80 challenge scenarios through three test stages:
 - Tests for **zero false positives** on blank terminal environments.
 - Tests for **zero false positives** on trivial/unrelated commands (`ls`, `pwd`, `whoami`).
 - Runs the official solution against the live VFS to guarantee **100% solution pass rate**.
@@ -199,6 +204,13 @@ Validates that all registered commands provide authentic man pages, standard sec
 
 ```bash
 npx tsx scripts/test-man-help.ts
+```
+
+### 3. Drill Freedom & Semantic Equivalence Test
+Validates flexible syntax grading, flag order permutations, omitted defaults, and typo rejection across the flashcard drills:
+
+```bash
+npx tsx scripts/test-drill-freedom.ts
 ```
 
 ---

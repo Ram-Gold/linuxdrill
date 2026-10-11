@@ -3,7 +3,7 @@ import { verifyProblem } from "../src/lib/verifyProblem";
 import { problems } from "../src/lib/problems";
 
 console.log("=================================================");
-console.log("RUNNING SUITE: ALL 40 PROBLEMS ACCURACY AUDIT");
+console.log(`RUNNING SUITE: ALL ${problems.length} PROBLEMS ACCURACY AUDIT`);
 console.log("=================================================");
 
 // Test 1: Blank shell false positives
@@ -18,7 +18,7 @@ for (const p of problems) {
   }
 }
 if (blankFalsePositives === 0) {
-  console.log("✅ Passed: 0/40 false positives on blank shell!");
+  console.log(`✅ Passed: 0/${problems.length} false positives on blank shell!`);
 }
 
 // Test 2: Trivial commands false positives
@@ -36,11 +36,11 @@ for (const p of problems) {
   }
 }
 if (trivialFalsePositives === 0) {
-  console.log("✅ Passed: 0/40 false positives with trivial commands!");
+  console.log(`✅ Passed: 0/${problems.length} false positives with trivial commands!`);
 }
 
 // Test 3: Official solutions accuracy
-console.log("\n--- TEST 3: Executing official solution for all 40 challenges ---");
+console.log(`\n--- TEST 3: Executing official solution for all ${problems.length} challenges ---`);
 let failedCount = 0;
 const failureDetails: { id: string; title: string; message: string; failedChecks: string[] }[] = [];
 
@@ -69,7 +69,7 @@ for (const p of problems) {
   }
 }
 
-console.log(`\nResults: ${40 - failedCount}/40 passed`);
+console.log(`\nResults: ${problems.length - failedCount}/${problems.length} passed`);
 if (failedCount > 0) {
   console.error(`❌ ${failedCount} problems failed their solution verification!`);
   failureDetails.forEach((f) => {
@@ -79,5 +79,5 @@ if (failedCount > 0) {
   });
   process.exit(1);
 } else {
-  console.log("🎉 ALL 40 PROBLEMS PASSED WITH 100% ACCURACY!");
+  console.log(`🎉 ALL ${problems.length} PROBLEMS PASSED WITH 100% ACCURACY!`);
 }

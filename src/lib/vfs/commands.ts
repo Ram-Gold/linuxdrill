@@ -374,6 +374,9 @@ export class ShellContext {
       case "mv":
         return this.handleMv(args);
 
+      case "ln":
+        return this.handleLn(args);
+
       case "cat":
         return this.handleCat(args, stdin);
 
@@ -883,9 +886,13 @@ export class ShellContext {
       return { stdout: "", stderr: `ls: cannot access '${target}': No such file or directory`, exitCode: 2 };
     }
 
-    if (node.type === "file") {
+    if (node.type === "file" || node.type === "symlink") {
+      const typeChar = node.type === "symlink" ? "l" : "-";
+      const symlinkTarget = node.target ? ` -> ${node.target}` : "";
       return {
-        stdout: longFormat ? `${node.permissions} 1 ${node.owner} ${node.group} ${node.size} Sep 21 00:00 ${node.name}\n` : `${node.name}\n`,
+        stdout: longFormat
+          ? `${typeChar}${node.permissions} 1 ${node.owner} ${node.group} ${node.size} Sep 21 00:00 ${node.name}${symlinkTarget}\n`
+          : `${node.name}\n`,
         stderr: "",
         exitCode: 0,
       };
@@ -1242,7 +1249,7 @@ export class ShellContext {
 
   private handleCut(args: string[], stdin: string): CommandOutput {
     let delim = "\t";
-    let field = 1;
+    let fields: number[] = [1];
     let file = "";
 
     for (let i = 0; i < args.length; i++) {
@@ -1250,7 +1257,12 @@ export class ShellContext {
       if (a.startsWith("-d")) {
         delim = a.length > 2 ? a.slice(2) : args[++i] || "\t";
       } else if (a.startsWith("-f")) {
-        field = parseInt(a.length > 2 ? a.slice(2) : args[++i] || "1", 10) || 1;
+        const rawF = a.length > 2 ? a.slice(2) : args[++i] || "1";
+        fields = rawF
+          .split(",")
+          .map((n) => parseInt(n.trim(), 10))
+          .filter((n) => !isNaN(n));
+        if (fields.length === 0) fields = [1];
       } else if (!a.startsWith("-") && !file) {
         file = a;
       }
@@ -1266,7 +1278,7 @@ export class ShellContext {
     const lines = content.split("\n").filter((l) => l.length > 0);
     const output = lines.map((l) => {
       const parts = l.split(delim);
-      return parts[field - 1] ?? "";
+      return fields.map((f) => parts[f - 1] ?? "").join(delim);
     });
 
     return { stdout: output.join("\n") + (output.length > 0 ? "\n" : ""), stderr: "", exitCode: 0 };
@@ -1393,22 +1405,59 @@ export class ShellContext {
   private handleTr(args: string[], stdin: string): CommandOutput {
     let deleteChars = false;
     let complement = false;
-    let pattern = "";
+    const positional: string[] = [];
 
     for (let i = 0; i < args.length; i++) {
-      if (args[i] === "-d") deleteChars = true;
-      else if (args[i] === "-c") complement = true;
-      else if (args[i] === "-dc" || args[i] === "-cd") {
+      const a = args[i];
+      if (a === "-d") deleteChars = true;
+      else if (a === "-c") complement = true;
+      else if (a === "-dc" || a === "-cd") {
         deleteChars = true;
         complement = true;
-      } else if (!pattern) {
-        pattern = args[i];
+      } else if (!a.startsWith("-")) {
+        positional.push(a);
       }
     }
 
-    if (deleteChars && complement && pattern.includes("0-9")) {
+    if (deleteChars && complement && positional[0]?.includes("0-9")) {
       const digitsOnly = stdin.replace(/[^0-9]/g, "");
       return { stdout: `${digitsOnly}\n`, stderr: "", exitCode: 0 };
+    }
+
+    if (deleteChars && positional[0]) {
+      const set = positional[0].replace(/^['"]|['"]$/g, "");
+      let res = "";
+      for (const ch of stdin) {
+        if (!set.includes(ch)) res += ch;
+      }
+      return { stdout: res, stderr: "", exitCode: 0 };
+    }
+
+    if (positional.length >= 2) {
+      const set1 = positional[0].replace(/^['"]|['"]$/g, "");
+      const set2 = positional[1].replace(/^['"]|['"]$/g, "");
+      if (
+        (set1.includes("[:lower:]") || set1 === "a-z") &&
+        (set2.includes("[:upper:]") || set2 === "A-Z")
+      ) {
+        return { stdout: stdin.toUpperCase(), stderr: "", exitCode: 0 };
+      }
+      if (
+        (set1.includes("[:upper:]") || set1 === "A-Z") &&
+        (set2.includes("[:lower:]") || set2 === "a-z")
+      ) {
+        return { stdout: stdin.toLowerCase(), stderr: "", exitCode: 0 };
+      }
+      let res = "";
+      for (const ch of stdin) {
+        const idx = set1.indexOf(ch);
+        if (idx !== -1 && idx < set2.length) {
+          res += set2[idx];
+        } else {
+          res += ch;
+        }
+      }
+      return { stdout: res, stderr: "", exitCode: 0 };
     }
 
     return { stdout: stdin, stderr: "", exitCode: 0 };
@@ -1484,6 +1533,23 @@ export class ShellContext {
       .replace(/\$PATH/g, this.session.env.PATH);
 
     return { stdout: text + (noNewline ? "" : "\n"), stderr: "", exitCode: 0 };
+  }
+
+  private handleLn(args: string[]): CommandOutput {
+    const isSymlink = args.includes("-s") || args.includes("-sf") || args.includes("-fs");
+    const filtered = args.filter((a) => !a.startsWith("-"));
+    if (filtered.length < 2) {
+      return { stdout: "", stderr: "ln: missing destination file operand", exitCode: 1 };
+    }
+    const [target, linkName] = filtered;
+    if (!isSymlink) {
+      return { stdout: "", stderr: "ln: hard links across directories not permitted in lab sandbox", exitCode: 1 };
+    }
+    const res = this.vfs.createSymlink(target, linkName, this.session.cwd);
+    if (!res.success) {
+      return { stdout: "", stderr: `ln: failed to create symbolic link '${linkName}': ${res.error}`, exitCode: 1 };
+    }
+    return { stdout: "", stderr: "", exitCode: 0 };
   }
 
   private handleChmod(args: string[]): CommandOutput {
@@ -1615,6 +1681,7 @@ export class ShellContext {
     let uid = 1000 + Math.floor(Math.random() * 8000);
     let shell = "/bin/bash";
     let comment = "";
+    let homeDir = "";
 
     for (let i = 0; i < args.length; i++) {
       if (args[i] === "-u" && args[i + 1]) {
@@ -1627,8 +1694,14 @@ export class ShellContext {
         shell = args[++i];
       } else if (args[i] === "-c" && args[i + 1]) {
         comment = args[++i];
+      } else if (args[i] === "-d" && args[i + 1]) {
+        homeDir = args[++i];
+      } else if (args[i] === "-m") {
+        createHome = true;
       } else if (args[i] === "-M") {
         createHome = false;
+      } else if (args[i] === "-r") {
+        uid = 500 + Math.floor(Math.random() * 400);
       } else if (!args[i].startsWith("-")) {
         username = args[i];
       }
@@ -1636,7 +1709,8 @@ export class ShellContext {
 
     if (!username) return { stdout: "", stderr: "useradd: missing username", exitCode: 1 };
 
-    const entry = `${username}:x:${uid}:${uid}:${comment}:/home/${username}:${shell}\n`;
+    const effectiveHome = homeDir || `/home/${username}`;
+    const entry = `${username}:x:${uid}:${uid}:${comment}:${effectiveHome}:${shell}\n`;
     this.vfs.writeFile("/etc/passwd", entry, "/", { append: true });
     this.vfs.writeFile("/etc/group", `${username}:x:${uid}:\n`, "/", { append: true });
 
@@ -1656,7 +1730,21 @@ export class ShellContext {
     }
 
     if (createHome) {
-      this.vfs.mkdir(`/home/${username}`, "/", { owner: username, group, permissions: "rwxr-x---" });
+      this.vfs.mkdir(effectiveHome, "/", { owner: username, group, permissions: "rwxr-x---" });
+
+      // Copy skeleton files from /etc/skel if present
+      const skelNode = this.vfs.getNode("/etc/skel");
+      if (skelNode && skelNode.children) {
+        for (const [childName, childNode] of skelNode.children.entries()) {
+          if (childNode.type === "file") {
+            this.vfs.writeFile(`${effectiveHome}/${childName}`, childNode.content ?? "", "/", {
+              owner: username,
+              group,
+              permissions: childNode.permissions,
+            });
+          }
+        }
+      }
     }
 
     return { stdout: "", stderr: "", exitCode: 0 };

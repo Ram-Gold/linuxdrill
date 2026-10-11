@@ -189,9 +189,9 @@
   --brutal-border: rgba(255, 255, 255, 0.22);
   --brutal-shadow: #000000;
 
-  /* 90-degree 3D bottom extrusion shadows (darkened) */
-  --surface-3d-shadow: color-mix(in srgb, var(--surface-base) 25%, black);
-  --btn-3d-shadow-color: color-mix(in srgb, var(--accent-primary) 40%, black);
+  /* 90-degree 3D bottom extrusion shadows (harmonized with theme palette) */
+  --surface-3d-shadow: color-mix(in srgb, var(--surface-base) 65%, #0b0d17 35%);
+  --btn-3d-shadow-color: color-mix(in srgb, var(--accent-primary) 65%, #0b0d17 35%);
 
   /* Scrollbars */
   --scrollbar-thumb: rgba(255, 255, 255, 0.18);
@@ -258,9 +258,9 @@
   --brutal-border: #141731;
   --brutal-shadow: #141731;
 
-  /* 90-degree 3D bottom extrusion shadows (darkened) */
+  /* 90-degree 3D bottom extrusion shadows (harmonized with theme palette) */
   --surface-3d-shadow: #c8cde0;
-  --btn-3d-shadow-color: color-mix(in srgb, var(--accent-primary) 65%, black);
+  --btn-3d-shadow-color: color-mix(in srgb, var(--accent-primary) 70%, #1e1035 30%);
 
   --scrollbar-thumb: rgba(0, 0, 0, 0.15);
   --scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
@@ -338,6 +338,10 @@
   /* Neobrutalist design tokens */
   --brutal-border: rgba(205, 214, 244, 0.22);
   --brutal-shadow: #11111b;
+
+  /* 90-degree 3D bottom extrusion shadows (harmonized with Catppuccin Crust/Mantle/Mauve) */
+  --surface-3d-shadow: color-mix(in srgb, var(--surface-base) 60%, #11111b 40%);
+  --btn-3d-shadow-color: color-mix(in srgb, var(--accent-primary) 65%, #11111b 35%);
 
   /* Scrollbars */
   --scrollbar-thumb: rgba(205, 214, 244, 0.2);
@@ -420,6 +424,10 @@
   --brutal-border: rgba(235, 219, 178, 0.22);
   --brutal-shadow: #141617;
 
+  /* 90-degree 3D bottom extrusion shadows (harmonized with Gruvbox dark0_hard/earthy tones) */
+  --surface-3d-shadow: color-mix(in srgb, var(--surface-base) 60%, #1d2021 40%);
+  --btn-3d-shadow-color: color-mix(in srgb, var(--accent-primary) 65%, #1d2021 35%);
+
   /* Scrollbars */
   --scrollbar-thumb: rgba(235, 219, 178, 0.2);
   --scrollbar-thumb-hover: rgba(235, 219, 178, 0.35);
@@ -498,6 +506,10 @@
   /* Neobrutalist design tokens */
   --brutal-border: rgba(192, 202, 245, 0.22);
   --brutal-shadow: #101017;
+
+  /* 90-degree 3D bottom extrusion shadows (harmonized with Tokyo Night navy/deep blue) */
+  --surface-3d-shadow: color-mix(in srgb, var(--surface-base) 60%, #161620 40%);
+  --btn-3d-shadow-color: color-mix(in srgb, var(--accent-primary) 65%, #161620 35%);
 
   /* Scrollbars */
   --scrollbar-thumb: rgba(192, 202, 245, 0.2);
@@ -578,6 +590,10 @@
   /* Neobrutalist design tokens */
   --brutal-border: rgba(220, 215, 186, 0.22);
   --brutal-shadow: #121217;
+
+  /* 90-degree 3D bottom extrusion shadows (harmonized with Kanagawa sumiInk0/oniViolet) */
+  --surface-3d-shadow: color-mix(in srgb, var(--surface-base) 60%, #121217 40%);
+  --btn-3d-shadow-color: color-mix(in srgb, var(--accent-primary) 65%, #121217 35%);
 
   /* Scrollbars */
   --scrollbar-thumb: rgba(220, 215, 186, 0.2);
@@ -1003,13 +1019,13 @@ code, kbd, pre, samp, .font-mono, [data-mono], .font-metric {
   box-shadow: 0 0 0 2px var(--bg-canvas), 0 0 0 4px var(--brutal-border, #000000);
 }
 
-/* 90-degree 3D button & card extrusion shadows (darkened) */
+/* 90-degree 3D button & card extrusion shadows (dynamic per theme) */
 .shadow-3d-card {
-  box-shadow: 0 6px 0 0 var(--surface-3d-shadow, color-mix(in srgb, var(--surface-base) 25%, black));
+  box-shadow: 0 6px 0 0 var(--surface-3d-shadow, color-mix(in srgb, var(--surface-base) 65%, #0b0d17 35%));
 }
 
 .shadow-3d-btn {
-  box-shadow: 0 4px 0 0 var(--btn-3d-shadow-color, color-mix(in srgb, var(--accent-primary) 40%, black));
+  box-shadow: 0 4px 0 0 var(--btn-3d-shadow-color, color-mix(in srgb, var(--accent-primary) 65%, #0b0d17 35%));
   transition: transform 80ms ease, box-shadow 80ms ease;
 }
 

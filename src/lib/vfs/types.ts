@@ -31,6 +31,13 @@ export interface CommandOutput {
   exitCode: number;
   clear?: boolean;
   pager?: { title: string; content: string };
+  editor?: {
+    type: "nano" | "vim";
+    filePath: string;
+    resolvedPath: string;
+    initialContent: string;
+    isNewFile: boolean;
+  };
 }
 
 export interface HistoryItem {

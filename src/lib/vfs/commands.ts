@@ -330,12 +330,18 @@ export class ShellContext {
       }
     }
 
-    // Check script execution e.g. /root/info.sh or ./greet.sh
+    // Check script execution e.g. /root/info.sh or ./greet.sh or sh script.sh or bash script.sh
     if (commandName.startsWith("./") || commandName.startsWith("/") || commandName.endsWith(".sh")) {
       return this.handleScriptExecution(commandName, args);
     }
-    if (commandName === "bash" && args[0]?.endsWith(".sh")) {
-      return this.handleScriptExecution(args[0], args.slice(1));
+    if ((commandName === "bash" || commandName === "sh") && args[0]) {
+      return this.handleScriptExecution(args[0], args.slice(1), true);
+    }
+    if (commandName === "source" || commandName === ".") {
+      if (args[0]) {
+        return this.handleScriptExecution(args[0], args.slice(1), true);
+      }
+      return { stdout: "", stderr: "source: filename argument required\nsource: usage: source filename [arguments]\n", exitCode: 2 };
     }
 
     // Universal GNU --help interceptor
@@ -635,6 +641,13 @@ export class ShellContext {
 
       case "sshd":
         return this.handleSshd(args);
+
+      case "nano":
+        return this.handleEditor("nano", args);
+
+      case "vim":
+      case "vi":
+        return this.handleEditor("vim", args);
 
       case "visudo":
         return this.handleVisudo(args);
@@ -2436,12 +2449,52 @@ export class ShellContext {
     return this.execute(`${cmd} ${rest.join(" ")} ${items.join(" ")}`);
   }
 
-  private handleScriptExecution(scriptPath: string, args: string[]): CommandOutput {
-    const node = this.vfs.getNode(scriptPath, this.session.cwd);
-    if (!node) {
-      return { stdout: "", stderr: `bash: ${scriptPath}: No such file or directory`, exitCode: 127 };
+  private handleEditor(type: "nano" | "vim", args: string[]): CommandOutput {
+    // Filter flags like -l, -m, -R, etc.
+    const fileArgs = args.filter((a) => !a.startsWith("-") && !a.startsWith("+"));
+    const filePath = fileArgs[0] || (type === "nano" ? "New_File" : "[No Name]");
+    const resolved = this.vfs.resolvePath(filePath, this.session.cwd);
+    const existing = this.vfs.getNode(resolved);
+
+    if (existing && existing.type === "dir") {
+      return {
+        stdout: "",
+        stderr: `${type}: ${filePath}: Is a directory\n`,
+        exitCode: 1,
+      };
     }
 
+    return {
+      stdout: "",
+      stderr: "",
+      exitCode: 0,
+      editor: {
+        type,
+        filePath,
+        resolvedPath: resolved,
+        initialContent: existing ? (existing.content ?? "") : "",
+        isNewFile: !existing,
+      },
+    };
+  }
+
+  private handleScriptExecution(scriptPath: string, args: string[], explicitShell = false): CommandOutput {
+    const resolved = this.vfs.resolvePath(scriptPath, this.session.cwd);
+    const node = this.vfs.getNode(resolved);
+    if (!node) {
+      return { stdout: "", stderr: `bash: ${scriptPath}: No such file or directory\n`, exitCode: 127 };
+    }
+
+    if (node.type === "dir") {
+      return { stdout: "", stderr: `bash: ${scriptPath}: Is a directory\n`, exitCode: 126 };
+    }
+
+    // Check executable bit if invoked directly like ./script.sh or /bin/script.sh
+    if (!explicitShell && !node.permissions.includes("x")) {
+      return { stdout: "", stderr: `bash: ${scriptPath}: Permission denied\n`, exitCode: 126 };
+    }
+
+    // Built-in presets for system scenarios
     if (scriptPath.includes("info.sh")) {
       return {
         stdout: `Host: ${this.session.hostname}\nDate: ${new Date().toUTCString()}\nUser: ${this.session.username}\n`,
@@ -2483,6 +2536,57 @@ export class ShellContext {
       return { stdout: "", stderr: "", exitCode: 0 };
     }
 
-    return { stdout: "", stderr: "", exitCode: 0 };
+    // Dynamic shell script execution: evaluate line-by-line in shell environment
+    const content = node.content ?? "";
+    const rawLines = content.split("\n");
+    let accumulatedStdout = "";
+    let accumulatedStderr = "";
+    let lastCode = 0;
+
+    // Backup positional parameters
+    const prevParams: Record<string, string> = {};
+    for (let i = 0; i <= 9; i++) {
+      prevParams[String(i)] = this.session.env[String(i)] ?? "";
+    }
+    this.session.env["0"] = scriptPath;
+    args.forEach((a, idx) => {
+      this.session.env[String(idx + 1)] = a;
+    });
+    this.session.env["#"] = String(args.length);
+    this.session.env["@"] = args.join(" ");
+    this.session.env["*"] = args.join(" ");
+
+    try {
+      for (const line of rawLines) {
+        const trimmed = line.trim();
+        // Skip comments (including shebang) and empty lines
+        if (!trimmed || trimmed.startsWith("#")) continue;
+
+        // Execute line
+        const res = this.execute(trimmed);
+        if (res.stdout) accumulatedStdout += res.stdout;
+        if (res.stderr) accumulatedStderr += res.stderr;
+        lastCode = res.exitCode;
+        this.session.env["?"] = String(lastCode);
+        if (lastCode !== 0 && (content.includes("set -e") || trimmed.startsWith("exit "))) {
+          break;
+        }
+      }
+    } finally {
+      // Restore positional parameters
+      for (let i = 0; i <= 9; i++) {
+        if (prevParams[String(i)] !== undefined) {
+          this.session.env[String(i)] = prevParams[String(i)];
+        } else {
+          delete this.session.env[String(i)];
+        }
+      }
+    }
+
+    return {
+      stdout: accumulatedStdout,
+      stderr: accumulatedStderr,
+      exitCode: lastCode,
+    };
   }
 }

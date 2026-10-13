@@ -58,6 +58,16 @@ export default function TerminalGuideDrawer({
       ],
     },
     {
+      category: 'Editors & Bash Scripting',
+      icon: <TerminalIcon className="w-3.5 h-3.5 text-emerald-400" />,
+      items: [
+        { cmd: 'nano myscript.sh', desc: 'Open friendly GNU nano full-screen editor' },
+        { cmd: 'vim script.sh', desc: 'Open Vim modal editor (:w, :wq, :q!, i)' },
+        { cmd: 'chmod +x myscript.sh', desc: 'Make script executable' },
+        { cmd: './myscript.sh', desc: 'Execute script directly or via bash script.sh' },
+      ],
+    },
+    {
       category: 'System & Services',
       icon: <Shield className="w-3.5 h-3.5 text-[var(--accent-green)]" />,
       items: [

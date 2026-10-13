@@ -22,6 +22,7 @@ import { ShellContext } from "../lib/vfs/commands";
 import type { HistoryItem } from "../lib/vfs/types";
 import { parseAnsi, hasAnsiCodes } from "../lib/vfs/ansiColors";
 import TerminalGuideDrawer from "./terminal/TerminalGuideDrawer";
+import TerminalEditor from "./terminal/TerminalEditor";
 
 export interface TerminalHandle {
   getShell: () => ShellContext;
@@ -124,6 +125,15 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
   });
   const [scrollPercent, setScrollPercent] = useState<number>(0);
 
+  // In-terminal editor state for nano / vim
+  const [activeEditor, setActiveEditor] = useState<{
+    type: "nano" | "vim";
+    filePath: string;
+    resolvedPath: string;
+    initialContent: string;
+    isNewFile: boolean;
+  } | null>(null);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pagerContainerRef = useRef<HTMLDivElement>(null);
@@ -132,10 +142,10 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
 
   // Auto scroll bash terminal to bottom
   useEffect(() => {
-    if (containerRef.current && !pager.active) {
+    if (containerRef.current && !pager.active && !activeEditor) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [historyItems, inputVal, pager.active]);
+  }, [historyItems, inputVal, pager.active, activeEditor]);
 
   // Focus pager when it becomes active
   useEffect(() => {
@@ -148,7 +158,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
   }, [pager.active]);
 
   const focusInput = () => {
-    if (!pager.active) {
+    if (!pager.active && !activeEditor) {
       inputRef.current?.focus();
     }
   };
@@ -203,6 +213,30 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
       return;
     }
 
+    if (output.editor) {
+      // Launch in-terminal fullscreen editor (nano or vim)
+      setActiveEditor({
+        type: output.editor.type,
+        filePath: output.editor.filePath,
+        resolvedPath: output.editor.resolvedPath,
+        initialContent: output.editor.initialContent,
+        isNewFile: output.editor.isNewFile,
+      });
+
+      // Record editor command invocation in bash history
+      setHistoryItems((prev) => [
+        ...prev,
+        {
+          id: Math.random().toString(),
+          command: trimmed,
+          user: shell.session.username,
+          cwd: shell.session.cwd,
+          timestamp: new Date(),
+        },
+      ]);
+      return;
+    }
+
     if (output.pager) {
       // Launch full-screen interactive pager (e.g. man or less)
       const lines = output.pager.content.split("\n");
@@ -242,6 +276,21 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
         timestamp: new Date(),
       },
     ]);
+  };
+
+  // Editor callbacks
+  const handleEditorSave = (newContent: string, targetPath?: string) => {
+    if (!activeEditor) return { success: false, error: "No active editor" };
+    const writeTarget = targetPath || activeEditor.filePath;
+    const writeRes = shell.vfs.writeFile(writeTarget, newContent, shell.session.cwd);
+    return writeRes;
+  };
+
+  const handleEditorClose = (_wasSaved: boolean) => {
+    setActiveEditor(null);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 50);
   };
 
   // Calculate scroll percent in pager
@@ -572,6 +621,10 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
         } ${className}`}
       style={{ height: isMaximized || embedded ? undefined : defaultHeight }}
       onClick={() => {
+        if (activeEditor) {
+          // Do not steal focus from editor
+          return;
+        }
         if (!pager.active) {
           focusInput();
         } else {
@@ -752,7 +805,21 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
         )}
       </div>
 
-      {pager.active ? (
+      {activeEditor ? (
+        /* ============================================================ */
+        /* Authentic Full-Screen Terminal Text Editor (nano / vim)      */
+        /* ============================================================ */
+        <TerminalEditor
+          type={activeEditor.type}
+          filePath={activeEditor.filePath}
+          resolvedPath={activeEditor.resolvedPath}
+          initialContent={activeEditor.initialContent}
+          isNewFile={activeEditor.isNewFile}
+          onSave={handleEditorSave}
+          onClose={handleEditorClose}
+          fontSize={fontSize}
+        />
+      ) : pager.active ? (
         /* ============================================================ */
         /* Interactive Pager View (less / man emulation)                */
         /* ============================================================ */

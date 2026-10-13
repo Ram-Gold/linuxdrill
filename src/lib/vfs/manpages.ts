@@ -1602,6 +1602,54 @@ MAN_PAGES["tr"] = {
   seeAlso: ["sed(1)"],
 };
 
+MAN_PAGES["nano"] = {
+  name: "nano",
+  section: 1,
+  synopsis: "nano [OPTIONS] [[+LINE[,COLUMN]] FILE]...",
+  description:
+    "GNU nano is a small and friendly text editor. It aims to emulate the Pico text editor while also offering additional features.",
+  options: [
+    { flag: "-B, --backup", description: "save a backup file when saving" },
+    { flag: "-l, --linenumbers", description: "show line numbers in front of the text" },
+    { flag: "-m, --mouse", description: "enable mouse support" },
+    { flag: "-v, --view", description: "view mode (read-only)" },
+    { flag: "--help", description: "display this help and exit" },
+    { flag: "--version", description: "output version information and exit" },
+  ],
+  examples: [
+    "nano script.sh",
+    "nano /etc/fstab",
+    "nano +10 server.conf",
+  ],
+  seeAlso: ["vim(1)", "vi(1)", "less(1)"],
+};
+
+MAN_PAGES["vim"] = {
+  name: "vim",
+  section: 1,
+  synopsis: "vim [option] [file ...]\nvim [option] -t tag\nvim [option] -q [errorfile]",
+  description:
+    "Vim is a programmer's text editor. It is an improved version of the Vi editor distributed with Unix. It features modal editing with normal, insert, visual, and command modes.",
+  options: [
+    { flag: "-R", description: "read-only mode; like 'view'" },
+    { flag: "-b", description: "binary mode" },
+    { flag: "+[num]", description: "position cursor at line [num]" },
+    { flag: "+/{pat}", description: "position cursor at first occurrence of {pat}" },
+    { flag: "-v", description: "Vi mode (traditional terminal UI)" },
+    { flag: "--help", description: "display this help and exit" },
+    { flag: "--version", description: "output version information and exit" },
+  ],
+  examples: [
+    "vim script.sh",
+    "vim /etc/ssh/sshd_config",
+    "vim +20 /var/log/messages",
+  ],
+  seeAlso: ["nano(1)", "vi(1)", "view(1)"],
+};
+
+MAN_PAGES["vi"] = MAN_PAGES["vim"];
+
+
 /**
  * Lookup a man page by command name
  */

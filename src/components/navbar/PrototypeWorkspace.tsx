@@ -183,15 +183,15 @@ export function PrototypeWorkspace({
             </div>
           </div>
 
-          {/* MIDDLE: Minimal Navigation Menu (GitHub-card style background) */}
+          {/* MIDDLE: Minimal Navigation Menu */}
           <nav className="space-y-1.5" aria-label="Main Navigation">
             {/* Challenges */}
             <Link
               to="/"
-              className={`w-full p-2.5 rounded-none border transition-all flex items-center justify-between text-xs group mimo-press ${
+              className={`w-full p-2.5 rounded-xl border transition-all flex items-center justify-between text-xs group mimo-press ${
                 isChallenges
-                  ? "bg-[var(--surface-active)] border-[var(--accent-primary)]/40 text-[var(--text-main)] font-semibold shadow-xs"
-                  : "bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] border-[var(--border-subtle)]/70 text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                  ? "bg-[var(--surface-active)] border-[var(--accent-primary)] text-[var(--text-main)] font-semibold shadow-xs"
+                  : "bg-transparent border-transparent hover:bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
@@ -209,10 +209,10 @@ export function PrototypeWorkspace({
             {/* Drill */}
             <Link
               to="/drills"
-              className={`w-full p-2.5 rounded-none border transition-all flex items-center justify-between text-xs group mimo-press ${
+              className={`w-full p-2.5 rounded-xl border transition-all flex items-center justify-between text-xs group mimo-press ${
                 isDrills
-                  ? "bg-[var(--surface-active)] border-[var(--accent-primary)]/40 text-[var(--text-main)] font-semibold shadow-xs"
-                  : "bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] border-[var(--border-subtle)]/70 text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                  ? "bg-[var(--surface-active)] border-[var(--accent-primary)] text-[var(--text-main)] font-semibold shadow-xs"
+                  : "bg-transparent border-transparent hover:bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
@@ -230,10 +230,10 @@ export function PrototypeWorkspace({
             {/* Sandbox */}
             <Link
               to="/terminal"
-              className={`w-full p-2.5 rounded-none border transition-all flex items-center justify-between text-xs group mimo-press ${
+              className={`w-full p-2.5 rounded-xl border transition-all flex items-center justify-between text-xs group mimo-press ${
                 isTerminal
-                  ? "bg-[var(--surface-active)] border-[var(--accent-primary)]/40 text-[var(--text-main)] font-semibold shadow-xs"
-                  : "bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] border-[var(--border-subtle)]/70 text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                  ? "bg-[var(--surface-active)] border-[var(--accent-primary)] text-[var(--text-main)] font-semibold shadow-xs"
+                  : "bg-transparent border-transparent hover:bg-[var(--surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)]"
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">

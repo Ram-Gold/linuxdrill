@@ -17,19 +17,27 @@ export default function App() {
     .reduce((sum, p) => sum + p.points, 0);
 
   return (
-    <div className="min-h-screen flex flex-col font-sans antialiased transition-colors duration-120" style={{ backgroundColor: 'var(--bg-canvas)', color: 'var(--text-main)' }}>
+    <div
+      className="min-h-screen flex flex-col md:flex-row font-sans antialiased transition-colors duration-120"
+      style={{ backgroundColor: "var(--bg-canvas)", color: "var(--text-main)" }}
+    >
       <Navbar
         solvedCount={solvedCount}
         totalCount={totalCount}
         totalPoints={totalPoints}
       />
 
-      <main className={`w-full flex-1 ${isTerminal ? "p-0 overflow-hidden" : "px-5 lg:px-8 py-6"}`}>
-        <Outlet />
-      </main>
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+        <main
+          className={`w-full flex-1 ${
+            isTerminal ? "p-0 overflow-hidden" : "px-5 lg:px-8 py-6"
+          }`}
+        >
+          <Outlet />
+        </main>
 
-      {!isFullscreen && <Footer />}
+        {!isFullscreen && <Footer />}
+      </div>
     </div>
   );
 }
-

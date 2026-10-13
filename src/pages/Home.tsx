@@ -59,7 +59,7 @@ export default function Home() {
   }, [solved]);
 
   return (
-    <div className="max-w-[1400px] mx-auto select-none space-y-3.5 sm:space-y-4">
+    <div className="w-full max-w-[1200px] mx-auto select-none space-y-3.5 sm:space-y-4">
       {/* Hero Section */}
       <HomeHero
         solvedCount={solvedCount}

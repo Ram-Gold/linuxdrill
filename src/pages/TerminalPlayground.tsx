@@ -23,7 +23,6 @@ export default function TerminalPlayground() {
     }
   });
   const { navbarMode, setNavbarMode } = useNavbarMode();
-  const isNavbarPinned = navbarMode === "always";
 
   // Terminal font size state persisted in localStorage (defaults to 13px)
   const [terminalFontSize, setTerminalFontSize] = useState<number>(() => {
@@ -73,7 +72,7 @@ export default function TerminalPlayground() {
 
   return (
     <div
-      className={`w-full ${isNavbarPinned ? "h-[calc(100vh-3.5rem)]" : "h-screen"} select-none flex flex-col p-0 m-0 overflow-hidden bg-[var(--surface-base)] transition-[height] duration-200`}
+      className="w-full h-[calc(100vh-3.5rem)] md:h-screen select-none flex flex-col p-0 m-0 overflow-hidden bg-[var(--surface-base)]"
     >
       {/* 100% Full-Bleed Workspace Layout without outer padding or rounded borders */}
       <div className="w-full h-full flex flex-col md:flex-row overflow-hidden bg-[var(--surface-base)]">

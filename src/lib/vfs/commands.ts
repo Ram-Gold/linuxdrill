@@ -206,7 +206,7 @@ export class ShellContext {
     return result;
   }
 
-  private expandSubstitutions(input: string): string {
+  public expandSubstitutions(input: string): string {
     let result = input;
 
     // 1. Evaluate inner command substitutions $(...) (not $((...)))
@@ -253,7 +253,7 @@ export class ShellContext {
     let effectiveStdin = stdinInput;
 
     if (cmd.heredoc !== undefined) {
-      effectiveStdin = cmd.heredoc;
+      effectiveStdin = cmd.heredocQuoted ? cmd.heredoc : this.expandSubstitutions(cmd.heredoc);
     } else if (cmd.stdinFile) {
       const read = this.vfs.readFile(cmd.stdinFile, this.session.cwd);
       if (read.error) {

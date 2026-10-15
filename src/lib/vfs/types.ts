@@ -47,4 +47,5 @@ export interface HistoryItem {
   cwd: string;
   output?: CommandOutput;
   timestamp: Date;
+  promptSymbol?: string;
 }

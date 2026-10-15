@@ -21,6 +21,7 @@ import { AnimatePresence } from "motion/react";
 import { ShellContext } from "../lib/vfs/commands";
 import type { HistoryItem } from "../lib/vfs/types";
 import { parseAnsi, hasAnsiCodes } from "../lib/vfs/ansiColors";
+import { detectHeredocInitiation, type HeredocInitiation } from "../lib/vfs/commandParser";
 import TerminalGuideDrawer from "./terminal/TerminalGuideDrawer";
 import TerminalEditor from "./terminal/TerminalEditor";
 
@@ -133,6 +134,12 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
     initialContent: string;
     isNewFile: boolean;
   } | null>(null);
+
+  // Heredoc capture state for multi-line interactive cat / heredoc (PS2 '>' prompt)
+  const [heredocSession, setHeredocSession] = useState<(HeredocInitiation & {
+    rawInitiationCommand: string;
+    lines: string[];
+  }) | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -445,9 +452,25 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
       return;
     }
 
-    // Ctrl+C to cancel current line
+    // Ctrl+C to cancel current line or active heredoc capture
     if (e.ctrlKey && e.key === "c") {
       e.preventDefault();
+      if (heredocSession) {
+        setHistoryItems((prev) => [
+          ...prev,
+          {
+            id: Math.random().toString(),
+            command: `${inputVal}^C`,
+            user: shell.session.username,
+            cwd: shell.session.cwd,
+            timestamp: new Date(),
+            promptSymbol: ">",
+          },
+        ]);
+        setHeredocSession(null);
+        setInputVal("");
+        return;
+      }
       setHistoryItems((prev) => [
         ...prev,
         {
@@ -465,6 +488,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
 
     // History UP
     if (e.key === "ArrowUp") {
+      if (heredocSession) return;
       e.preventDefault();
       const history = shell.history;
       if (history.length === 0) return;
@@ -476,6 +500,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
 
     // History DOWN
     if (e.key === "ArrowDown") {
+      if (heredocSession) return;
       e.preventDefault();
       const history = shell.history;
       if (history.length === 0 || historyIndex === -1) return;
@@ -490,9 +515,13 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
       return;
     }
 
-    // Tab autocomplete
+    // Tab autocomplete or tab indent in heredoc
     if (e.key === "Tab") {
       e.preventDefault();
+      if (heredocSession) {
+        setInputVal((prev) => prev + "\t");
+        return;
+      }
       handleAutocomplete();
       return;
     }
@@ -504,6 +533,92 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
         onVerify?.(shell);
         return;
       }
+
+      // 1. If currently inside an interactive heredoc capture session
+      if (heredocSession) {
+        const checkVal = heredocSession.stripTabs ? inputVal.replace(/^\t+/, "").trim() : inputVal.trim();
+        const isFinish = checkVal === heredocSession.delimiter;
+
+        if (!isFinish) {
+          // Record current line under secondary prompt '>'
+          setHistoryItems((prev) => [
+            ...prev,
+            {
+              id: Math.random().toString(),
+              command: inputVal,
+              user: shell.session.username,
+              cwd: shell.session.cwd,
+              timestamp: new Date(),
+              promptSymbol: ">",
+            },
+          ]);
+          setHeredocSession((prev) => (prev ? { ...prev, lines: [...prev.lines, inputVal] } : null));
+          setInputVal("");
+          return;
+        }
+
+        // Delimiter matched! Terminate heredoc and execute
+        setHistoryItems((prev) => [
+          ...prev,
+          {
+            id: Math.random().toString(),
+            command: inputVal,
+            user: shell.session.username,
+            cwd: shell.session.cwd,
+            timestamp: new Date(),
+            promptSymbol: ">",
+          },
+        ]);
+
+        const fullBlock = `${heredocSession.rawInitiationCommand}\n${heredocSession.lines.join("\n")}\n${heredocSession.delimiter}`;
+        const output = shell.execute(fullBlock);
+        onCommandRun?.(heredocSession.rawInitiationCommand);
+
+        if (output.stdout || output.stderr) {
+          setHistoryItems((prev) => [
+            ...prev,
+            {
+              id: Math.random().toString(),
+              command: "",
+              user: shell.session.username,
+              cwd: shell.session.cwd,
+              output,
+              timestamp: new Date(),
+            },
+          ]);
+        }
+
+        setHeredocSession(null);
+        setInputVal("");
+        setHistoryIndex(-1);
+        return;
+      }
+
+      // 2. Check if a single-line command starts an interactive heredoc (e.g. cat > filename << 'EOF')
+      if (!inputVal.includes("\n")) {
+        const initiation = detectHeredocInitiation(inputVal);
+        if (initiation) {
+          setHistoryItems((prev) => [
+            ...prev,
+            {
+              id: Math.random().toString(),
+              command: inputVal,
+              user: shell.session.username,
+              cwd: shell.session.cwd,
+              timestamp: new Date(),
+            },
+          ]);
+          setHeredocSession({
+            ...initiation,
+            rawInitiationCommand: inputVal,
+            lines: [],
+          });
+          setInputVal("");
+          setHistoryIndex(-1);
+          return;
+        }
+      }
+
       executeCommand(inputVal);
       setInputVal("");
       setHistoryIndex(-1);
@@ -556,6 +671,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
   const handleReset = () => {
     shell.reset();
     setSetupRun(false);
+    setHeredocSession(null);
     setPager((p) => ({ ...p, active: false }));
     setHistoryItems([
       {
@@ -934,19 +1050,25 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
         >
           {historyItems.map((item) => (
             <div key={item.id} className="mb-2">
-              {item.command && (
+              {item.command !== "" && (
                 <div className="flex items-start space-x-2 text-[var(--text-muted)]">
                   <span className="font-mono shrink-0 select-none" style={{ fontSize: `${fontSize}px` }}>
-                    <span className={item.user === "root" ? "text-[var(--accent-red)] font-bold" : "text-[var(--accent-green)] font-bold"}>
-                      {item.user}@{shell.session.hostname}
-                    </span>
-                    <span className="text-[var(--text-tertiary)]">:</span>
-                    <span className="text-[var(--accent-primary-soft)] font-semibold">
-                      {item.cwd === shell.session.homeDir ? "~" : item.cwd}
-                    </span>
-                    <span className={item.user === "root" ? "text-[var(--accent-red)] font-bold" : "text-[var(--accent-green)] font-bold"}>
-                      {item.user === "root" ? "# " : "$ "}
-                    </span>
+                    {item.promptSymbol === ">" ? (
+                      <span className="text-[var(--accent-amber)] font-bold">&gt;&nbsp;</span>
+                    ) : (
+                      <>
+                        <span className={item.user === "root" ? "text-[var(--accent-red)] font-bold" : "text-[var(--accent-green)] font-bold"}>
+                          {item.user}@{shell.session.hostname}
+                        </span>
+                        <span className="text-[var(--text-tertiary)]">:</span>
+                        <span className="text-[var(--accent-primary-soft)] font-semibold">
+                          {item.cwd === shell.session.homeDir ? "~" : item.cwd}
+                        </span>
+                        <span className={item.user === "root" ? "text-[var(--accent-red)] font-bold" : "text-[var(--accent-green)] font-bold"}>
+                          {item.user === "root" ? "# " : "$ "}
+                        </span>
+                      </>
+                    )}
                   </span>
                   <span className="font-semibold text-[var(--text-main)] break-all" style={{ fontSize: `${fontSize}px` }}>{item.command}</span>
                 </div>
@@ -985,16 +1107,22 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
           {/* Current Active Input Prompt */}
           <div className="flex items-center space-x-1.5 pt-1">
             <span className="font-mono shrink-0 select-none" style={{ fontSize: `${fontSize}px` }}>
-              <span className={isRoot ? "text-[var(--accent-red)] font-bold" : "text-[var(--accent-green)] font-bold"}>
-                {shell.session.username}@{shell.session.hostname}
-              </span>
-              <span className="text-[var(--text-tertiary)]">:</span>
-              <span className="text-[var(--accent-primary-soft)] font-semibold">
-                {displayCwd}
-              </span>
-              <span className={isRoot ? "text-[var(--accent-red)] font-bold" : "text-[var(--accent-green)] font-bold"}>
-                {promptSymbol}&nbsp;
-              </span>
+              {heredocSession ? (
+                <span className="text-[var(--accent-amber)] font-bold">&gt;&nbsp;</span>
+              ) : (
+                <>
+                  <span className={isRoot ? "text-[var(--accent-red)] font-bold" : "text-[var(--accent-green)] font-bold"}>
+                    {shell.session.username}@{shell.session.hostname}
+                  </span>
+                  <span className="text-[var(--text-tertiary)]">:</span>
+                  <span className="text-[var(--accent-primary-soft)] font-semibold">
+                    {displayCwd}
+                  </span>
+                  <span className={isRoot ? "text-[var(--accent-red)] font-bold" : "text-[var(--accent-green)] font-bold"}>
+                    {promptSymbol}&nbsp;
+                  </span>
+                </>
+              )}
             </span>
             <div className="relative flex-1">
               <input
@@ -1009,6 +1137,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                     e.preventDefault();
                     const clean = pasteData.replace(/```[a-z]*\n?/g, "").replace(/```/g, "").trim();
                     setInputVal("");
+                    setHeredocSession(null);
                     executeCommand(clean);
                   }
                 }}
@@ -1018,7 +1147,11 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
                 spellCheck={false}
                 autoComplete="off"
                 autoCapitalize="off"
-                placeholder="Type bash command..."
+                placeholder={
+                  heredocSession
+                    ? `Enter heredoc text (type '${heredocSession.delimiter}' to finish)...`
+                    : "Type bash command..."
+                }
               />
             </div>
           </div>

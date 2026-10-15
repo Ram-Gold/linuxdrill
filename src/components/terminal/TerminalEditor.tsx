@@ -1,5 +1,118 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Save, LogOut, Sparkles } from "lucide-react";
+import { useThemePreset } from "../../lib/useThemePreset";
+
+interface VimThemeStyle {
+  outerBg: string;
+  headerBg: string;
+  bodyBg: string;
+  gutterBg: string;
+  gutterBorder: string;
+  gutterText: string;
+  lineHighlight: string;
+  tildeColor: string;
+  textColor: string;
+  headerBorder: string;
+  headerText: string;
+  bottomBarBg: string;
+  bottomBarBorder: string;
+  normalBadge: string;
+  insertBadge: string;
+  commandBadge: string;
+}
+
+const VIM_THEMES: Record<string, VimThemeStyle> = {
+  default: {
+    outerBg: "#151728",
+    headerBg: "#1c2035",
+    bodyBg: "#141625",
+    gutterBg: "#111322",
+    gutterBorder: "rgba(255, 255, 255, 0.07)",
+    gutterText: "#7b7e9e",
+    lineHighlight: "#f8d24a",
+    tildeColor: "#a98af0",
+    textColor: "#ffffff",
+    headerBorder: "rgba(255, 255, 255, 0.08)",
+    headerText: "#a3a5c3",
+    bottomBarBg: "#1c2035",
+    bottomBarBorder: "rgba(255, 255, 255, 0.08)",
+    normalBadge: "bg-[#7e4bde] text-white shadow-xs font-bold",
+    insertBadge: "bg-[#7ed957] text-[#111322] shadow-xs font-bold",
+    commandBadge: "bg-[#f8d24a] text-[#111322] shadow-xs font-bold",
+  },
+  "catppuccin-mocha": {
+    outerBg: "#181825",
+    headerBg: "#181825",
+    bodyBg: "#1e1e2e",
+    gutterBg: "#11111b",
+    gutterBorder: "rgba(203, 166, 247, 0.14)",
+    gutterText: "#6c7086",
+    lineHighlight: "#fab387",
+    tildeColor: "#89b4fa",
+    textColor: "#cdd6f4",
+    headerBorder: "rgba(203, 166, 247, 0.16)",
+    headerText: "#a6adc8",
+    bottomBarBg: "#181825",
+    bottomBarBorder: "rgba(203, 166, 247, 0.16)",
+    normalBadge: "bg-[#cba6f7] text-[#11111b] shadow-xs font-bold",
+    insertBadge: "bg-[#a6e3a1] text-[#11111b] shadow-xs font-bold",
+    commandBadge: "bg-[#fab387] text-[#11111b] shadow-xs font-bold",
+  },
+  "kanagawa-wave": {
+    outerBg: "#16161d",
+    headerBg: "#16161d",
+    bodyBg: "#1f1f28",
+    gutterBg: "#16161d",
+    gutterBorder: "rgba(149, 127, 184, 0.16)",
+    gutterText: "#727169",
+    lineHighlight: "#e6c384",
+    tildeColor: "#7e9cd8",
+    textColor: "#dcd7ba",
+    headerBorder: "rgba(149, 127, 184, 0.16)",
+    headerText: "#c8c093",
+    bottomBarBg: "#16161d",
+    bottomBarBorder: "rgba(149, 127, 184, 0.16)",
+    normalBadge: "bg-[#957fb8] text-[#16161d] shadow-xs font-bold",
+    insertBadge: "bg-[#98bb6c] text-[#16161d] shadow-xs font-bold",
+    commandBadge: "bg-[#e6c384] text-[#16161d] shadow-xs font-bold",
+  },
+  "tokyo-night": {
+    outerBg: "#16161e",
+    headerBg: "#16161e",
+    bodyBg: "#1a1b26",
+    gutterBg: "#16161e",
+    gutterBorder: "rgba(122, 162, 247, 0.16)",
+    gutterText: "#565f89",
+    lineHighlight: "#e0af68",
+    tildeColor: "#7aa2f7",
+    textColor: "#c0caf5",
+    headerBorder: "rgba(122, 162, 247, 0.16)",
+    headerText: "#a9b1d6",
+    bottomBarBg: "#16161e",
+    bottomBarBorder: "rgba(122, 162, 247, 0.16)",
+    normalBadge: "bg-[#7aa2f7] text-[#16161e] shadow-xs font-bold",
+    insertBadge: "bg-[#9ece6a] text-[#16161e] shadow-xs font-bold",
+    commandBadge: "bg-[#bb9af7] text-[#16161e] shadow-xs font-bold",
+  },
+  gruvbox: {
+    outerBg: "#1d2021",
+    headerBg: "#1d2021",
+    bodyBg: "#282828",
+    gutterBg: "#1d2021",
+    gutterBorder: "rgba(254, 128, 25, 0.16)",
+    gutterText: "#7c6f64",
+    lineHighlight: "#fabd2f",
+    tildeColor: "#8ec07c",
+    textColor: "#ebdbb2",
+    headerBorder: "rgba(254, 128, 25, 0.16)",
+    headerText: "#a89984",
+    bottomBarBg: "#1d2021",
+    bottomBarBorder: "rgba(254, 128, 25, 0.16)",
+    normalBadge: "bg-[#fe8019] text-[#1d2021] shadow-xs font-bold",
+    insertBadge: "bg-[#b8bb26] text-[#1d2021] shadow-xs font-bold",
+    commandBadge: "bg-[#fabd2f] text-[#1d2021] shadow-xs font-bold",
+  },
+};
 
 export interface TerminalEditorProps {
   type: "nano" | "vim";
@@ -21,6 +134,8 @@ export default function TerminalEditor({
   onClose,
   fontSize = 13,
 }: TerminalEditorProps) {
+  const { activePresetId } = useThemePreset();
+  const themeStyle = VIM_THEMES[activePresetId] || VIM_THEMES.default;
   const [content, setContent] = useState(initialContent);
   const [isModified, setIsModified] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>(
@@ -298,17 +413,28 @@ export default function TerminalEditor({
       ref={editorContainerRef}
       tabIndex={0}
       onKeyDown={type === "vim" && vimMode === "NORMAL" ? handleVimNormalKeyDown : undefined}
-      className="relative flex flex-col w-full h-full bg-[#12141a] text-[#d4d4d8] font-mono outline-none select-none overflow-hidden"
-      style={{ fontSize: `${fontSize}px` }}
+      className="relative flex flex-col w-full h-full font-mono outline-none select-none overflow-hidden transition-colors duration-150"
+      style={{
+        fontSize: `${fontSize}px`,
+        backgroundColor: themeStyle.outerBg,
+        color: themeStyle.textColor,
+      }}
     >
       {/* NANO TOP BAR */}
       {type === "nano" && (
-        <div className="flex items-center justify-between px-3 py-1 bg-[#1e222d] text-[#e4e4e7] border-b border-white/10 shrink-0 font-medium">
-          <span className="text-emerald-400 font-semibold">GNU nano 7.2</span>
-          <span className="text-zinc-200 truncate max-w-[280px] sm:max-w-[400px]">
-            File: {filePath} {isModified ? <span className="text-amber-400 font-bold">* Modified</span> : ""}
+        <div
+          className="flex items-center justify-between px-3 py-1 border-b shrink-0 font-medium transition-colors duration-150"
+          style={{
+            backgroundColor: themeStyle.headerBg,
+            borderColor: themeStyle.headerBorder,
+            color: themeStyle.headerText,
+          }}
+        >
+          <span className="text-[var(--accent-green)] font-semibold">GNU nano 7.2</span>
+          <span className="truncate max-w-[280px] sm:max-w-[400px]" style={{ color: themeStyle.textColor }}>
+            File: {filePath} {isModified ? <span style={{ color: themeStyle.lineHighlight }} className="font-bold">* Modified</span> : ""}
           </span>
-          <span className="text-zinc-400 text-xs hidden sm:inline">
+          <span className="text-xs hidden sm:inline" style={{ color: themeStyle.gutterText }}>
             L:{cursorPos.line} C:{cursorPos.col}
           </span>
         </div>
@@ -316,16 +442,23 @@ export default function TerminalEditor({
 
       {/* VIM TOP BAR (Minimal vintage terminal ruler) */}
       {type === "vim" && (
-        <div className="flex items-center justify-between px-3 py-1 bg-[#181a20] text-zinc-400 border-b border-white/5 shrink-0 text-xs">
+        <div
+          className="flex items-center justify-between px-3 py-1.5 border-b shrink-0 text-xs transition-colors duration-150"
+          style={{
+            backgroundColor: themeStyle.headerBg,
+            borderColor: themeStyle.headerBorder,
+            color: themeStyle.headerText,
+          }}
+        >
           <div className="flex items-center gap-2">
-            <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-semibold uppercase text-[10px]">
+            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${themeStyle.normalBadge}`}>
               VIM
             </span>
-            <span className="text-zinc-300 font-medium truncate max-w-[260px] sm:max-w-md">
-              {filePath} {isModified ? "[+]" : ""}
+            <span className="font-medium truncate max-w-[260px] sm:max-w-md" style={{ color: themeStyle.textColor }}>
+              {filePath} {isModified ? <span style={{ color: themeStyle.lineHighlight }} className="font-bold">[+]</span> : ""}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-[11px] text-zinc-400">
+          <div className="flex items-center gap-2 text-[11px]" style={{ color: themeStyle.headerText }}>
             <span>{isNewFile ? "[New File]" : `${lines.length} lines`}</span>
             <span>·</span>
             <span>
@@ -336,22 +469,37 @@ export default function TerminalEditor({
       )}
 
       {/* EDITOR MAIN TEXT AREA WITH LINE NUMBERS / TILDE */}
-      <div className="relative flex-1 flex overflow-hidden bg-[#0c0d12]">
+      <div
+        className="relative flex-1 flex overflow-hidden transition-colors duration-150"
+        style={{ backgroundColor: themeStyle.bodyBg }}
+      >
         {/* Line Gutter */}
-        <div className="py-2 pl-2 pr-2 text-right bg-[#0f1117] text-zinc-600 select-none border-r border-white/5 shrink-0 min-w-[3rem]">
+        <div
+          className="py-2 pl-2 pr-2 text-right select-none border-r shrink-0 min-w-[3.25rem] transition-colors duration-150"
+          style={{
+            backgroundColor: themeStyle.gutterBg,
+            borderColor: themeStyle.gutterBorder,
+          }}
+        >
           {lines.map((_, i) => (
             <div
               key={i}
-              className={`leading-relaxed text-xs transition-colors ${
-                cursorPos.line === i + 1 ? "text-amber-400 font-bold" : "text-zinc-600"
-              }`}
+              className="leading-relaxed text-xs transition-colors font-mono"
+              style={{
+                color: cursorPos.line === i + 1 ? themeStyle.lineHighlight : themeStyle.gutterText,
+                fontWeight: cursorPos.line === i + 1 ? 700 : 400,
+              }}
             >
               {i + 1}
             </div>
           ))}
           {type === "vim" &&
             Array.from({ length: Math.max(0, 16 - lines.length) }).map((_, i) => (
-              <div key={`tilde-${i}`} className="leading-relaxed text-xs text-sky-600 font-bold">
+              <div
+                key={`tilde-${i}`}
+                className="leading-relaxed text-xs font-bold select-none"
+                style={{ color: themeStyle.tildeColor }}
+              >
                 ~
               </div>
             ))}
@@ -385,10 +533,14 @@ export default function TerminalEditor({
               }
             }}
             spellCheck={false}
-            className={`w-full h-full p-2 bg-transparent text-[#e4e4e7] leading-relaxed resize-none border-none outline-none font-mono focus:ring-0 ${
+            className={`w-full h-full p-2 bg-transparent leading-relaxed resize-none border-none outline-none font-mono focus:ring-0 ${
               type === "vim" && vimMode !== "INSERT" ? "cursor-default" : "cursor-text"
             }`}
-            style={{ fontSize: `${fontSize}px` }}
+            style={{
+              fontSize: `${fontSize}px`,
+              color: themeStyle.textColor,
+              caretColor: themeStyle.lineHighlight,
+            }}
             placeholder={
               type === "vim"
                 ? vimMode === "NORMAL"
@@ -401,8 +553,19 @@ export default function TerminalEditor({
       </div>
 
       {/* QUICK TOUCH ACTION TOOLBAR (MOBILE & TOUCH FRIENDLY) */}
-      <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#14161f] border-t border-white/10 shrink-0 overflow-x-auto text-xs no-scrollbar">
-        <span className="text-[10px] uppercase font-bold text-zinc-500 mr-1 shrink-0">Quick Bar:</span>
+      <div
+        className="flex items-center gap-1.5 px-2.5 py-1.5 border-t shrink-0 overflow-x-auto text-xs no-scrollbar transition-colors duration-150"
+        style={{
+          backgroundColor: themeStyle.headerBg,
+          borderColor: themeStyle.headerBorder,
+        }}
+      >
+        <span
+          className="text-[10px] uppercase font-bold mr-1 shrink-0"
+          style={{ color: themeStyle.gutterText }}
+        >
+          Quick Bar:
+        </span>
 
         {type === "nano" ? (
           <>
@@ -411,7 +574,7 @@ export default function TerminalEditor({
               onClick={() => {
                 setNanoPrompt({ type: "save_as", inputVal: filePath });
               }}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 font-medium active:scale-95 transition-all"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[var(--accent-green)]/15 hover:bg-[var(--accent-green)]/25 text-[var(--accent-green)] border border-[var(--accent-green)]/30 font-medium active:scale-95 transition-all"
             >
               <Save className="w-3 h-3" />
               <span>^O Save</span>
@@ -425,7 +588,7 @@ export default function TerminalEditor({
                   onClose(false);
                 }
               }}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 font-medium active:scale-95 transition-all"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[var(--accent-red)]/15 hover:bg-[var(--accent-red)]/25 text-[var(--accent-red)] border border-[var(--accent-red)]/30 font-medium active:scale-95 transition-all"
             >
               <LogOut className="w-3 h-3" />
               <span>^X Exit</span>
@@ -442,7 +605,7 @@ export default function TerminalEditor({
                   ta.focus();
                 }
               }}
-              className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-white/5 font-mono"
+              className="px-2 py-1 rounded bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] text-[var(--text-main)] border border-[var(--surface-active)]/40 font-mono"
             >
               Tab
             </button>
@@ -458,7 +621,7 @@ export default function TerminalEditor({
                   ta.focus();
                 }
               }}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-[var(--accent-primary)]/15 hover:bg-[var(--accent-primary)]/25 text-[var(--accent-primary-soft)] border border-[var(--accent-primary)]/30"
             >
               <Sparkles className="w-3 h-3" />
               <span>+ #!/bin/bash</span>
@@ -478,8 +641,8 @@ export default function TerminalEditor({
               }}
               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded border font-semibold active:scale-95 transition-all ${
                 vimMode === "INSERT"
-                  ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                  : "bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-white/10"
+                  ? `${themeStyle.insertBadge} border-transparent`
+                  : "bg-[var(--surface-subtle)] hover:bg-[var(--surface-active)] text-[var(--text-main)] border-[var(--surface-active)]/40"
               }`}
             >
               <span>{vimMode === "INSERT" ? "Esc (Normal)" : "i (Insert)"}</span>
@@ -489,7 +652,7 @@ export default function TerminalEditor({
               onClick={() => {
                 handlePerformSave();
               }}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 font-medium active:scale-95 transition-all"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[var(--accent-green)]/15 hover:bg-[var(--accent-green)]/25 text-[var(--accent-green)] border border-[var(--accent-green)]/30 font-medium active:scale-95 transition-all"
             >
               <Save className="w-3 h-3" />
               <span>:w Save</span>
@@ -500,7 +663,7 @@ export default function TerminalEditor({
                 const ok = handlePerformSave();
                 if (ok) onClose(true);
               }}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-sky-500/15 hover:bg-sky-500/25 text-sky-400 border border-sky-500/30 font-medium active:scale-95 transition-all"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[var(--accent-blue)]/15 hover:bg-[var(--accent-blue)]/25 text-[var(--accent-blue)] border border-[var(--accent-blue)]/30 font-medium active:scale-95 transition-all"
             >
               <span>:wq Save & Exit</span>
             </button>
@@ -509,7 +672,7 @@ export default function TerminalEditor({
               onClick={() => {
                 onClose(false);
               }}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 active:scale-95 transition-all"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-[var(--accent-red)]/15 hover:bg-[var(--accent-red)]/25 text-[var(--accent-red)] border border-[var(--accent-red)]/30 active:scale-95 transition-all"
             >
               <LogOut className="w-3 h-3" />
               <span>:q! Quit</span>
@@ -522,7 +685,7 @@ export default function TerminalEditor({
                 setIsModified(true);
                 setVimMode("INSERT");
               }}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-[var(--accent-primary)]/15 hover:bg-[var(--accent-primary)]/25 text-[var(--accent-primary-soft)] border border-[var(--accent-primary)]/30"
             >
               <Sparkles className="w-3 h-3" />
               <span>+ Shebang</span>
@@ -533,11 +696,17 @@ export default function TerminalEditor({
 
       {/* BOTTOM STATUS BAR OR INTERACTIVE PROMPT */}
       {type === "nano" ? (
-        <div className="shrink-0 bg-[#161821] border-t border-white/10 select-none">
+        <div
+          className="shrink-0 border-t select-none transition-colors duration-150"
+          style={{
+            backgroundColor: themeStyle.bottomBarBg,
+            borderColor: themeStyle.bottomBarBorder,
+          }}
+        >
           {/* Nano Prompt Row (WriteOut or Confirm Exit) */}
           {nanoPrompt ? (
-            <div className="px-3 py-1.5 bg-[#252836] text-white flex items-center gap-2 text-xs font-mono">
-              <span className="font-bold text-amber-300">
+            <div className="px-3 py-1.5 bg-[var(--surface-active)] text-white flex items-center gap-2 text-xs font-mono">
+              <span className="font-bold" style={{ color: themeStyle.lineHighlight }}>
                 {nanoPrompt.type === "save_as"
                   ? "File Name to Write:"
                   : "Save modified buffer (ANSWERING \"No\" WILL DESTROY CHANGES) ?"}
@@ -598,57 +767,70 @@ export default function TerminalEditor({
               )}
             </div>
           ) : (
-            <div className="px-3 py-1 text-xs text-zinc-300 font-mono">
+            <div className="px-3 py-1 text-xs font-mono" style={{ color: themeStyle.textColor }}>
               {statusMessage || "\u00A0"}
             </div>
           )}
 
           {/* Genuine 2-Row Nano Shortcut Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-x-2 gap-y-0.5 px-3 py-1.5 text-[11px] font-mono bg-[#11131a] text-zinc-400 border-t border-white/5">
+          <div
+            className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-x-2 gap-y-0.5 px-3 py-1.5 text-[11px] font-mono border-t"
+            style={{
+              backgroundColor: themeStyle.headerBg,
+              borderColor: themeStyle.headerBorder,
+              color: themeStyle.gutterText,
+            }}
+          >
             <div>
-              <span className="font-bold text-white bg-zinc-800 px-1 py-0.2 rounded mr-1">^G</span> Get Help
+              <span className="font-bold text-white bg-white/10 px-1 py-0.2 rounded mr-1">^G</span> Get Help
             </div>
             <div>
-              <span className="font-bold text-white bg-zinc-800 px-1 py-0.2 rounded mr-1">^O</span> WriteOut
+              <span className="font-bold text-white bg-white/10 px-1 py-0.2 rounded mr-1">^O</span> WriteOut
             </div>
             <div>
-              <span className="font-bold text-white bg-zinc-800 px-1 py-0.2 rounded mr-1">^W</span> Where Is
+              <span className="font-bold text-white bg-white/10 px-1 py-0.2 rounded mr-1">^W</span> Where Is
             </div>
             <div>
-              <span className="font-bold text-white bg-zinc-800 px-1 py-0.2 rounded mr-1">^K</span> Cut
+              <span className="font-bold text-white bg-white/10 px-1 py-0.2 rounded mr-1">^K</span> Cut
             </div>
             <div>
-              <span className="font-bold text-white bg-zinc-800 px-1 py-0.2 rounded mr-1">^J</span> Justify
+              <span className="font-bold text-white bg-white/10 px-1 py-0.2 rounded mr-1">^J</span> Justify
             </div>
             <div>
-              <span className="font-bold text-white bg-zinc-800 px-1 py-0.2 rounded mr-1">^C</span> Cur Pos
+              <span className="font-bold text-white bg-white/10 px-1 py-0.2 rounded mr-1">^C</span> Cur Pos
             </div>
             <div>
-              <span className="font-bold text-white bg-zinc-800 px-1 py-0.2 rounded mr-1">^X</span> Exit
+              <span className="font-bold text-white bg-white/10 px-1 py-0.2 rounded mr-1">^X</span> Exit
             </div>
             <div>
-              <span className="font-bold text-white bg-zinc-800 px-1 py-0.2 rounded mr-1">^R</span> Read File
+              <span className="font-bold text-white bg-white/10 px-1 py-0.2 rounded mr-1">^R</span> Read File
             </div>
             <div>
-              <span className="font-bold text-white bg-zinc-800 px-1 py-0.2 rounded mr-1">^\</span> Replace
+              <span className="font-bold text-white bg-white/10 px-1 py-0.2 rounded mr-1">^\</span> Replace
             </div>
             <div>
-              <span className="font-bold text-white bg-zinc-800 px-1 py-0.2 rounded mr-1">^U</span> Paste
+              <span className="font-bold text-white bg-white/10 px-1 py-0.2 rounded mr-1">^U</span> Paste
             </div>
             <div>
-              <span className="font-bold text-white bg-zinc-800 px-1 py-0.2 rounded mr-1">^T</span> Execute
+              <span className="font-bold text-white bg-white/10 px-1 py-0.2 rounded mr-1">^T</span> Execute
             </div>
             <div>
-              <span className="font-bold text-white bg-zinc-800 px-1 py-0.2 rounded mr-1">^_</span> Go To Line
+              <span className="font-bold text-white bg-white/10 px-1 py-0.2 rounded mr-1">^_</span> Go To Line
             </div>
           </div>
         </div>
       ) : (
         /* VIM BOTTOM BAR */
-        <div className="shrink-0 bg-[#14161f] border-t border-white/10 px-3 py-1 text-xs font-mono flex items-center justify-between min-h-[28px]">
+        <div
+          className="shrink-0 border-t px-3 py-1 text-xs font-mono flex items-center justify-between min-h-[30px] transition-colors duration-150"
+          style={{
+            backgroundColor: themeStyle.bottomBarBg,
+            borderColor: themeStyle.bottomBarBorder,
+          }}
+        >
           {vimMode === "COMMAND" ? (
-            <div className="flex items-center w-full gap-1 text-amber-300">
-              <span className="font-bold text-sm">:</span>
+            <div className="flex items-center w-full gap-1">
+              <span className="font-bold text-sm" style={{ color: themeStyle.lineHighlight }}>:</span>
               <input
                 ref={commandInputRef}
                 type="text"
@@ -663,7 +845,8 @@ export default function TerminalEditor({
                     setVimMode("NORMAL");
                   }
                 }}
-                className="bg-transparent border-none outline-none text-white w-full text-xs font-mono p-0 focus:ring-0"
+                className="bg-transparent border-none outline-none w-full text-xs font-mono p-0 focus:ring-0"
+                style={{ color: themeStyle.textColor }}
                 placeholder="w (save), q (quit), wq (save & exit), q! (quit without saving)"
               />
             </div>
@@ -671,11 +854,11 @@ export default function TerminalEditor({
             <>
               <div className="flex items-center gap-3">
                 {vimMode === "INSERT" ? (
-                  <span className="font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 rounded-sm text-[11px] tracking-wider animate-pulse">
+                  <span className={`px-2 py-0.5 rounded-sm text-[11px] tracking-wider animate-pulse ${themeStyle.insertBadge}`}>
                     -- INSERT --
                   </span>
                 ) : (
-                  <span className="font-semibold text-zinc-400 text-[11px] uppercase tracking-wide">
+                  <span className={`px-2 py-0.5 rounded-sm text-[11px] tracking-wide ${themeStyle.normalBadge}`}>
                     NORMAL
                   </span>
                 )}
@@ -683,15 +866,16 @@ export default function TerminalEditor({
                   <span
                     className={
                       statusMessage.startsWith("E") || statusMessage.includes("Error")
-                        ? "text-rose-400 font-semibold"
-                        : "text-zinc-300"
+                        ? "text-[var(--accent-red)] font-semibold"
+                        : "opacity-90"
                     }
+                    style={{ color: statusMessage.startsWith("E") || statusMessage.includes("Error") ? undefined : themeStyle.textColor }}
                   >
                     {statusMessage}
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-4 text-zinc-500 text-[11px]">
+              <div className="flex items-center gap-4 text-[11px]" style={{ color: themeStyle.headerText }}>
                 <span className="hidden sm:inline">
                   {cursorPos.line},{cursorPos.col}
                 </span>

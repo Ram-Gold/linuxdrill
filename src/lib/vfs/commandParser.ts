@@ -8,6 +8,7 @@ export interface ParsedCommand {
   };
   stdinFile?: string;
   heredoc?: string;
+  heredocQuoted?: boolean;
   pipeNext?: ParsedCommand;
 }
 
@@ -35,6 +36,7 @@ export function parseCommandLine(input: string): ChainStep[] {
         // Attach heredoc to the first command in pipeline
         if (i === 0 && block.heredoc !== undefined) {
           parsed.heredoc = block.heredoc;
+          parsed.heredocQuoted = block.heredocQuoted;
         }
 
         if (prevCmd) {
@@ -52,9 +54,42 @@ export function parseCommandLine(input: string): ChainStep[] {
   return steps;
 }
 
+export interface HeredocInitiation {
+  targetCmd: string;
+  delimiter: string;
+  isQuoted: boolean;
+  stripTabs: boolean;
+}
+
+export function detectHeredocInitiation(line: string): HeredocInitiation | null {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith("#")) return null;
+
+  // Match << or <<- followed by optional quote and delimiter
+  const heredocMatch = trimmed.match(/^(.*?)(?:<<(-?)\s*(?:(['"])(.*?)\3|([A-Za-z0-9_.-]+)))(.*)$/);
+  if (!heredocMatch) return null;
+
+  const stripTabs = heredocMatch[2] === "-";
+  const quoteChar = heredocMatch[3];
+  const delimiter = (heredocMatch[4] || heredocMatch[5] || "").trim();
+  if (!delimiter) return null;
+
+  const before = heredocMatch[1] || "";
+  const after = heredocMatch[6] || "";
+  const targetCmd = `${before} ${after}`.trim();
+
+  return {
+    targetCmd,
+    delimiter,
+    isQuoted: !!quoteChar,
+    stripTabs,
+  };
+}
+
 interface RawCommandBlock {
   cmd: string;
   heredoc?: string;
+  heredocQuoted?: boolean;
 }
 
 function extractCommandBlocksWithHeredocs(input: string): RawCommandBlock[] {
@@ -65,6 +100,8 @@ function extractCommandBlocksWithHeredocs(input: string): RawCommandBlock[] {
 
   let currentCmd = "";
   let activeHeredocDelim: string | null = null;
+  let activeHeredocQuoted = false;
+  let activeHeredocStripTabs = false;
   let heredocBuffer: string[] = [];
 
   let inBraceGroup = false;
@@ -75,13 +112,21 @@ function extractCommandBlocksWithHeredocs(input: string): RawCommandBlock[] {
 
     // Inside heredoc body
     if (activeHeredocDelim !== null) {
-      if (line.trim() === activeHeredocDelim) {
+      const checkLine = activeHeredocStripTabs ? line.replace(/^\t+/, "").trim() : line.trim();
+      if (checkLine === activeHeredocDelim) {
+        let finalHeredoc = heredocBuffer.join("\n") + "\n";
+        if (activeHeredocStripTabs) {
+          finalHeredoc = heredocBuffer.map((l) => l.replace(/^\t+/, "")).join("\n") + "\n";
+        }
         blocks.push({
           cmd: currentCmd,
-          heredoc: heredocBuffer.join("\n") + "\n",
+          heredoc: finalHeredoc,
+          heredocQuoted: activeHeredocQuoted,
         });
         currentCmd = "";
         activeHeredocDelim = null;
+        activeHeredocQuoted = false;
+        activeHeredocStripTabs = false;
         heredocBuffer = [];
       } else {
         heredocBuffer.push(line);
@@ -90,10 +135,12 @@ function extractCommandBlocksWithHeredocs(input: string): RawCommandBlock[] {
     }
 
     // Heredoc start
-    const heredocMatch = line.match(/^(.*?)(?:<<-?\s*["']?([A-Za-z0-9_]+)["']?)(.*)$/);
+    const heredocMatch = line.match(/^(.*?)(?:<<(-?)\s*(?:(['"])(.*?)\3|([A-Za-z0-9_.-]+)))(.*)$/);
     if (heredocMatch) {
-      currentCmd = (heredocMatch[1] + " " + heredocMatch[3]).trim();
-      activeHeredocDelim = heredocMatch[2];
+      currentCmd = (heredocMatch[1] + " " + heredocMatch[6]).trim();
+      activeHeredocStripTabs = heredocMatch[2] === "-";
+      activeHeredocQuoted = !!heredocMatch[3];
+      activeHeredocDelim = (heredocMatch[4] || heredocMatch[5] || "").trim();
       heredocBuffer = [];
       continue;
     }
@@ -167,6 +214,7 @@ function extractCommandBlocksWithHeredocs(input: string): RawCommandBlock[] {
     blocks.push({
       cmd: currentCmd,
       heredoc: heredocBuffer.join("\n"),
+      heredocQuoted: activeHeredocQuoted,
     });
   }
 
@@ -334,7 +382,18 @@ function parseSingleCommand(rawCmd: string): ParsedCommand {
   if (redirIndex !== -1) {
     const filePart = cmdPart.slice(redirIndex + (isAppend ? 2 : 1)).trim();
     cmdPart = cmdPart.slice(0, redirIndex).trim();
-    const cleanFile = filePart.split(/\s+/)[0].replace(/^["']|["']$/g, "");
+
+    let cleanFile = "";
+    if (filePart.startsWith('"')) {
+      const closingIdx = filePart.indexOf('"', 1);
+      cleanFile = closingIdx !== -1 ? filePart.slice(1, closingIdx) : filePart.slice(1);
+    } else if (filePart.startsWith("'")) {
+      const closingIdx = filePart.indexOf("'", 1);
+      cleanFile = closingIdx !== -1 ? filePart.slice(1, closingIdx) : filePart.slice(1);
+    } else {
+      cleanFile = filePart.split(/\s+/)[0];
+    }
+
     if (cleanFile) {
       redirect = { file: cleanFile, append: isAppend };
     }
